@@ -1,0 +1,83 @@
+"""Build bookmarklet/install.html (drag-to-bookmarks page) from bookmarklet/innstilt.js.
+
+   .venv/bin/python bookmarklet/build.py
+"""
+import base64
+import re
+from pathlib import Path
+from urllib.parse import quote
+
+HERE = Path(__file__).parent
+ROOT = HERE.parent
+
+
+def bookmarklet_href() -> str:
+    src = re.sub(r"/\*.*?\*/", "", (HERE / "innstilt.js").read_text(), flags=re.S)  # drop block comments
+    if re.search(r"(^|[^:'\"])//", src):
+        raise SystemExit("innstilt.js must not contain // comments (use /* */)")
+    src = "\n".join(line.strip() for line in src.splitlines() if line.strip())
+    return "javascript:" + quote(src, safe="")
+
+
+def main() -> None:
+    href = bookmarklet_href()
+    icon = base64.b64encode((ROOT / "assets" / "icons" / "ghost-64.png").read_bytes()).decode()
+    page = TEMPLATE.replace("{{HREF}}", href).replace("{{ICON}}", icon)
+    (HERE / "install.html").write_text(page)
+    print(f"bookmarklet: {len(href)} chars -> {HERE / 'install.html'}")
+
+
+TEMPLATE = """<!doctype html>
+<html lang="no">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Innstilt - bokmerke</title>
+<link rel="icon" href="data:image/png;base64,{{ICON}}">
+<style>
+  :root { --bg:#0e3a30; --card:#f2faf5; --ink:#0b0b0c; --muted:#4a6b60; --yellow:#f5c400; }
+  * { box-sizing:border-box; }
+  body { margin:0; background:linear-gradient(#1c5a4a,#0e3a30); color:var(--ink);
+         font:16px/1.5 system-ui,-apple-system,"Segoe UI",sans-serif; min-height:100vh; padding:32px 16px; }
+  main { max-width:620px; margin:0 auto; background:var(--card); border-radius:20px; padding:28px; }
+  header { display:flex; gap:14px; align-items:center; margin-bottom:8px; }
+  header img { width:56px; height:56px; border-radius:14px; }
+  h1 { margin:0; font-size:28px; }
+  .sub { margin:0; color:var(--muted); }
+  .drag { display:flex; justify-content:center; margin:26px 0 10px; }
+  .drag a { display:inline-flex; gap:10px; align-items:center; background:var(--ink); color:var(--yellow);
+            text-decoration:none; font-weight:800; font-size:20px; padding:14px 22px; border-radius:12px;
+            border:3px dashed var(--yellow); cursor:grab; }
+  .hint { text-align:center; color:var(--muted); margin:0 0 22px; font-size:14px; }
+  ol { padding-left:22px; } li { margin:6px 0; }
+  kbd { background:#e2efe8; border-radius:5px; padding:1px 6px; font-size:14px; }
+  .note { background:#fff4c2; border-radius:12px; padding:12px 14px; font-size:14px; }
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <img src="data:image/png;base64,{{ICON}}" alt="">
+    <div><h1>Innstilt</h1><p class="sub">Bokmerket som fullfører Vy-skjemaet for deg.</p></div>
+  </header>
+
+  <div class="drag"><a href="{{HREF}}" onclick="alert('Dra knappen til bokmerkelinjen i stedet for å klikke på den her.'); return false;">👻 Innstilt: fyll ut</a></div>
+  <p class="hint">Dra den svarte knappen opp til bokmerkelinjen.</p>
+
+  <ol>
+    <li>Vis bokmerkelinjen: <kbd>⌘</kbd> <kbd>⇧</kbd> <kbd>B</kbd> på Mac, <kbd>Ctrl</kbd> <kbd>⇧</kbd> <kbd>B</kbd> på Windows.</li>
+    <li>Dra <b>👻 Innstilt: fyll ut</b> opp dit.</li>
+    <li>Når <code>innstilt claim</code> eller <code>innstilt scan</code> åpner Vy-skjemaet, klikker du bokmerket.
+        Det setter avgangstiden og velger toget.</li>
+    <li>Sjekk skjemaet og trykk <b>Send inn</b> selv. Bokmerket sender aldri noe.</li>
+  </ol>
+
+  <p class="note">Bokmerket kjører bare på siden du står på, i din egen nettleser. Det sender ingen data noe sted,
+  og det klikker aldri «Send inn».</p>
+</main>
+</body>
+</html>
+"""
+
+if __name__ == "__main__":
+    main()

@@ -1,0 +1,13 @@
+# Python
+.venv/
+__pycache__/
+*.pyc
+*.egg-info/
+build/
+dist/
+
+# Personal data from form recon (ticket code, name, e-mail, screenshots) - never commit
+tools/recon/out/
+
+# macOS
+.DS_Store

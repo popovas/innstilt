@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <!-- Ghost train for 16-64 px (favicons): no text, chunky shapes, big yellow "!" badge. -->
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#1c5a4a"/>
+      <stop offset="1" stop-color="#0e3a30"/>
+    </linearGradient>
+  </defs>
+  <rect width="512" height="512" rx="112" fill="url(#bg)"/>
+
+  <!-- rail -->
+  <rect x="36" y="430" width="440" height="22" rx="11" fill="#8fbfa8"/>
+
+  <!-- ghost carriage, bigger and lower than the detailed icon -->
+  <path d="M40 210 Q40 150 100 150 H330 Q410 150 440 236 L452 290 Q458 318 440 336 L440 400
+           Q414 380 388 400 Q362 420 336 400 Q310 380 284 400 Q258 420 232 400 Q206 380 180 400
+           Q154 420 128 400 Q102 380 76 400 Q58 414 40 400 Z" fill="#e9f6ee"/>
+  <!-- window band with two sleepy eyes -->
+  <path d="M64 196 H336 Q384 196 404 246 L410 268 H64 Z" fill="#14473b"/>
+  <ellipse cx="170" cy="234" rx="34" ry="26" fill="#e9f6ee"/>
+  <ellipse cx="290" cy="234" rx="34" ry="26" fill="#e9f6ee"/>
+  <path d="M134 234 A36 30 0 0 1 206 234 Z M254 234 A36 30 0 0 1 326 234 Z" fill="#14473b"/>
+  <circle cx="178" cy="244" r="11" fill="#0e3a30"/>
+  <circle cx="298" cy="244" r="11" fill="#0e3a30"/>
+  <!-- livery stripe -->
+  <rect x="40" y="340" width="400" height="26" fill="#2fa36b"/>
+
+  <!-- yellow warning badge -->
+  <circle cx="404" cy="108" r="84" fill="#f5c400" stroke="#0e3a30" stroke-width="14"/>
+  <rect x="390" y="56" width="28" height="74" rx="14" fill="#0e3a30"/>
+  <circle cx="404" cy="158" r="16" fill="#0e3a30"/>
+</svg>

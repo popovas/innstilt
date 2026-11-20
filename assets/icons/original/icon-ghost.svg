@@ -1,0 +1,76 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#1c5a4a"/>
+      <stop offset="1" stop-color="#0e3a30"/>
+    </linearGradient>
+    <linearGradient id="ghost" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#f2faf5"/>
+      <stop offset=".75" stop-color="#cfeadb"/>
+      <stop offset="1" stop-color="#cfeadb" stop-opacity=".55"/>
+    </linearGradient>
+    <radialGradient id="shadow" cx=".5" cy=".5" r=".5">
+      <stop offset="0" stop-color="#06221b" stop-opacity=".55"/>
+      <stop offset="1" stop-color="#06221b" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+
+  <!-- tile -->
+  <rect width="512" height="512" rx="112" fill="url(#bg)"/>
+
+  <!-- empty track -->
+  <g fill="#0a2c24">
+    <rect x="58" y="416" width="26" height="14" rx="3"/><rect x="128" y="416" width="26" height="14" rx="3"/>
+    <rect x="198" y="416" width="26" height="14" rx="3"/><rect x="268" y="416" width="26" height="14" rx="3"/>
+    <rect x="338" y="416" width="26" height="14" rx="3"/><rect x="408" y="416" width="26" height="14" rx="3"/>
+  </g>
+  <rect x="40" y="406" width="432" height="10" rx="5" fill="#8fbfa8"/>
+
+  <!-- the shadow of a train that isn't there -->
+  <ellipse cx="262" cy="404" rx="150" ry="12" fill="url(#shadow)"/>
+
+  <!-- ghost carriage: commuter-unit body, sheet-ghost hem -->
+  <path d="M96 196 Q96 156 138 156 H330 Q392 156 414 222 L424 262 Q430 290 414 306 L414 360
+           Q394 344 374 360 Q354 376 334 360 Q314 344 294 360 Q274 376 254 360 Q234 344 214 360
+           Q194 376 174 360 Q154 344 134 360 Q114 376 96 360 Z"
+        fill="url(#ghost)"/>
+
+  <!-- window band -->
+  <path d="M114 188 H336 Q372 188 388 226 L394 244 H114 Z" fill="#14473b"/>
+  <!-- eyes in the windows: hollow, unbothered -->
+  <g fill="#e9f6ee">
+    <ellipse cx="190" cy="217" rx="22" ry="19"/>
+    <ellipse cx="280" cy="217" rx="22" ry="19"/>
+  </g>
+  <g fill="#0e3a30">
+    <circle cx="196" cy="222" r="8"/>
+    <circle cx="286" cy="222" r="8"/>
+  </g>
+  <!-- heavy lids -->
+  <path d="M166 214 A24 22 0 0 1 214 214 Z" fill="#14473b"/>
+  <path d="M256 214 A24 22 0 0 1 304 214 Z" fill="#14473b"/>
+  <path d="M166 214 H214 M256 214 H304" stroke="#cfeadb" stroke-width="4" stroke-linecap="round"/>
+  <!-- cab window -->
+  <path d="M332 196 H340 Q362 196 374 230 L378 240 H332 Z" fill="#2c6b59"/>
+
+  <!-- mouth: a flat "meh" -->
+  <path d="M206 282 Q236 274 266 284" fill="none" stroke="#14473b" stroke-width="7" stroke-linecap="round"/>
+
+  <!-- livery stripe, fading out -->
+  <path d="M96 318 H414 V336 H96 Z" fill="#2fa36b" opacity=".85"/>
+  <!-- headlight, switched off -->
+  <circle cx="404" cy="282" r="8" fill="#9cc3b0"/>
+
+  <!-- floating wisps -->
+  <path d="M60 236 Q74 228 66 214 M54 290 Q70 282 60 266" fill="none" stroke="#cfeadb" stroke-width="5" stroke-linecap="round" opacity=".5"/>
+
+  <!-- departure-board status: black panel, yellow warning -->
+  <g>
+    <rect x="78" y="52" width="356" height="84" rx="10" fill="#0b0b0c"/>
+    <rect x="78" y="52" width="356" height="84" rx="10" fill="none" stroke="#2a2d2f" stroke-width="3"/>
+    <circle cx="164" cy="94" r="25" fill="#f5c400"/>
+    <rect x="160" y="76" width="8" height="24" rx="4" fill="#0b0b0c"/>
+    <circle cx="164" cy="110" r="5" fill="#0b0b0c"/>
+    <text x="202" y="111" font-family="Overpass, 'Segoe UI', Arial, sans-serif" font-weight="800" font-size="50" fill="#f5c400">Innstilt</text>
+  </g>
+</svg>
