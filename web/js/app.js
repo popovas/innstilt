@@ -3,7 +3,7 @@ import * as store from './store.js';
 import * as data from './data.js';
 import { t, getLang, setLang, fmtDate, fmtDay } from './i18n.js';
 import { BOOKMARKLET } from './bookmarklet-href.js';
-import { VERSION, ABOUT, contactAddress } from './about.js';
+import { VERSION, ABOUT, ROADMAP, contactAddress } from './about.js';
 import * as stats from './stats.js';
 
 const DONATE_URL = '';  /* e.g. a Vipps or Buy Me a Coffee link; the footer button stays hidden while empty */
@@ -99,6 +99,7 @@ function viewWelcome() {
 async function viewAbout() {
   const address = await contactAddress();
   const paras = ABOUT[getLang()] || ABOUT.no;
+  const roadmap = ROADMAP[getLang()] || ROADMAP.no;
   $('#main').innerHTML = `
     <section class="hero small-hero">
       <img src="icons/ghost-192.png" width="88" height="88" alt="">
@@ -109,6 +110,10 @@ async function viewAbout() {
     <section class="card about">
       <p class="lead"><strong>${esc(paras[0])}</strong></p>
       ${paras.slice(1).map(x => `<p>${esc(x)}</p>`).join('')}
+    </section>
+    <section class="card about">
+      <h2>🚧 ${esc(roadmap[0])}</h2>
+      <ul class="roadmap">${roadmap.slice(1).map(x => `<li>${esc(x)}</li>`).join('')}</ul>
     </section>
     ${address ? `<section class="card center">
       <p>${esc(t('contactBody'))}</p>

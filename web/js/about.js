@@ -43,3 +43,17 @@ export const ABOUT = {
     'Innstilt is a spare-time project and is not affiliated with Vy or Entur.',
   ],
 };
+
+/* "Work in progress" on the About page: a heading, then one string per bullet. Edit freely. */
+export const ROADMAP = {
+  no: [
+    'Under arbeid',
+    'Apper for iPhone og Android, så Innstilt kan lastes ned fra App Store og Google Play.',
+    'Flere selskaper enn Vy – som Ruter, SJ, Go-Ahead og Flytoget. Vi startet med Vy, fordi det er dem vi oftest blir stående på perrongen og vente på.',
+  ],
+  en: [
+    'Work in progress',
+    'Apps for iPhone and Android, so Innstilt can be downloaded from the App Store and Google Play.',
+    'More companies than Vy – such as Ruter, SJ, Go-Ahead and Flytoget. We started with Vy because they are the ones we most often end up waiting for on the platform.',
+  ],
+};
