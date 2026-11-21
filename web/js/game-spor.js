@@ -14,12 +14,21 @@ const BEST_KEY = 'innstilt.game.best.spor';
 const C = { bg: '#0e3a30', tile: '#174a3d', tileOk: '#1f6b50', used: '#2a5a4b', rail: '#dfe7e3', railOk: '#ffffff', sleeper: '#7a5a3a',
   rock: '#8a958f', rock2: '#6c7671', mint: '#f2faf5', stripe: '#2fa36b', win: '#0e3a30', ink: '#0b0b0c', yellow: '#f5c400', red: '#ff6b57' };
 
+/* a season per level, round and round: board, tiles, rails and what lies on the ground */
+const THEMES = [
+  { key: 'summer', bg: '#1f5130', tile: '#2b6a3d', ok: '#3d8c55', used: '#4d6e55', rail: '#dfe7e3', railOk: '#ffffff', ballast: '#7d776a', specks: ['#f5c400', '#ffffff', '#e84a5f'] },
+  { key: 'autumn', bg: '#4a3a22', tile: '#5d4a2b', ok: '#7d6634', used: '#6b5f48', rail: '#e3ddd2', railOk: '#ffffff', ballast: '#857b6a', specks: ['#d9822b', '#b5521b', '#e0b040'] },
+  { key: 'winter', bg: '#9fbccb', tile: '#c3d9e3', ok: '#e6f3f8', used: '#adc2cc', rail: '#4b5560', railOk: '#18242d', ballast: '#8e9aa2', specks: ['#ffffff'] },
+  { key: 'night', bg: '#0d1b2e', tile: '#172a42', ok: '#23466a', used: '#1e3249', rail: '#c9d3df', railOk: '#ffffff', ballast: '#3c4656', specks: ['#f5f2c0', '#ffffff'] },
+];
+
 const TXT = {
   no: {
     title: 'Sporarbeid', intro: 'Vri skinnene så toget kommer fram til stasjonen til høyre. Toget går når nedtellingen er ute – eller når du trykker «Kjør nå!».',
     start: 'Start', resume: 'Fortsett', again: 'Spill igjen', back: 'Tilbake til turene', other: 'Prøv det andre spillet',
     go: 'Kjør nå!', paused: 'Pause', wait: 'Avgang om {s} s', running: 'Toget går', level: 'Nivå {n}', points: 'Poeng',
     winTitle: 'Framme!', winText: '+{n} poeng.', next: 'Neste avgang',
+    seasons: { summer: 'Sommer', autumn: 'Høst', winter: 'Vinter', night: 'Natt' },
     loseTitle: 'Buss for tog!', loseText: 'Sporet tok slutt på nivå {lvl}.', result: '{n} poeng.', newBest: 'Ny rekord!', best: 'Rekord: {n}',
     help: 'Hvordan spiller jeg?', keys: 'Klikk på en rute for å vri den · Enter = kjør nå · P = pause',
     pad: { pause: 'Pause' },
@@ -35,6 +44,7 @@ const TXT = {
     start: 'Start', resume: 'Resume', again: 'Play again', back: 'Back to trips', other: 'Try the other game',
     go: 'Go now!', paused: 'Paused', wait: 'Departs in {s} s', running: 'Train running', level: 'Level {n}', points: 'Points',
     winTitle: 'Arrived!', winText: '+{n} points.', next: 'Next departure',
+    seasons: { summer: 'Summer', autumn: 'Autumn', winter: 'Winter', night: 'Night' },
     loseTitle: 'Bus for train!', loseText: 'The track ran out on level {lvl}.', result: '{n} points.', newBest: 'New record!', best: 'Record: {n}',
     help: 'How do I play?', keys: 'Click a tile to turn it · Enter = go now · P = pause',
     pad: { pause: 'Pause' },
@@ -103,7 +113,10 @@ function makeLevel(level) {
       : { kind: Math.random() < 0.6 ? 'curve' : 'straight', rot: rnd(4) };
   }
   const start = route[0].y, goal = route[route.length - 1].y;
-  return { N, grid, start, goal, countdown: Math.max(9, 24 - level * 1.5) * 1000, cellMs: Math.max(420, 1000 - level * 60) };
+  const theme = THEMES[(level - 1) % THEMES.length];
+  const specks = Array.from({ length: 70 }, () => ({ x: Math.random(), y: Math.random(), r: 0.5 + Math.random(), a: Math.random() * Math.PI,
+    col: theme.specks[rnd(theme.specks.length)] }));
+  return { N, grid, start, goal, theme, specks, countdown: Math.max(9, 24 - level * 1.5) * 1000, cellMs: Math.max(420, 1000 - level * 60) };
 }
 
 /** Starts the game inside `root`. Returns a function that stops it and removes every listener. */
@@ -151,6 +164,13 @@ export function start(root, { lang = 'no', back = () => {}, other = null } = {})
     hud();
     msg.hidden = true;
     setMode('wait');
+    toast(`${fill(T.level, { n: g.level })} · ${T.seasons[g.theme.key]}`);
+  }
+
+  function toast(text) {
+    toastEl.textContent = text; toastEl.hidden = false;
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => { toastEl.hidden = true; }, 1600);
   }
 
   function rotate(x, y) {
@@ -188,7 +208,7 @@ export function start(root, { lang = 'no', back = () => {}, other = null } = {})
     g.score += pts;
     hud();
     g.level++;
-    show(T.winTitle, fill(T.winText, { n: pts }), [[T.next, nextLevel, true]]);
+    show(T.winTitle, fill(T.winText, { n: pts }), [[T.next, nextLevel, true], [T.back, back]]);
     setMode('between');
   }
 
@@ -310,8 +330,18 @@ export function start(root, { lang = 'no', back = () => {}, other = null } = {})
   }
 
   function trackPiece(kind, lit, c) {
-    const railW = Math.max(1.5, c * 0.05), g2 = c * 0.17;
-    const rail = lit ? C.railOk : C.rail;
+    const railW = Math.max(1.5, c * 0.05), g2 = c * 0.17, th = g ? g.theme : THEMES[0];
+    const rail = lit ? th.railOk : th.rail;
+    /* gravel bed under the sleepers */
+    ctx.fillStyle = th.ballast;
+    if (kind === 'curve') {
+      ctx.lineWidth = 0.56 * c; ctx.strokeStyle = th.ballast; ctx.globalAlpha = 0.55;
+      ctx.beginPath(); ctx.arc(0.5 * c, -0.5 * c, 0.5 * c, Math.PI / 2, Math.PI); ctx.stroke(); ctx.globalAlpha = 1;
+    } else {
+      ctx.globalAlpha = 0.55; ctx.fillRect(-0.28 * c, -0.5 * c, 0.56 * c, c);
+      if (kind === 'cross') ctx.fillRect(-0.5 * c, -0.28 * c, c, 0.56 * c);
+      ctx.globalAlpha = 1;
+    }
     if (kind === 'straight' || kind === 'cross') {
       const one = () => {
         ctx.fillStyle = C.sleeper;
@@ -335,9 +365,17 @@ export function start(root, { lang = 'no', back = () => {}, other = null } = {})
 
   function draw(now) {
     const W = cv.width;
-    ctx.fillStyle = C.bg; ctx.fillRect(0, 0, W, W);
+    ctx.fillStyle = g ? g.theme.bg : C.bg; ctx.fillRect(0, 0, W, W);
     if (!g) return;
-    const { c, o } = geo(), link = connected();
+    const { c, o } = geo(), link = connected(), th = g.theme;
+    /* what lies on the ground: flowers, leaves, snow or stars (seen around and between the tiles) */
+    for (const sp of g.specks) {
+      ctx.fillStyle = sp.col;
+      ctx.beginPath();
+      if (th.key === 'autumn') ctx.ellipse(sp.x * W, sp.y * W, c * 0.07 * sp.r, c * 0.035 * sp.r, sp.a, 0, Math.PI * 2);
+      else ctx.arc(sp.x * W, sp.y * W, c * (th.key === 'summer' ? 0.035 : th.key === 'night' ? 0.02 : 0.04) * sp.r, 0, Math.PI * 2);
+      ctx.fill();
+    }
     /* stations: platforms on the left and right edge */
     station(o - 0.5 * c, o + (g.start + 0.5) * c, c, false);
     station(o + (g.N + 0.5) * c, o + (g.goal + 0.5) * c, c, link.done);
@@ -347,8 +385,10 @@ export function start(root, { lang = 'no', back = () => {}, other = null } = {})
     }
     for (let y = 0; y < g.N; y++) for (let x = 0; x < g.N; x++) {
       const tile = g.grid[y][x], px = o + x * c, py = o + y * c, lit = link.ok.has(`${x},${y}`);
-      ctx.fillStyle = tile.locked ? C.used : lit ? C.tileOk : C.tile;
+      ctx.fillStyle = tile.locked ? th.used : lit ? th.ok : th.tile;
       rr(px + c * 0.03, py + c * 0.03, c * 0.94, c * 0.94, c * 0.12); ctx.fill();
+      ctx.fillStyle = 'rgba(255,255,255,.07)';   /* a little shine on the upper half */
+      rr(px + c * 0.03, py + c * 0.03, c * 0.94, c * 0.42, c * 0.12); ctx.fill();
       ctx.save(); ctx.translate(px + c / 2, py + c / 2);
       if (tile.kind === 'rock') rock(c);
       else { ctx.rotate(((tile.rot - (tile.spin || 0)) * Math.PI) / 2); trackPiece(tile.kind, lit, c); }
