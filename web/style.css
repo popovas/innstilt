@@ -282,3 +282,5 @@ dialog.helpdlg .intro h1 { font-size: 20px; }
 .g-lvl { display: block; font-size: 12px; font-weight: 600; color: var(--muted); }
 .g-clock.ahead b { color: var(--link); }
 .g-toast { white-space: normal; width: max-content; max-width: 90%; text-align: center; }
+.g-toast { background: rgba(11, 11, 12, .55); pointer-events: none; transition: top .15s, bottom .15s; }
+.g-toast.low { top: auto; bottom: 10px; }

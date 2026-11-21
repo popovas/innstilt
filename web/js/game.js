@@ -443,6 +443,8 @@ export function start(root, { lang = 'no', back = () => {}, testScore = 0 } = {}
     if (st.pax) passenger((st.pax.x + 0.5) * c, (st.pax.y + 0.5) * c + Math.sin(now / 180) * c * 0.03, c, st.pax.look);
     for (let i = st.snake.length - 1; i > 0; i--) wagon(st.snake[i].x * c, st.snake[i].y * c, c);
     head(st.snake[0], c);
+    /* the message moves to the bottom while the train is near the top, so it never hides the train */
+    if (!toastEl.hidden) toastEl.classList.toggle('low', st.snake[0].y < 4);
     if (now < flashUntil) { ctx.fillStyle = 'rgba(255,107,87,.35)'; ctx.fillRect(0, 0, W, W); }
     barEl.style.width = `${Math.min(100, (st.slow / minuteMs(st.score)) * 100)}%`;
   }
