@@ -912,6 +912,15 @@ function viewClaims() {
     };
     row.querySelector('select').addEventListener('change', change);
     row.querySelector('input').addEventListener('change', change);
+    row.querySelector('[data-case]').addEventListener('click', () => {
+      const cur = store.get().claims.find(x => x.key === key)?.case || '';
+      const v = prompt(t('casePrompt'), cur);
+      if (v === null) return;
+      const n = v.replace(/\D/g, '');
+      if (n && !/^\d{4,12}$/.test(n)) { alert(t('caseInvalid')); return; }
+      store.update(s => { const c = s.claims.find(x => x.key === key); if (c) c.case = n; });
+      viewClaims();
+    });
     row.querySelector('[data-remove]').addEventListener('click', () => {
       if (!confirm(t('removeClaimConfirm'))) return;
       store.update(s => { s.claims = s.claims.filter(x => x.key !== key); });
@@ -923,10 +932,10 @@ function viewClaims() {
 function claimRowHtml(c) {
   return `<article class="claim" data-key="${esc(c.key)}">
     <div><strong>${esc(fmtDay(c.date))} ${esc(c.dep)}</strong> ${esc(c.line)}
-      <div class="muted">${esc(c.fromName.replace(/ stasjon$/, ''))} → ${esc(c.toName.replace(/ stasjon$/, ''))}${c.case ? ` · #${esc(c.case)}` : ''}${c.earlier ? ` · ${esc(t('claimedEarlier'))}` : ''}</div></div>
+      <div class="muted">${esc(c.fromName.replace(/ stasjon$/, ''))} → ${esc(c.toName.replace(/ stasjon$/, ''))} · <button type="button" class="link small" data-case>${c.case ? `#${esc(c.case)}` : `＋ ${esc(t('addCase'))}`}</button>${c.earlier ? ` · ${esc(t('claimedEarlier'))}` : ''}</div></div>
     <select aria-label="status">${['pending', 'paid', 'rejected'].map(s =>
       `<option value="${s}" ${s === c.status ? 'selected' : ''}>${esc(t(s))}</option>`).join('')}</select>
-    <input aria-label="${esc(t('amount'))}" placeholder="kr" inputmode="decimal" value="${c.amount ?? ''}" ${c.status === 'paid' ? '' : 'hidden'}>
+    <input aria-label="${esc(t('amount'))}" placeholder="kr" inputmode="decimal" value="${esc(c.amount ?? '')}" ${c.status === 'paid' ? '' : 'hidden'}>
     <button type="button" class="link remove" data-remove aria-label="${esc(t('removeClaim'))}" title="${esc(t('removeClaim'))}">✕</button>
   </article>`;
 }
