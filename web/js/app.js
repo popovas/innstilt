@@ -106,22 +106,53 @@ function viewWelcome() {
 /* #/case?n=123456&from=NSR:StopPlace:1&to=NSR:StopPlace:2&date=2026-11-21&time=16:54, opened by the
    bookmarklet's "Lagre i Innstilt" on Vy's confirmation page. Attaches the case number to that trip's claim,
    or keeps it until the claim is marked as sent. Everything is checked; a bad link changes nothing. */
+/** Stores a case number caught on Vy's confirmation page (bookmarklet or in-app browser). Returns a message. */
+function applyCase({ n, from, to, date, time }) {
+  const key = store.claimKey(from, to, core.osloToMs(date, time));
+  const claim = store.get().claims.find(c => c.key === key);
+  store.update(s => {
+    const c = s.claims.find(x => x.key === key);
+    if (c) c.case = n;
+    else (s.pendingCases ??= {})[key] = n;
+  });
+  dispatchEvent(new CustomEvent('innstilt-case'));  /* fills an open "I've sent it" dialog in this tab */
+  return t(claim ? 'caseSaved' : 'casePending', { n, date: fmtDay(date), time });
+}
+
+const validCase = d => d && /^\d{4,12}$/.test(d.n) && /^NSR:StopPlace:\d+$/.test(d.from) && /^NSR:StopPlace:\d+$/.test(d.to)
+  && /^\d{4}-\d\d-\d\d$/.test(d.date) && /^\d\d:\d\d$/.test(d.time);
+
+/* Android app: Vy's form opens in Innstilt's own in-app browser. On every page load it runs the bookmarklet's
+   code (sets the time, picks the train, never presses "Send inn"); when Vy shows the case number, the page
+   sends it back here. Vy's page gets no access to the app's data: only that one message comes back, and it is
+   validated like any link. */
+const IAB = () => (data.NATIVE ? globalThis.Capacitor?.Plugins?.InAppBrowser : null);
+let iabWired = false;
+async function openVy(link) {
+  const iab = IAB();
+  if (!iab) { window.open(link, '_blank', 'noopener'); return; }
+  if (!iabWired) {
+    iabWired = true;
+    /* Vy's form rewrites its address on every change, and each rewrite is reported as a page load: run the
+       filling code only once per real page (a reload clears the flag), or it keeps re-reading the time it
+       just changed and drifts. */
+    const code = `if (!window.__innstiltFilled) { window.__innstiltFilled = true; ${decodeURIComponent(BOOKMARKLET.slice('javascript:'.length))} }`;
+    iab.addListener('browserPageLoaded', () => { iab.executeScript({ code }).catch(() => {}); });
+    iab.addListener('messageFromWebview', e => {
+      const d = e?.detail;
+      if (d?.innstilt === 'case' && validCase(d)) applyCase(d);
+    });
+  }
+  try {
+    await iab.openWebView({ url: link, title: 'Vy', toolbarType: 'navigation', showReloadButton: true, isAnimated: true });
+  } catch { window.open(link, '_blank', 'noopener'); }
+}
+
 function viewCase(q) {
   const n = q.get('n') || '', from = q.get('from') || '', to = q.get('to') || '';
   const date = q.get('date') || '', time = q.get('time') || '';
-  const okInput = /^\d{4,12}$/.test(n) && /^NSR:StopPlace:\d+$/.test(from) && /^NSR:StopPlace:\d+$/.test(to)
-    && /^\d{4}-\d\d-\d\d$/.test(date) && /^\d\d:\d\d$/.test(time);
-  let msg = t('caseBad');
-  if (okInput) {
-    const key = store.claimKey(from, to, core.osloToMs(date, time));
-    const claim = store.get().claims.find(c => c.key === key);
-    store.update(s => {
-      const c = s.claims.find(x => x.key === key);
-      if (c) c.case = n;
-      else (s.pendingCases ??= {})[key] = n;
-    });
-    msg = t(claim ? 'caseSaved' : 'casePending', { n, date: fmtDay(date), time });
-  }
+  const okInput = validCase({ n, from, to, date, time });
+  const msg = okInput ? applyCase({ n, from, to, date, time }) : t('caseBad');
   history.replaceState(null, '', '#/claims');  /* a reload shouldn't apply it again */
   $('#main').innerHTML = `<section class="card center casecard">
       <h1>${okInput ? '✓' : '⚠️'} ${esc(t('caseTitle'))}</h1><p>${esc(msg)}</p>
@@ -851,13 +882,13 @@ function startClaim({ from, to, j, ticketCode }) {
   const s = store.get();
   const ticket = (ticketCode && s.tickets.find(x => x.code === ticketCode)) || core.ticketFor(s.tickets, j.depMs);
   const link = core.claimLink(s.profile, ticket, from, to, j);
-  window.open(link, '_blank', 'noopener');  /* in the click handler, so pop-up blockers allow it */
+  openVy(link);  /* in the click handler, so pop-up blockers allow it */
   const dlg = $('#dlg');
   const train = `${j.line} ${j.dep}`;
   dlg.innerHTML = `<form method="dialog">
       <h2>${esc(t('claimTitle'))}</h2>
-      <p>${esc(t('claimOpened'))}</p>
-      ${!isTouch() && s.bookmarkDone ? `<p>${esc(t('claimStepsBookmark'))}</p>` : `
+      <p>${esc(t(IAB() ? 'claimOpenedApp' : 'claimOpened'))}</p>
+      ${IAB() ? `<p>${esc(t('claimStepsApp'))}</p>` : !isTouch() && s.bookmarkDone ? `<p>${esc(t('claimStepsBookmark'))}</p>` : `
       <p>${esc(t('claimStepsManual'))}</p>
       <ol class="steps">
         <li>${esc(t('claimStep1'))} <span class="big">${esc(j.dep)}</span></li>
@@ -865,7 +896,7 @@ function startClaim({ from, to, j, ticketCode }) {
         <li>${esc(t('claimStep3'))}</li>
       </ol>
       ${isTouch() ? '' : `<p class="muted small">${esc(t('claimTip'))}</p>`}`}
-      <p><a href="${esc(link)}" target="_blank" rel="noopener">${esc(t('openAgain'))}</a></p>
+      <p><a href="${esc(link)}" target="_blank" rel="noopener" id="openAgain">${esc(t('openAgain'))}</a></p>
       <label>${esc(t('caseNo'))}<input name="case" inputmode="numeric" autocomplete="off"></label>
       <div class="actions">
         <button value="cancel">${esc(t('notSent'))}</button>
@@ -879,6 +910,8 @@ function startClaim({ from, to, j, ticketCode }) {
     if (n && input && !input.value) { input.value = n; input.classList.add('caught'); }
   };
   store.onExternalChange(() => { if (dlg.open) fillCase(); });
+  addEventListener('innstilt-case', () => { if (dlg.open) fillCase(); });
+  dlg.querySelector('#openAgain').addEventListener('click', e => { if (IAB()) { e.preventDefault(); openVy(link); } });
   fillCase();
   dlg.onclose = () => {
     if (dlg.returnValue !== 'sent') return;

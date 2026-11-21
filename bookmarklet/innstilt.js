@@ -81,6 +81,12 @@
       clearInterval(window.innstiltCaseWatch);
       window.innstiltCaseWatch = null;
       if (!m) return;
+      /* Inside the Innstilt app (its in-app browser): give the case number straight to the app. */
+      if (window.mobileApp && window.mobileApp.postMessage) {
+        window.mobileApp.postMessage({ detail: { innstilt: 'case', n: m[1], from: trip.from, to: trip.to, date: trip.date, time: trip.time } });
+        toast('Saksnummer ' + m[1] + ' er lagret i Innstilt. Lukk Vy-vinduet med X.', 'ok');
+        return;
+      }
       const t = toast('Saksnummer ' + m[1] + ' – ', 'case');
       const a = document.createElement('a');
       a.textContent = 'Lagre i Innstilt';
@@ -156,15 +162,16 @@
     return;
   }
 
-  toast('Tid satt til ' + hhmm + ', venter på avgangslisten …');
+  toast('Tid satt til ' + hhmm + ', ser etter togliste …');
   let radios = [];
-  for (let i = 0; i < 60; i++) {
+  for (let i = 0; i < 24; i++) {
     radios = [...document.querySelectorAll('input[name=departureList]')];
     if (radios.length) break;
     await sleep(250);
   }
   if (!radios.length) {
-    toast('Tiden er satt (' + hhmm + '), men ingen avgangsliste dukket opp. Velg toget selv.', 'err');
+    /* Vy's form often has no train list (it looks up the train itself); the time is all it needs. */
+    toast('Tid satt til ' + hhmm + '. Sjekk skjemaet og trykk «Send inn».', 'ok');
     return;
   }
   await sleep(300);
