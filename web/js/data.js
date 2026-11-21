@@ -100,3 +100,13 @@ export function loadStats() {
     .then(r => (r.ok ? r.json() : null)).catch(() => null);
   return statsPromise;
 }
+
+/** Only the trains that could be claimable, for all days at once (build_web_data.py claims.json), or null.
+    Much smaller than the day files; Trips uses it and falls back to the day files if it can't be loaded. */
+let claimsPromise = null;
+export function loadClaimsIndex() {
+  claimsPromise ??= fetch(`${DATA}/claims.json`, timed({ cache: 'no-cache' }))
+    .then(r => { if (!r.ok) throw new Error(`claims ${r.status}`); return r.json(); })
+    .catch(() => { claimsPromise = null; return null; });
+  return claimsPromise;
+}

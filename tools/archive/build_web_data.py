@@ -7,8 +7,9 @@ web/data/; later a nightly job runs the same script. Public timetable data only,
   .venv/bin/python tools/archive/build_web_data.py --since 2026-11-03 --until 2026-11-20
   .venv/bin/python tools/archive/build_web_data.py --prune-before 2026-08-22   (nightly job)
 
-Output: web/data/vyg/YYYY-MM-DD.json, index.json, and stats.json (per month and line: departures,
-cancelled, >30 min late; for "the most cancelled line of the month"). Day file format:
+Output: web/data/vyg/YYYY-MM-DD.json, index.json, stats.json (per month and line: departures, cancelled,
+>30 min late; for "the most cancelled line of the month") and claims.json (only the trains that could be
+claimable, for a fast Trips list). Day file format:
   {"date": "2026-11-12", "stops": {"<idx>": ["NSR:StopPlace:59872", "Oslo S"], ...},
    "journeys": [{"id": ..., "line": "R31", "dest": "Hakadal", "extra": false, "cancelled": false,
                  "calls": [[stopIdx, aimedArr "HH:MM"|null, aimedDep "HH:MM"|null,
@@ -147,6 +148,43 @@ def write_stats() -> None:
     print(f"stats: {len(months)} months")
 
 
+def _late(call: list) -> bool:
+    """More than 30 min late arriving at this stop (aimed 'HH:MM' vs recorded 'HH:MM:SS', wraps midnight)."""
+    if not call[1] or not call[3]:
+        return False
+    delay = (_min(call[3]) - _min(call[1])) % 1440
+    return 30 < delay < 720
+
+
+def write_claims_index() -> None:
+    """One small file for the app's Trips list: per day only the trains that could be claimable on some leg
+    (cancelled at any stop, or more than 30 min late arriving anywhere). Replacement buses are left out.
+    Stops share one numbering across days. The full day files are still used for "next train" and searches."""
+    stops: dict[str, int] = {}
+    names: list[list[str]] = []
+    days: dict[str, list] = {}
+    for f in sorted(OUT.glob("????-??-??.json")):
+        day = json.loads(f.read_text())
+        local = {int(k): v for k, v in day["stops"].items()}
+        keep = []
+        for j in day["journeys"]:
+            if j["extra"] or not (j["cancelled"] or any(c[4] for c in j["calls"]) or any(_late(c) for c in j["calls"])):
+                continue
+            calls = []
+            for c in j["calls"]:
+                sid, name = local[c[0]]
+                if sid not in stops:
+                    stops[sid] = len(names)
+                    names.append([sid, name])
+                calls.append([stops[sid], *c[1:]])
+            keep.append({**j, "calls": calls})
+        days[day["date"]] = keep
+    (OUT / "claims.json").write_text(json.dumps(
+        {"updated": dt.datetime.now(innstilt.TZ).isoformat(), "stops": {str(i): v for i, v in enumerate(names)},
+         "days": days}, ensure_ascii=False, separators=(",", ":")))
+    print(f"claims index: {sum(len(v) for v in days.values())} trains over {len(days)} days")
+
+
 def main() -> None:
     ap = argparse.ArgumentParser()
     today = dt.datetime.now(innstilt.TZ).date()
@@ -180,6 +218,7 @@ def main() -> None:
     (OUT / "index.json").write_text(json.dumps({"days": days, "updated": dt.datetime.now(innstilt.TZ).isoformat()}))
     print(f"index: {len(days)} days")
     write_stats()
+    write_claims_index()
 
 
 if __name__ == "__main__":

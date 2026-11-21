@@ -505,7 +505,7 @@ async function viewTrips() {
   wireInstall();
   wireOtherTrip();
   fillJab();
-  const index = await data.loadIndex();
+  const [index, slim] = await Promise.all([data.loadIndex(), data.loadClaimsIndex()]);
   const today = core.todayOslo();
   const oldest = core.addDays(today, -core.CLAIM_DEADLINE_DAYS);
   const days = (index?.days || []).filter(d => d >= oldest && d < today).sort().reverse();
@@ -513,6 +513,7 @@ async function viewTrips() {
   const done = new Set(s.claims.map(c => c.key));
   const pairs = p.routes.flatMap(r => [[r.a, r.b, r.timesOut], [r.b, r.a, r.timesBack]]);
   let shown = 0, urgent = 0, skipped = new Set();
+  const sections = [];  /* {sec, day, items}: days whose "next train" lines are filled in afterwards */
 
   /* Today comes live from Entur (real-time info only lasts until about an hour after a train arrives, so
      the last few hours); earlier days come from the nightly archive files. */
@@ -525,11 +526,16 @@ async function viewTrips() {
     if (isToday) {
       routeJourneys = (from, to) => liveForRoute(from, to, now - LIVE_LOOKBACK, now + HOUR)
         .catch(() => { liveFailed = true; return []; });
+    } else if (slim?.days?.[day]) {
+      /* fast path: only the possibly-claimable trains of the day */
+      const dayData = { date: day, stops: slim.stops, journeys: slim.days[day] };
+      routeJourneys = async (from, to) => core.journeysForRoute(dayData, from.id, to.id);
     } else {
       let dayData;
       try { dayData = await data.loadDay(day); } catch { failedDays += 1; continue; }
       routeJourneys = async (from, to) => core.journeysForRoute(dayData, from.id, to.id);
     }
+    const partial = !isToday && Boolean(slim?.days?.[day]);  /* no "next train" from the slim list */
     const items = [], seen = new Set();  /* two routes may share a leg */
     for (const [from, to, times] of pairs) {
       const js = await routeJourneys(from, to);
@@ -539,7 +545,7 @@ async function viewTrips() {
         if (done.has(key) || seen.has(key)) continue;
         seen.add(key);
         if (!core.ticketFor(s.tickets, j.depMs)) { skipped.add(day); continue; }
-        items.push({ from, to, j, next: j.cancelled ? core.nextTrain(js, j) : null });
+        items.push({ from, to, j, next: j.cancelled && !partial ? core.nextTrain(js, j) : null });
       }
     }
     if (!items.length || run !== tripsRun) continue;
@@ -551,6 +557,7 @@ async function viewTrips() {
     sec.innerHTML = `<h2>${esc(fmtDay(day))}${isToday ? ` <span class="pill live">${esc(t('live'))}</span>` : ''}</h2>` + items.map((it, i) => tripHtml(it, `${day}-${i}`)).join('');
     $('#trips').appendChild(sec);
     wireTrips(sec, items);
+    if (partial && items.some(it => it.j.cancelled)) sections.push({ sec, day, items });
   }
   if (run !== tripsRun) return;
   $('#progress').textContent = (skipped.size ? t('noTicketDay', { n: skipped.size }) + ' ' : '');
@@ -564,6 +571,40 @@ async function viewTrips() {
   }
   /* the list is newest first, so trips about to expire are at the bottom: say so at the top */
   if (urgent) $('#trips').insertAdjacentHTML('afterbegin', `<p class="notice urgent">⏳ ${esc(t('urgentTop', { n: urgent }))}</p>`);
+  fillNextTrains(sections, run);
+}
+
+/* For cancelled trips listed from the slim file: the "next train … N min later" line needs all trains of the
+   day, so that day's full file is loaded, but only once its section is scrolled into view. Days nobody
+   looks at are never downloaded. */
+function fillNextTrains(sections, run) {
+  if (!sections.length) return;
+  const byEl = new Map(sections.map(s => [s.sec, s]));
+  const io = new IntersectionObserver(entries => {
+    for (const e of entries) {
+      if (!e.isIntersecting) continue;
+      io.unobserve(e.target);
+      if (run === tripsRun) fillNextTrainsDay(byEl.get(e.target), run);
+      else io.disconnect();
+    }
+  }, { rootMargin: '400px 0px' });
+  sections.forEach(s => io.observe(s.sec));
+}
+
+async function fillNextTrainsDay({ sec, day, items }, run) {
+  let full;
+  try { full = await data.loadDay(day); } catch { return; }
+  if (run !== tripsRun || !sec.isConnected) return;
+  const done = new Set(store.get().claims.map(c => c.key));
+  const left = items.filter(it => !done.has(store.claimKey(it.from.id, it.to.id, it.j.depMs)));
+  for (const it of left) {
+    if (!it.j.cancelled) continue;
+    const js = core.journeysForRoute(full, it.from.id, it.to.id);
+    const same = js.find(x => x.depMs === it.j.depMs && x.line === it.j.line);
+    it.next = same ? core.nextTrain(js, same) : null;
+  }
+  sec.innerHTML = `<h2>${esc(fmtDay(day))}</h2>` + left.map((it, i) => tripHtml(it, `${day}-${i}`)).join('');
+  wireTrips(sec, left);
 }
 
 function statusHtml(j) {
