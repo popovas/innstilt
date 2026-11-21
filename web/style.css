@@ -291,3 +291,10 @@ dialog.helpdlg .intro h1 { font-size: 20px; }
 .g-rules { font-size: 13px; line-height: 1.35; }
 .g-rules li { margin: 5px 0; }
 .g-sign { vertical-align: -5px; }
+/* Sporarbeid: pause, "go now" and "?" in one row under the board */
+.g-row { display: flex; justify-content: space-between; align-items: center; gap: 10px; margin: 12px 0 0; }
+.g-row .g-pp { width: 48px; height: 40px; padding: 0; font-size: 18px; border-radius: 16px; background: var(--yellow); border: 2px solid var(--yellow); color: #0b0b0c; }
+.g-row .g-go { flex: 1; max-width: 220px; min-height: 48px; font-size: 18px; }
+.g-row .g-go:disabled { opacity: .45; }
+.g-row .helpbtn { position: static; flex: none; }
+.g-spacer { width: 24px; }

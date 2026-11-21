@@ -40,7 +40,7 @@ function shell() {
     .map(([r, label]) => `<a href="#/${r}" ${r === route ? 'aria-current="page"' : ''}>${esc(label)}</a>`).join('');
   $('#nav').hidden = !store.get().welcomed;
   const help = $('#helpBtn');
-  help.hidden = !store.get().welcomed || route === 'intro' || route === 'game';  /* the game has its own "?" */
+  help.hidden = !store.get().welcomed || route === 'intro' || route.startsWith('game');  /* the games have their own "?" */
   help.setAttribute('aria-label', t('help')); help.title = t('help');
   $('#foot').innerHTML = `<a href="#/about">${esc(t('about'))}</a> · <a href="${data.NATIVE ? 'https://innstilt.app/' : ''}personvern.html${getLang() === 'en' ? '#en' : ''}">${esc(t('privacy'))}</a> · ${esc(t('notVy'))} ${esc(t('dataFrom'))}`
     + (DONATE_URL ? ` · <a href="${esc(DONATE_URL)}" target="_blank" rel="noopener">${esc(t('coffee'))}</a>` : '');
@@ -67,7 +67,8 @@ function render() {
   if (route.startsWith('case?')) return viewCase(new URLSearchParams(route.slice(5)));
   if (!s.welcomed) return viewWelcome();
   if (!store.isReady()) return viewSetup(true);  /* first-run setup until profile + ticket are complete */
-  ({ trips: viewTrips, claims: viewClaims, settings: () => viewSetup(false), game: viewGame }[route] || viewTrips)();
+  if (route === 'game' || route.startsWith('game/')) return viewGame(route.split('/')[1]);
+  ({ trips: viewTrips, claims: viewClaims, settings: () => viewSetup(false) }[route] || viewTrips)();
 }
 
 /** Navigate: changing the hash renders via 'hashchange'; same hash -> render directly (never both). */
@@ -814,12 +815,16 @@ async function liveForRoute(from, to, startMs, endMs) {
   return calls.map(c => core.liveJourney(c, from.id, to.id)).filter(Boolean).sort((a, b) => a.depMs - b.depMs);
 }
 
-/* "Forsinket?" – hidden behind the logo in the header; loaded only when opened. */
-async function viewGame() {
+/* The hidden games behind the logo in the header: the game of the day, or one by name (#/game/<id>). */
+async function viewGame(id) {
+  const hash = location.hash;
   $('#main').innerHTML = '<div id="game"></div>';
-  const { start } = await import('./game.js');
-  if (location.hash !== '#/game' || !$('#game')) return;  /* the user moved on while it loaded */
-  stopGame = start($('#game'), { lang: getLang(), back: () => go('trips') });
+  const games = await import('./games.js');
+  const which = id in games.GAMES ? id : games.gameOfDay();
+  const { start } = await games.GAMES[which]();
+  if (location.hash !== hash || !$('#game')) return;  /* the user moved on while it loaded */
+  const other = games.nextGame(which);
+  stopGame = start($('#game'), { lang: getLang(), back: () => go('trips'), other: other !== which ? () => go(`game/${other}`) : null });
 }
 
 async function viewTrips() {
