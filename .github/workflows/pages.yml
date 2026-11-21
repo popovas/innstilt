@@ -1,0 +1,71 @@
+# Builds the train data for the web app from Entur's public archive and publishes web/ to GitHub Pages.
+# Public timetable data only - no personal data is involved anywhere in this workflow.
+name: Publish web app
+
+on:
+  schedule:
+    - cron: "15 5 * * *"   # every day 05:15 UTC (06:15/07:15 in Oslo), after Entur publishes yesterday
+  push:
+    branches: [main]
+    paths: ["web/**", "tools/archive/**", "cli/innstilt.py", ".github/workflows/pages.yml"]
+  workflow_dispatch:       # "Run workflow" button in the Actions tab
+
+permissions:
+  contents: read           # nothing here can change the repository
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120   # the very first run exports up to 90 days from Entur's archive
+    env:
+      INNSTILT_HOME: ${{ github.workspace }}/.innstilt   # archive download cache (public data)
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install
+        run: |
+          pip install -e cli
+          python -m playwright install --with-deps chromium
+
+      - name: Restore train data and archive cache from earlier runs
+        uses: actions/cache@v4
+        with:
+          path: |
+            web/data
+            .innstilt/cache
+          key: train-data-${{ github.run_id }}
+          restore-keys: train-data-
+
+      - name: Build train data (last 90 days, only new days)
+        run: |
+          SINCE=$(date -u -d "90 days ago" +%F)
+          python tools/archive/build_web_data.py --since "$SINCE" --prune-before "$SINCE"
+          find .innstilt/cache -name '*.csv.gz' ! -newermt "$SINCE" -delete 2>/dev/null || true
+          du -sh web/data
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: web
+
+  deploy:
+    needs: build
+    # GitHub Pages on the free plan only works for public repositories: skip quietly while private.
+    if: ${{ !github.event.repository.private }}
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write         # publish to GitHub Pages
+      id-token: write      # required by deploy-pages to verify the deployment
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

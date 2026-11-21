@@ -5,6 +5,7 @@ web/data/; later a nightly job runs the same script. Public timetable data only,
 
   .venv/bin/python tools/archive/build_web_data.py                 # last 90 days that are available
   .venv/bin/python tools/archive/build_web_data.py --since 2026-11-03 --until 2026-11-20
+  .venv/bin/python tools/archive/build_web_data.py --prune-before 2026-08-22   (nightly job)
 
 Output: web/data/vyg/YYYY-MM-DD.json and web/data/vyg/index.json. Day file format:
   {"date": "2026-11-12", "stops": {"<idx>": ["NSR:StopPlace:59872", "Oslo S"], ...},
@@ -107,6 +108,7 @@ def main() -> None:
     ap.add_argument("--since", default=str(today - dt.timedelta(days=90)))
     ap.add_argument("--until", default=str(today - dt.timedelta(days=1)))
     ap.add_argument("--force", action="store_true", help="rebuild days that already exist")
+    ap.add_argument("--prune-before", help="delete day files older than this date (YYYY-MM-DD)")
     args = ap.parse_args()
     OUT.mkdir(parents=True, exist_ok=True)
     day, until = dt.date.fromisoformat(args.since), dt.date.fromisoformat(args.until)
@@ -124,6 +126,11 @@ def main() -> None:
             target.write_text(json.dumps(data, ensure_ascii=False, separators=(",", ":")))
             print(f"{day}: {len(data['journeys'])} journeys, {target.stat().st_size // 1024} KB")
         day += dt.timedelta(days=1)
+    if args.prune_before:
+        for old in OUT.glob("????-??-??.json"):
+            if old.stem < args.prune_before:
+                old.unlink()
+                print(f"{old.stem}: pruned (older than {args.prune_before})")
     days = sorted(p.stem for p in OUT.glob("????-??-??.json"))
     (OUT / "index.json").write_text(json.dumps({"days": days, "updated": dt.datetime.now(innstilt.TZ).isoformat()}))
     print(f"index: {len(days)} days")
