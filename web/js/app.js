@@ -814,7 +814,7 @@ async function fillCounter() {
   if (!total || total.kr < 1) return;
   const fmt = n => n.toLocaleString(getLang() === 'no' ? 'nb-NO' : 'en-GB');
   document.querySelectorAll('[data-counter]').forEach(el => {
-    el.innerHTML = `💸 ${esc(t('counter', { kr: fmt(total.kr), n: fmt(total.paid) }))}<small>${esc(t('counterNote'))}</small>`;
+    el.innerHTML = `💸 ${esc(t('counter', { kr: fmt(total.kr) }))}<small>${esc(t('counterNote', { n: fmt(total.paid) }))}</small>`;
     el.hidden = false;
   });
 }
