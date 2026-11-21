@@ -14,6 +14,8 @@ const MAX_LIVES = 5, STREAK = 10;  /* extra train sets: the spare pickup, or 10 
 const TREES = [3, 11].flatMap(y => [4, 5, 6, 7, 8, 9, 10].map(x => ({ x, y })));   /* level 4: two rows of trees */
 const BEST_KEY = 'innstilt.game.best';
 const DIRS = { up: [0, -1], down: [0, 1], left: [-1, 0], right: [1, 0] };
+const INWARD = { left: 'right', right: 'left', top: 'down', bottom: 'up' };   /* direction when coming out of a tunnel side */
+const PAIRS = [['left', 'right'], ['top', 'bottom'], ['left', 'top'], ['top', 'right'], ['right', 'bottom'], ['bottom', 'left']];
 const OPPOSITE = { up: 'down', down: 'up', left: 'right', right: 'left' };
 const KEYS = { ArrowUp: 'up', ArrowDown: 'down', ArrowLeft: 'left', ArrowRight: 'right', w: 'up', s: 'down', a: 'left', d: 'right' };
 const C = { bg1: '#0e3a30', bg2: '#113f35', mint: '#f2faf5', mint2: '#cfeadb', stripe: '#2fa36b', ink: '#0b0b0c', win: '#0e3a30',
@@ -27,7 +29,7 @@ const TXT = {
     ahead: 'Foran rute! 😎', spare: 'Ekstra togsett! 🚆', streak: '10 på rad uten uhell – ekstra togsett!',
     green: 'Grønt signal! −3 min', redSig: 'Venter på signal… +3 min', lvl: 'Nivå {n}',
     levels: { 2: 'Nivå 2: løv og is!', 3: 'Nivå 3: tunneler!', 4: 'Nivå 4: trær over sporet!', 5: 'Nivå 5: elg!' },
-    tunnelX: 'Tunnel åpen ⟷', tunnelY: 'Tunnel åpen ↕', tree: 'Trær over sporet!', moose: 'Elg på sporet!',
+    tunnel: 'Tunnel: {a} ⟷ {b}', sides: { left: 'venstre', right: 'høyre', top: 'topp', bottom: 'bunn' }, tree: 'Trær over sporet!', moose: 'Elg på sporet!',
     paused: 'Pause', leaf: 'Løv på skinnene!', ice: 'Is i kontaktledningen!', self: 'Materiellmangel!', edge: 'Signalfeil!',
     lateTitle: '31 minutter forsinket!', lateText: 'Gratulerer – du har krav på erstatning.',
     livesTitle: 'Toget er innstilt', livesText: 'Ingen flere togsett i dag.',
@@ -38,7 +40,7 @@ const TXT = {
       '⏱ Forsinkelsen tikker hele tiden: +1 minutt hvert 3. sekund (streken viser neste minutt). Ved 31 minutter er spillet over.',
       '🟢 Grønt signal tar 3 minutter av forsinkelsen – under null er du foran rute. 🔴 Rødt signal legger til 3 – kjør rundt det.',
       '🚆 Ekstra togsett: plukk opp reservetoget med + når det dukker opp, eller ta 10 passasjerer på rad uten uhell (opptil 5 togsett).',
-      '📈 Nytt nivå hver 4. passasjer. 2: løv og is 🍂❄️ dukker opp noen sekunder. 3: tunneler – to motsatte kanter åpnes en stund, og du kjører ut på den ene siden og inn på den andre. 4: trær over sporet 🌲. 5: elg som rusler over brettet.',
+      '📈 Nytt nivå hver 4. passasjer. 2: løv og is 🍂❄️ dukker opp noen sekunder. 3: tunneler – to kanter (gule og svarte) åpnes en stund: kjør ut på den ene og kom inn fra den andre, også fra siden. 4: trær over sporet 🌲. 5: elg som rusler over brettet.',
       '💥 Kjører du inn i løv, is, trær, elg, en lukket kant eller dine egne vogner, mister du et togsett (3 i alt), og farten starter rolig igjen.',
       '🕹 Styr med pilene, eller sveip på brettet. ⏸ nede til venstre tar pause.'],
   },
@@ -48,7 +50,7 @@ const TXT = {
     ahead: 'Ahead of schedule! 😎', spare: 'Spare train set! 🚆', streak: '10 in a row without a mishap – extra train set!',
     green: 'Green signal! −3 min', redSig: 'Waiting for a signal… +3 min', lvl: 'Level {n}',
     levels: { 2: 'Level 2: leaves and ice!', 3: 'Level 3: tunnels!', 4: 'Level 4: trees on the line!', 5: 'Level 5: moose!' },
-    tunnelX: 'Tunnel open ⟷', tunnelY: 'Tunnel open ↕', tree: 'Trees on the line!', moose: 'Moose on the line!',
+    tunnel: 'Tunnel: {a} ⟷ {b}', sides: { left: 'left', right: 'right', top: 'top', bottom: 'bottom' }, tree: 'Trees on the line!', moose: 'Moose on the line!',
     paused: 'Paused', leaf: 'Leaves on the line!', ice: 'Ice on the overhead wire!', self: 'Rolling stock shortage!', edge: 'Signal failure!',
     lateTitle: '31 minutes late!', lateText: 'Congratulations – you are entitled to compensation.',
     livesTitle: 'Train cancelled', livesText: 'No more train sets today.',
@@ -59,7 +61,7 @@ const TXT = {
       '⏱ The delay keeps ticking: +1 minute every 3 seconds (the bar shows the next minute). At 31 minutes the game is over.',
       '🟢 A green signal takes 3 minutes off the delay – below zero you are ahead of schedule. 🔴 A red signal adds 3 – drive around it.',
       '🚆 Extra train sets: pick up the spare train with + when it shows up, or take 10 passengers in a row without a mishap (up to 5 train sets).',
-      '📈 A new level every 4 passengers. 2: leaves and ice 🍂❄️ show up for a few seconds. 3: tunnels – two opposite edges open for a while, and you drive out one side and in the other. 4: trees on the line 🌲. 5: a moose wandering across.',
+      '📈 A new level every 4 passengers. 2: leaves and ice 🍂❄️ show up for a few seconds. 3: tunnels – two edges (yellow and black) open for a while: drive out of one and come in from the other, sometimes from the side. 4: trees on the line 🌲. 5: a moose wandering across.',
       '💥 Hit leaves, ice, trees, a moose, a closed edge or your own wagons and you lose a train set (3 in all), and the speed starts calm again.',
       '🕹 Steer with the arrows, or swipe on the board. ⏸ bottom left pauses.'],
   },
@@ -157,9 +159,16 @@ export function start(root, { lang = 'no', back = () => {}, testScore = 0 } = {}
     if (st.queue.length) st.dir = st.queue.shift();
     const [dx, dy] = DIRS[st.dir], h = st.snake[0];
     let x = h.x + dx, y = h.y + dy;
+    const out = x < 0 ? 'left' : x >= N ? 'right' : y < 0 ? 'top' : y >= N ? 'bottom' : null;
     const tn = st.tunnel;
-    if (tn && tn.axis === 'x' && (x < 0 || x >= N)) x = (x + N) % N;       /* through the tunnel to the other side */
-    if (tn && tn.axis === 'y' && (y < 0 || y >= N)) y = (y + N) % N;
+    if (out && tn && tn.sides.includes(out)) {
+      /* through the tunnel: come out of the other side at the same row/column, heading into the board */
+      const k = out === 'left' || out === 'right' ? y : x;
+      const to = tn.sides[0] === out ? tn.sides[1] : tn.sides[0];
+      x = to === 'left' ? 0 : to === 'right' ? N - 1 : k;
+      y = to === 'top' ? 0 : to === 'bottom' ? N - 1 : k;
+      st.dir = INWARD[to]; st.queue = [];
+    }
     if (x < 0 || y < 0 || x >= N || y >= N) return crash('edge');
     if (on(st.trees, x, y)) return crash('tree');
     if (st.moose && st.moose.x === x && st.moose.y === y) return crash('moose');
@@ -276,8 +285,10 @@ export function start(root, { lang = 'no', back = () => {}, testScore = 0 } = {}
         st.tunnel.age += dt;
         if (st.tunnel.age >= st.tunnel.life) { st.tunnel = null; st.nextTunnel = 5000 + Math.random() * 6000; }
       } else if ((st.nextTunnel -= dt) <= 0) {
-        st.tunnel = { axis: Math.random() < 0.5 ? 'x' : 'y', age: 0, life: 8000 + Math.random() * 5000 };
-        toast(st.tunnel.axis === 'x' ? T.tunnelX : T.tunnelY);
+        /* a third opposite sides, the rest adjacent sides (more confusing) */
+        const sides = PAIRS[Math.random() < 1 / 3 ? Math.floor(Math.random() * 2) : 2 + Math.floor(Math.random() * 4)];
+        st.tunnel = { sides, age: 0, life: 8000 + Math.random() * 5000 };
+        toast(fill(T.tunnel, { a: T.sides[sides[0]], b: T.sides[sides[1]] }));
       }
     }
     if (st.spare) {
@@ -442,7 +453,12 @@ export function start(root, { lang = 'no', back = () => {}, testScore = 0 } = {}
       const long = Math.max(bw, bh);
       for (let i = 0; i < long; i += c * 0.5) bw > bh ? ctx.fillRect(x + i, y, c * 0.25, bh) : ctx.fillRect(x, y + i, bw, c * 0.25);
     };
-    if (tn.axis === 'x') { band(0, 0, w, W); band(W - w, 0, w, W); } else { band(0, 0, W, w); band(0, W - w, W, w); }
+    for (const side of tn.sides) {
+      if (side === 'left') band(0, 0, w, W);
+      else if (side === 'right') band(W - w, 0, w, W);
+      else if (side === 'top') band(0, 0, W, w);
+      else band(0, W - w, W, w);
+    }
   }
 
   function tree(x, y, c) {
