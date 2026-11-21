@@ -183,3 +183,6 @@ details.qa summary::-webkit-details-marker { display: none; }
 details.qa summary::before { content: "+"; color: var(--stripe); font-weight: 800; width: 12px; flex: none; }
 details.qa[open] summary::before { content: "–"; }
 details.qa p { margin: 0 0 12px 20px; color: var(--muted); }
+.trip .tk { color: var(--muted); }
+.tk-pick { display: flex; align-items: center; gap: 4px; margin: 4px 0 0; font-weight: 400; font-size: 13px; }
+.tk-pick select { width: auto; margin: 0; padding: 2px 6px; font-size: 13px; border-radius: 6px; }

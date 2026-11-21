@@ -663,9 +663,16 @@ function statusHtml(j) {
 function tripHtml({ from, to, j, next }, id, action = null) {
   const nx = next ? `<small>${esc(t('nextTrain', {
     line: next.line, time: next.dep, min: core.effectiveDelay(j, next) }))}</small>` : '';
+  /* With several tickets, show which one the claim uses; if more than one was valid then, let the user pick. */
+  const all = store.get().tickets;
+  const valid = action === null && all.length > 1 ? core.ticketsFor(all, j.depMs) : [];
+  const tk = valid.length > 1
+    ? `<label class="tk-pick">🎫 <select data-ticket="${id}" aria-label="${esc(t('whichTicket'))}">${valid.map(v =>
+        `<option value="${esc(v.code)}">${esc(v.code)}</option>`).join('')}</select></label>`
+    : valid.length ? `<small class="tk">🎫 ${esc(valid[0].code)}</small>` : '';
   return `<article class="trip">
     <div class="when"><strong>${esc(j.dep)}</strong><span>${esc(j.line)}</span></div>
-    <div class="what">${esc(from.name.replace(/ stasjon$/, ''))} → ${esc(to.name.replace(/ stasjon$/, ''))} ${statusHtml(j)}${nx}</div>
+    <div class="what">${esc(from.name.replace(/ stasjon$/, ''))} → ${esc(to.name.replace(/ stasjon$/, ''))} ${statusHtml(j)}${nx}${tk}</div>
     ${action === null && core.daysLeft(j.date) <= core.DEADLINE_WARN_DAYS ? `<small class="deadline">⏳ ${esc(
       core.daysLeft(j.date) <= 0 ? t('lastDay') : t('daysLeft', { n: core.daysLeft(j.date) }))}</small>` : ''}
     ${action === null ? `<div class="acts"><button class="primary" data-claim="${id}">${esc(t('claimBtn'))}</button>
@@ -677,7 +684,10 @@ function tripHtml({ from, to, j, next }, id, action = null) {
 /** Wires the claim and "already claimed" buttons of rendered trips; `items` are indexed by the id's last part. */
 function wireTrips(root, items) {
   const pick = b => items[Number((b.dataset.claim ?? b.dataset.done).split('-').pop())];
-  root.querySelectorAll('[data-claim]').forEach(b => b.addEventListener('click', () => startClaim(pick(b))));
+  root.querySelectorAll('[data-claim]').forEach(b => b.addEventListener('click', () => {
+    const chosen = b.closest('.trip').querySelector('select[data-ticket]')?.value;  /* several valid tickets */
+    startClaim({ ...pick(b), ticketCode: chosen });
+  }));
   root.querySelectorAll('[data-done]').forEach(b => b.addEventListener('click', () => {
     const { from, to, j } = pick(b);
     recordClaim(from, to, j, '', true);  /* claimed before, outside Innstilt */
@@ -794,9 +804,9 @@ async function findOther(q) {
 
 /* ------------------------------------------------------------------ claim dialog */
 
-function startClaim({ from, to, j }) {
+function startClaim({ from, to, j, ticketCode }) {
   const s = store.get();
-  const ticket = core.ticketFor(s.tickets, j.depMs);
+  const ticket = (ticketCode && s.tickets.find(x => x.code === ticketCode)) || core.ticketFor(s.tickets, j.depMs);
   const link = core.claimLink(s.profile, ticket, from, to, j);
   window.open(link, '_blank', 'noopener');  /* in the click handler, so pop-up blockers allow it */
   const dlg = $('#dlg');

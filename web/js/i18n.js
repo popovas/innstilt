@@ -44,7 +44,7 @@ const STRINGS = {
     errEmail: 'Sjekk e-postadressen.', errName: 'Skriv inn navnet ditt.', errStation: 'Velg en stasjon fra listen.',
     errTimes: 'Skriv tider som 07:15, 16:54.', errDates: '«Gyldig til» må være etter «Gyldig fra».',
     /* tickets */
-    editTicket: 'Endre', saveTicket: 'Lagre billett', cancel: 'Avbryt', ticketSaved: 'Billetten er lagret.',
+    whichTicket: 'Hvilken billett reiste du med?', editTicket: 'Endre', saveTicket: 'Lagre billett', cancel: 'Avbryt', ticketSaved: 'Billetten er lagret.',
     errTicketDates: 'Fyll inn når billetten gjelder fra og til – det står på billetten i Vy-appen.',
     removeTicketConfirm: 'Fjerne denne billetten?',
     tickets: 'Billetter', addTicket: 'Legg til billett', remove: 'Fjern', validNow: 'gyldig nå',
@@ -152,7 +152,7 @@ const STRINGS = {
     errRef: 'The code looks like XXX-XXX-XXX', errAccount: 'The account number needs 11 digits – check for typos.',
     errEmail: 'Check the e-mail address.', errName: 'Enter your name.', errStation: 'Pick a station from the list.',
     errTimes: 'Write times like 07:15, 16:54.', errDates: '"Valid to" must be after "Valid from".',
-    editTicket: 'Edit', saveTicket: 'Save ticket', cancel: 'Cancel', ticketSaved: 'Ticket saved.',
+    whichTicket: 'Which ticket did you travel on?', editTicket: 'Edit', saveTicket: 'Save ticket', cancel: 'Cancel', ticketSaved: 'Ticket saved.',
     errTicketDates: 'Fill in when the ticket is valid from and to – it\'s on the ticket in the Vy app.',
     removeTicketConfirm: 'Remove this ticket?',
     tickets: 'Tickets', addTicket: 'Add a ticket', remove: 'Remove', validNow: 'valid now',

@@ -140,12 +140,16 @@ const minutes = hhmm => Number(hhmm.slice(0, 2)) * 60 + Number(hhmm.slice(3, 5))
 
 /* ---------- tickets ---------- */
 
-/** The ticket valid at `ms` (latest start wins). Tickets without dates count as always valid. */
-export function ticketFor(tickets, ms) {
+/** All tickets valid at `ms`, latest start first. Tickets without dates count as always valid. */
+export function ticketsFor(tickets, ms) {
   const ok = (tickets || []).filter(t =>
     (!t.validFrom || t.validFrom <= ms) && (!t.validTo || ms < t.validTo));
-  ok.sort((a, b) => (b.validFrom || 0) - (a.validFrom || 0));
-  return ok[0] || null;
+  return ok.sort((a, b) => (b.validFrom || 0) - (a.validFrom || 0));
+}
+
+/** The ticket valid at `ms` (latest start wins), or null. */
+export function ticketFor(tickets, ms) {
+  return ticketsFor(tickets, ms)[0] || null;
 }
 
 /** {kind, date} for an unobtrusive notice, or null. kinds: none | undated | expired | expiring */
