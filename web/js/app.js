@@ -660,8 +660,17 @@ function pickedStation(input) {
 }
 
 function settingsExtrasHtml() {
-  return `
+  const s = store.get();
+  const noTimes = s.profile.routes.some(r => !r.timesOut.length || !r.timesBack.length);
+  return `${TW() ? `
     <section class="card">
+      <h2>🔔 ${esc(t('notifyTitle'))}</h2>
+      <label class="check"><input type="checkbox" id="notifyOn" ${s.notifyOn ? 'checked' : ''}> ${esc(t('notifyOn'))}</label>
+      <p class="help">${esc(t('notifyHelp'))}</p>
+      ${noTimes ? `<p class="notice">${esc(t('notifyNoTimes'))}</p>` : ''}
+      <button type="button" class="link" id="notifyTest">${esc(t('notifyTest'))}</button>
+    </section>` : ''}
+    ${data.NATIVE ? '' : `<section class="card">
       <h2>${esc(t('bookmarkTitle'))}</h2>
       <p>${esc(t('bookmarkBody'))}</p>
       <p class="center"><a class="bookmarklet" href="${esc(BOOKMARKLET)}" id="bm"><img src="icons/ghost-32.png" width="22" height="22" alt=""><span class="vh">👻 </span>Innstilt: fyll ut</a></p>
@@ -679,9 +688,23 @@ function settingsExtrasHtml() {
 }
 
 function wireSettingsExtras() {
-  $('#bm').addEventListener('click', e => { e.preventDefault(); alert(t('bookmarkClick')); });
-  $('#bmHave').addEventListener('change', e => store.update(st => { st.bookmarkDone = e.target.checked; }));
+  $('#bm')?.addEventListener('click', e => { e.preventDefault(); alert(t('bookmarkClick')); });
+  $('#bmHave')?.addEventListener('change', e => store.update(st => { st.bookmarkDone = e.target.checked; }));
   $('#share')?.addEventListener('change', e => setShare(e.target.checked));
+  $('#notifyOn')?.addEventListener('change', async e => {
+    let on = e.target.checked;
+    if (on) {
+      const r = await TW().requestNotifications().catch(() => ({ granted: false }));
+      if (!r.granted) { on = false; e.target.checked = false; alert(t('notifyDenied')); }
+    }
+    store.update(st => { st.notifyOn = on; });
+    syncTrainWatch();
+  });
+  $('#notifyTest')?.addEventListener('click', async () => {
+    const r = await TW().requestNotifications().catch(() => ({ granted: false }));
+    if (!r.granted) { alert(t('notifyDenied')); return; }
+    TW().test({ title: t('notifyTestTitle'), text: t('notifyTestText') });
+  });
   $('#export').onclick = () => {
     const a = document.createElement('a');
     a.href = URL.createObjectURL(new Blob([store.exportJson()], { type: 'application/json' }));
