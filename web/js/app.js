@@ -6,7 +6,7 @@ import { BOOKMARKLET } from './bookmarklet-href.js';
 import { VERSION, ABOUT, ROADMAP, contactAddress } from './about.js';
 import * as stats from './stats.js';
 
-const DONATE_URL = '';  /* e.g. a Vipps or Buy Me a Coffee link; the footer button stays hidden while empty */
+const DONATE_URL = 'https://ko-fi.com/innstilt_team';  /* tips via Ko-fi (no phone number exposed, no requests); empty = hidden */
 const $ = sel => document.querySelector(sel);
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
 const isTouch = () => matchMedia('(pointer: coarse)').matches;
