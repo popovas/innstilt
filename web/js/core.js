@@ -14,6 +14,12 @@ export function validRef(text) {
   return /^[A-Z0-9]{3}-[A-Z0-9]{3}-[A-Z0-9]{3}$/.test(c) ? c : null;
 }
 
+/** As-you-type look of a reference code: capitals, a dash after every 3 characters, at most 9 characters. */
+export function formatRef(text) {
+  const c = (text || '').toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 9);
+  return c.match(/.{1,3}/g)?.join('-') ?? '';
+}
+
 /** Norwegian account number: 11 digits with a MOD11 check digit. Returns digits or null. */
 export function validAccount(text) {
   const d = (text || '').replace(/\D/g, '');

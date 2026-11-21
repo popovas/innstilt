@@ -151,7 +151,7 @@ function viewSetup(first) {
       <h2>${esc(t('secTicket'))}</h2>
       <p class="help">${esc(t('ticketHelp'))}</p>
       ${s.tickets.length > 1 ? ticketListHtml() : ''}
-      <label>${esc(t('refCode'))}<input name="code" value="${esc(tk.code)}" placeholder="${esc(t('refCodePh'))}" autocapitalize="characters" autocomplete="off" spellcheck="false"></label>
+      <label>${esc(t('refCode'))}<input name="code" value="${esc(tk.code)}" placeholder="${esc(t('refCodePh'))}" autocapitalize="characters" autocomplete="off" spellcheck="false" maxlength="11"></label>
       <div class="row">
         ${dateFields('validFrom', tk.validFrom)}
         ${dateFields('validTo', tk.validTo)}
@@ -175,6 +175,7 @@ function viewSetup(first) {
     </form>
     ${first ? '' : settingsExtrasHtml()}`;
   wireStations($('#setup'));
+  wireRefFormat($('#setup').code);
   wireRoutes();
   $('#newTicket')?.addEventListener('click', () => {
     const f = $('#setup');
@@ -190,6 +191,20 @@ function viewSetup(first) {
   $('#setup').addEventListener('submit', e => { e.preventDefault(); saveSetup(first); });
   wireImport();
   if (!first) wireSettingsExtras();
+}
+
+/* Formats the reference code while typing (XXX-XXX-XXX); keeps the cursor after the same character. */
+function wireRefFormat(input) {
+  input.addEventListener('input', () => {
+    const pos = input.selectionStart ?? input.value.length;
+    const before = input.value.slice(0, pos).replace(/[^A-Za-z0-9]/g, '').length;  /* characters left of the cursor */
+    const v = core.formatRef(input.value);
+    if (v === input.value) return;
+    input.value = v;
+    let p = 0, seen = 0;
+    while (p < v.length && seen < before) { if (v[p] !== '-') seen += 1; p += 1; }
+    input.setSelectionRange(p, p);
+  });
 }
 
 function ticketListHtml() {
