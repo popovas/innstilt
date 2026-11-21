@@ -3,7 +3,7 @@ import * as store from './store.js';
 import * as data from './data.js';
 import { t, getLang, setLang, fmtDate, fmtDay } from './i18n.js';
 import { BOOKMARKLET } from './bookmarklet-href.js';
-import { VERSION, ABOUT, ROADMAP, contactAddress } from './about.js';
+import { VERSION, ABOUT, ROADMAP, FAQ, contactAddress } from './about.js';
 import * as stats from './stats.js';
 
 const DONATE_URL = 'https://ko-fi.com/innstilt_team';  /* tips via Ko-fi (no phone number exposed, no requests); empty = hidden */
@@ -111,6 +111,11 @@ async function viewAbout() {
       <p class="lead"><strong>${esc(paras[0])}</strong></p>
       ${paras.slice(1).map(x => `<p>${esc(x)}</p>`).join('')}
     </section>
+    <details class="card fold faq">
+      <summary>${esc(t('faqTitle'))}</summary>
+      <div class="faq-body">${(FAQ[getLang()] || FAQ.no).map(([q, a]) =>
+        `<details class="qa"><summary>${esc(q)}</summary><p>${esc(a)}</p></details>`).join('')}</div>
+    </details>
     <section class="card about">
       <h2>🚧 ${esc(roadmap[0])}</h2>
       <ul class="roadmap">${roadmap.slice(1).map(x => `<li>${esc(x)}</li>`).join('')}</ul>

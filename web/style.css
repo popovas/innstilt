@@ -63,10 +63,10 @@ button.link.danger-link { color: var(--red); display: block; margin-top: 4px; }
 
 /* "Another trip": collapsed panel at the top of Trips */
 details.fold { padding: 0; }
-details.fold summary { list-style: none; cursor: pointer; padding: 14px 16px; font-weight: 700; display: flex; align-items: center; gap: 10px; }
-details.fold summary::-webkit-details-marker { display: none; }
-details.fold summary::before { content: "›"; font-size: 22px; line-height: 1; color: var(--stripe); transition: transform .15s; }
-details.fold[open] summary::before { transform: rotate(90deg); }
+details.fold > summary { list-style: none; cursor: pointer; padding: 14px 16px; font-weight: 700; display: flex; align-items: center; gap: 10px; }
+details.fold > summary::-webkit-details-marker { display: none; }
+details.fold > summary::before { content: "›"; font-size: 22px; line-height: 1; color: var(--stripe); transition: transform .15s; }
+details.fold[open] > summary::before { transform: rotate(90deg); }
 details.fold form, details.fold #otherResult { padding: 0 16px; }
 details.fold #otherResult { padding-bottom: 8px; }
 details.fold #otherResult:empty { display: none; }
@@ -151,8 +151,8 @@ input::placeholder { color: #8aa79b; opacity: 1; }
 .podium li { display: flex; gap: 8px; align-items: baseline; padding: 2px 0; }
 .podium .muted { flex: 1; font-size: 13px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .podium .pct { font-weight: 800; }
-details.jabfold summary { font-weight: 400; }
-details.jabfold summary::before { color: var(--yellow); }
+details.jabfold > summary { font-weight: 400; }
+details.jabfold > summary::before { color: var(--yellow); }
 details.jabfold .pct { font-weight: 800; }
 details.jabfold .jab-body { padding: 0 16px 12px; }
 .trip .deadline { grid-column: 1 / -1; order: 3; margin: -4px 0 0; color: var(--red); font-weight: 700; }
@@ -172,3 +172,10 @@ a.support-btn { display: inline-flex; align-items: center; gap: 8px; padding: 9p
   box-shadow: 0 2px 6px rgba(0,0,0,.15); }
 a.support-btn img { border-radius: 6px; }
 a.support-btn:hover, a.support-btn:focus { outline: 3px solid var(--yellow); outline-offset: 1px; }
+details.faq .faq-body { padding: 0 16px 10px; }
+details.qa { border-top: 1px solid var(--mint-2); }
+details.qa summary { cursor: pointer; padding: 10px 0; font-weight: 600; list-style: none; display: flex; gap: 8px; }
+details.qa summary::-webkit-details-marker { display: none; }
+details.qa summary::before { content: "+"; color: var(--stripe); font-weight: 800; width: 12px; flex: none; }
+details.qa[open] summary::before { content: "–"; }
+details.qa p { margin: 0 0 12px 20px; color: var(--muted); }
