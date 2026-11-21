@@ -56,3 +56,57 @@ export function isReady() {
   const p = state.profile;
   return Boolean(p.name && p.email && p.account && p.routes.length && state.tickets.length);
 }
+
+/* ---------- import (a file from "Download my data", possibly from another device) ----------
+   The file is untrusted: every field is type-checked and trimmed, unknown fields are dropped.
+   Profile, tickets and regular trips are replaced by the file's; claims are merged (same trip = kept once).
+   Settings that belong to this device (sharing id, bookmark, welcome) are not imported. */
+
+const STATION = /^NSR:StopPlace:\d+$/;
+const REF = /^[A-Z0-9]{3}-[A-Z0-9]{3}-[A-Z0-9]{3}$/;
+const str = (x, max = 200) => (typeof x === 'string' ? x.trim().slice(0, max) : '');
+const num = x => (typeof x === 'number' && Number.isFinite(x) ? x : null);
+const list = x => (Array.isArray(x) ? x : []);
+const station = x => (x && STATION.test(x.id) ? { id: x.id, name: str(x.name, 100) || x.id } : null);
+const hhmmList = x => list(x).filter(v => typeof v === 'string' && /^\d\d:\d\d$/.test(v)).slice(0, 24);
+
+function cleanClaim(c) {
+  if (!c || !STATION.test(c.fromId) || !STATION.test(c.toId) || num(c.depMs) === null
+      || !/^\d{4}-\d\d-\d\d$/.test(c.date) || !/^\d\d:\d\d$/.test(c.dep)) return null;
+  const status = ['pending', 'paid', 'rejected'].includes(c.status) ? c.status : 'pending';
+  const amount = num(c.amount);
+  return {
+    key: claimKey(c.fromId, c.toId, c.depMs), fromId: c.fromId, toId: c.toId,
+    fromName: str(c.fromName, 100) || c.fromId, toName: str(c.toName, 100) || c.toId,
+    date: c.date, dep: c.dep, line: str(c.line, 12), depMs: c.depMs,
+    case: str(String(c.case ?? ''), 20).replace(/\D/g, ''), status,
+    amount: status === 'paid' && amount !== null && amount >= 0 && amount < 100000 ? amount : null,
+    sentAt: num(c.sentAt) || Date.now(), ...(c.earlier === true ? { earlier: true } : {}),
+  };
+}
+
+/** Returns {claims: new claims added, tickets, routes}; throws Error('bad') for a file that isn't ours. */
+export function importJson(text) {
+  let d;
+  try { d = JSON.parse(text); } catch { throw new Error('bad'); }
+  if (!d || typeof d !== 'object' || !d.profile || typeof d.profile !== 'object' || !Array.isArray(d.claims)) {
+    throw new Error('bad');
+  }
+  const src = migrate({ ...structuredClone(EMPTY), profile: { ...d.profile } });  /* old home/work files too */
+  const p = src.profile;
+  const routes = list(p.routes).map(r => ({
+    a: station(r?.a), b: station(r?.b), timesOut: hhmmList(r?.timesOut), timesBack: hhmmList(r?.timesBack),
+  })).filter(r => r.a && r.b && r.a.id !== r.b.id).slice(0, 20);
+  const tickets = list(d.tickets).map(t => ({
+    code: str(t?.code, 11).toUpperCase(), validFrom: num(t?.validFrom), validTo: num(t?.validTo),
+  })).filter(t => REF.test(t.code)).slice(0, 60);
+  const incoming = list(d.claims).map(cleanClaim).filter(Boolean).slice(0, 5000);
+  const have = new Set(state.claims.map(c => c.key));
+  const added = incoming.filter(c => !have.has(c.key) && have.add(c.key));
+  state.profile = { name: str(p.name), email: str(p.email, 254), account: str(p.account, 20).replace(/\D/g, ''), routes };
+  state.tickets = tickets.sort((a, b) => (a.validFrom || 0) - (b.validFrom || 0));
+  state.claims.push(...added);
+  state.welcomed = true;
+  save();
+  return { claims: added.length, tickets: tickets.length, routes: routes.length };
+}

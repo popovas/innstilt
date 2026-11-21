@@ -126,6 +126,7 @@ function viewSetup(first) {
   const tk = s.tickets.length ? s.tickets[s.tickets.length - 1] : { code: '', validFrom: null, validTo: null };
   $('#main').innerHTML = `
     <h1>${esc(first ? t('setupTitle') : t('settingsTitle'))}</h1>
+    ${first ? `<p class="help">${esc(t('importFirst'))} ${importHtml()}</p>` : ''}
     ${noticeHtml()}
     <form id="setup" class="card" novalidate>
       <h2>${esc(t('secTicket'))}</h2>
@@ -167,6 +168,7 @@ function viewSetup(first) {
     render();
   }));
   $('#setup').addEventListener('submit', e => { e.preventDefault(); saveSetup(first); });
+  wireImport();
   if (!first) wireSettingsExtras();
 }
 
@@ -310,7 +312,9 @@ function settingsExtrasHtml() {
       <h2>${esc(t('yourData'))}</h2>
       <p class="muted">${esc(t('privacyBody'))}</p>
       ${stats.enabled() ? `<label class="check"><input type="checkbox" id="share" ${store.get().stats.share ? 'checked' : ''}> ${esc(t('shareSetting'))}</label>` : ''}
+      <p class="help">${esc(t('moveHelp'))}</p>
       <button type="button" id="export">${esc(t('exportData'))}</button>
+      ${importHtml(true)}
       <button type="button" class="danger" id="wipe">${esc(t('deleteData'))}</button>
     </section>`;
 }
@@ -327,6 +331,37 @@ function wireSettingsExtras() {
   };
   $('#wipe').onclick = () => {
     if (confirm(t('deleteConfirm'))) { store.wipe(); go('trips'); }
+  };
+}
+
+function importHtml(asButton = false) {
+  return `<button type="button" class="${asButton ? '' : 'link'}" id="importBtn">${esc(t('importData'))}</button>
+    <input type="file" id="importFile" accept="application/json,.json" hidden>
+    <span class="ok" id="importMsg" role="status" hidden></span>`;
+}
+
+function wireImport() {
+  const file = $('#importFile');
+  if (!file) return;
+  $('#importBtn').onclick = () => file.click();
+  file.onchange = async () => {
+    const f = file.files[0];
+    file.value = '';
+    if (!f) return;
+    const msg = $('#importMsg');
+    if (f.size > 5_000_000) { msg.textContent = t('importBad'); msg.className = 'error'; msg.hidden = false; return; }
+    if (store.isReady() && !confirm(t('importConfirm'))) return;
+    let res;
+    try { res = store.importJson(await f.text()); } catch {
+      msg.textContent = t('importBad'); msg.className = 'error'; msg.hidden = false; return;
+    }
+    render();
+    const after = $('#importMsg');
+    if (after) {
+      after.textContent = `✓ ${t('importDone', res)}`;
+      after.className = 'ok';
+      after.hidden = false;
+    }
   };
 }
 
