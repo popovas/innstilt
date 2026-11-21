@@ -222,9 +222,12 @@ fieldset.tkkind label.check { margin: 4px 0; }
 .intro-top { display: flex; justify-content: flex-end; }
 .intro-pic svg, .intro-pic img { width: 100%; max-width: 320px; height: auto; margin: 4px auto 8px; display: block; }
 .intro-pic img { border-radius: 14px; border: 1px solid var(--mint-2); box-shadow: 0 6px 20px rgba(0,0,0,.12); max-height: 46vh; object-fit: cover; object-position: top; }
-.helpbtn { width: 30px; height: 30px; padding: 0; border-radius: 50%; border: 2px solid rgba(255,255,255,.55); background: transparent;
-  color: #fff; font: 800 16px system-ui; flex: none; }
-.helpbtn:hover, .helpbtn:focus { background: rgba(255,255,255,.15); }
+/* "?" in the top-right corner of the page (not the header, which should stay one row) */
+.helpbar { position: relative; max-width: 680px; margin: 0 auto; height: 0; z-index: 4; }
+.helpbtn { position: absolute; right: 16px; top: 22px; width: 34px; height: 34px; padding: 0; border-radius: 50%;
+  border: 2px solid var(--link); background: var(--card); color: var(--link); font: 800 17px system-ui; box-shadow: 0 1px 4px rgba(0,0,0,.12); }
+.helpbtn:hover, .helpbtn:focus { background: var(--link); color: var(--card); }
+main > h1:first-child { padding-right: 46px; }
 dialog.helpdlg { max-width: min(94vw, 440px); }
 dialog.helpdlg .intro h1 { font-size: 20px; }
 .intro h1 { font-size: 23px; margin: 8px 0 6px; }
@@ -233,3 +236,11 @@ dialog.helpdlg .intro h1 { font-size: 20px; }
 .dot { width: 10px; height: 10px; padding: 0; border-radius: 50%; border: none; background: var(--mint-2); }
 .dot[aria-current] { background: var(--stripe); width: 26px; border-radius: 5px; }
 .intro .card { text-align: left; }
+/* phones: keep the header on one row (logo without the name, tighter tabs) */
+@media (max-width: 480px) {
+  header { flex-wrap: nowrap; gap: 6px; padding-left: 12px; padding-right: 12px; }
+  .brand-name { display: none; }
+  nav { gap: 0; }
+  nav a { padding: 6px 7px; font-size: 15px; }
+  .lang button { padding: 3px 6px; }
+}

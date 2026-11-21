@@ -20,7 +20,7 @@ from playwright.sync_api import sync_playwright
 ROOT = Path(__file__).resolve().parents[1]
 WEB, OUT = ROOT / "web", ROOT / "web" / "img" / "tutorial"
 NOW = dt.datetime(2026, 11, 20, 9, 0)   # first archive day shown: 19 Nov, an ordinary day with cancellations
-ANEBY, NYD = {"id": "NSR:StopPlace:58867", "name": "Åneby stasjon"}, {"id": "NSR:StopPlace:59649", "name": "Nydalen stasjon"}
+OSLO, GJOVIK = {"id": "NSR:StopPlace:59872", "name": "Oslo S"}, {"id": "NSR:StopPlace:302", "name": "Gjøvik stasjon"}
 
 
 def ms(y, m, d, h=0, mi=0):
@@ -36,13 +36,13 @@ def claim(date, dep, frm, to, line, status, amount, case):
 
 DEMO = {"welcomed": True, "bookmarkDone": True, "homeDone": True, "testerDone": True,
         "profile": {"name": "Ola Nordmann", "email": "ola@example.com", "account": "12345678903",
-                    "routes": [{"a": ANEBY, "b": NYD, "timesOut": ["07:15"], "timesBack": ["16:54"]}]},
+                    "routes": [{"a": GJOVIK, "b": OSLO, "timesOut": ["06:30"], "timesBack": ["16:00"]}]},
         "tickets": [{"kind": "vy", "code": "ABC-DEF-GHI", "validFrom": ms(2026, 11, 3, 8, 12), "validTo": ms(2026, 12, 3, 8, 12)},
                     {"kind": "vy", "code": "JKL-MNO-PQR", "validFrom": ms(2026, 10, 3, 8, 12), "validTo": ms(2026, 11, 3, 8, 12)}],
-        "claims": [claim("2026-11-18", "16:54", NYD, ANEBY, "R31", "pending", None, "481234"),
-                   claim("2026-11-12", "07:15", ANEBY, NYD, "R31", "paid", 21, "100003"),
-                   claim("2026-11-05", "16:54", NYD, ANEBY, "R31", "paid", 21, "478120"),
-                   claim("2026-10-29", "07:15", ANEBY, NYD, "R31", "rejected", None, "476002")],
+        "claims": [claim("2026-11-18", "16:09", OSLO, GJOVIK, "RE30", "pending", None, "100004"),   # made-up case numbers
+                   claim("2026-11-12", "06:28", GJOVIK, OSLO, "RE30", "paid", 52, "100003"),
+                   claim("2026-11-05", "16:09", OSLO, GJOVIK, "RE30", "paid", 52, "100002"),
+                   claim("2026-10-29", "06:28", GJOVIK, OSLO, "RE30", "rejected", None, "100001")],
         "stats": {"share": False, "id": "", "lastSent": ""}}
 
 
