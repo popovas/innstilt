@@ -1,13 +1,14 @@
 :root {
   --green-1: #1c5a4a; --green-2: #0e3a30; --mint: #f2faf5; --mint-2: #cfeadb; --stripe: #2fa36b;
   --ink: #0b0b0c; --muted: #4a6b60; --yellow: #f5c400; --red: #c4321f; --card: #ffffff; --bg: #eef6f1;
-  --radius: 14px;
+  --radius: 14px; --link: #12704f;
 }
 @media (prefers-color-scheme: dark) {
-  :root { --ink: #eaf4ee; --muted: #9cc3b0; --card: #133f34; --bg: #0b2a23; --mint: #133f34; }
+  :root { --ink: #eaf4ee; --muted: #9cc3b0; --card: #133f34; --bg: #0b2a23; --mint: #133f34; --link: #8fe0b4; --red: #ff9b8c; }
 }
 * { box-sizing: border-box; }
 html { -webkit-text-size-adjust: 100%; }
+a { color: var(--link); }
 body {
   margin: 0; background: var(--bg); color: var(--ink);
   font: 16px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
@@ -79,10 +80,10 @@ details.fold form { padding-bottom: 14px; }
 button { font: inherit; cursor: pointer; border-radius: 10px; padding: 9px 14px; border: 1px solid #b9d3c6; background: #fff; color: #0b0b0c; }
 button.primary { background: var(--green-2); color: #fff; border-color: var(--green-2); font-weight: 700; }
 button.big { display: block; width: 100%; padding: 14px; font-size: 18px; }
-button.link { background: none; border: none; padding: 4px 0; color: var(--stripe); font-weight: 600; }
+button.link { background: none; border: none; padding: 4px 0; color: var(--link); font-weight: 600; }
 button.danger { color: var(--red); border-color: var(--red); }
 .error { color: var(--red); font-weight: 600; min-height: 1.2em; }
-.ok { color: var(--stripe); font-weight: 700; margin-left: 10px; }
+.ok { color: var(--link); font-weight: 700; margin-left: 10px; }
 .notice { background: #fff4c2; color: #0b0b0c; border-radius: 10px; padding: 10px 12px; font-size: 14px; }
 
 .station { position: relative; }
@@ -135,7 +136,7 @@ dialog h2 { margin-top: 0; }
 .actions { display: flex; gap: 8px; justify-content: flex-end; margin-top: 12px; }
 
 footer { max-width: 680px; margin: 10px auto 30px; padding: 0 16px; font-size: 13px; color: var(--muted); text-align: center; }
-footer a { color: var(--stripe); }
+footer a { color: var(--link); }
 
 /* visually hidden but part of the text (e.g. the 👻 that ends up in the bookmark's name) */
 .vh { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
@@ -149,7 +150,7 @@ input::placeholder { color: #8aa79b; opacity: 1; }
 .counter { font-weight: 700; margin: 8px 0; }
 .counter small { font-weight: 400; }
 .sharecard pre { background: var(--bg); border-radius: 8px; padding: 8px 10px; font-size: 12px; overflow-x: auto; }
-.sharecard summary { cursor: pointer; color: var(--stripe); font-weight: 600; }
+.sharecard summary { cursor: pointer; color: var(--link); font-weight: 600; }
 .jab { background: var(--card); border-left: 4px solid var(--yellow); border-radius: 10px; padding: 8px 12px; font-size: 14px; margin: 8px 0; text-align: left; }
 .podium { list-style: none; padding: 0; margin: 6px 0 4px; }
 .podium li { display: flex; gap: 8px; align-items: baseline; padding: 2px 0; }
@@ -199,3 +200,8 @@ details.now.alert { border-left: 4px solid var(--red); }
 .nowlist .nt s { font-weight: 400; color: var(--muted); font-size: 12px; display: block; }
 .nowlist .badge { margin-left: 0; }
 button.small-btn { padding: 6px 10px; font-size: 14px; }
+@media (prefers-color-scheme: dark) {
+  /* the dark green button vanished on the dark green cards: use the logo's bright green with dark text */
+  button.primary { background: #3fbf7f; border-color: #3fbf7f; color: #06261d; }
+  a.support-btn { outline: 1px solid rgba(255,255,255,.25); }
+}
