@@ -375,7 +375,10 @@ export function start(root, { lang = 'no', back = () => {}, testScore = 0 } = {}
   }
 
   /** Overlay with a title, text and buttons [[label, action, primary]]. */
-  function show(title, html, buttons) {
+  let lastShow = null, helpOpen = false, beforeHelp = null;
+  function show(title, html, buttons, isHelp = false) {
+    if (!isHelp) lastShow = [title, html, buttons];
+    helpOpen = isHelp;
     msg.innerHTML = `<h2>${title}</h2><p>${html}</p><div class="g-btns">${buttons.map(([label], i) =>
       `<button type="button" data-b="${i}" class="${buttons[i][2] ? 'primary' : ''}">${label}</button>`).join('')}</div>`;
     msg.querySelectorAll('[data-b]').forEach(b => b.addEventListener('click', () => buttons[Number(b.dataset.b)][1]()));
@@ -397,13 +400,21 @@ export function start(root, { lang = 'no', back = () => {}, testScore = 0 } = {}
   }
   function resume() { if (mode === 'pause') { last = performance.now(); setMode('run'); } }
 
-  /** The game's own "?": pauses and explains the rules. */
+  /** The game's own "?": pauses and explains the rules; pressed again, it goes back to where you were. */
   function help() {
-    if (mode === 'run') setMode('pause');
+    if (helpOpen && !msg.hidden) {
+      helpOpen = false;
+      if (beforeHelp === 'run') resume();
+      else if (lastShow) show(...lastShow);
+      else msg.hidden = true;
+      return;
+    }
     if (mode === 'crash') return;
+    beforeHelp = mode;
+    if (mode === 'run') setMode('pause');
     const rules = `</p><ul class="g-rules">${T.rules.map(r => `<li>${r}</li>`).join('')}</ul><p>`;
-    if (mode === 'pause') show(T.help, rules, [[T.resume, resume, true], [T.back, back]]);
-    else show(T.help, rules, [[st ? T.again : T.start, newGame, true], [T.back, back]]);
+    if (mode === 'pause') show(T.help, rules, [[T.resume, resume, true], [T.back, back]], true);
+    else show(T.help, rules, [[st ? T.again : T.start, newGame, true], [T.back, back]], true);
   }
 
   function resize() {
