@@ -279,3 +279,4 @@ dialog.helpdlg .intro h1 { font-size: 20px; }
 .g-keys { display: flex; justify-content: space-between; align-items: center; gap: 8px; margin-top: 10px; }
 .g-pad .helpbtn, .g-keys .helpbtn { position: static; flex: none; }
 .g-msg button.primary { background: var(--yellow); border-color: var(--yellow); color: #0b0b0c; }
+.g-lvl { display: block; font-size: 12px; font-weight: 600; color: var(--muted); }
