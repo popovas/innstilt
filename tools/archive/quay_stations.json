@@ -1,0 +1,2090 @@
+{
+"NSR:Quay:1": [
+"NSR:StopPlace:59872",
+"Oslo S"
+],
+"NSR:Quay:10": [
+"NSR:StopPlace:4",
+"Otta stasjon"
+],
+"NSR:Quay:100": [
+"NSR:StopPlace:62335",
+"Eidsberg stasjon"
+],
+"NSR:Quay:100001": [
+"NSR:StopPlace:62288",
+"Edane station"
+],
+"NSR:Quay:100002": [
+"NSR:StopPlace:61303",
+"Högboda station"
+],
+"NSR:Quay:100005": [
+"NSR:StopPlace:59182",
+"Örebro Centralstation"
+],
+"NSR:Quay:100007": [
+"NSR:StopPlace:59182",
+"Örebro Centralstation"
+],
+"NSR:Quay:100008": [
+"NSR:StopPlace:61368",
+"Välsviken station"
+],
+"NSR:Quay:100138": [
+"NSR:StopPlace:58849",
+"Hakadal stasjon"
+],
+"NSR:Quay:100195": [
+"NSR:StopPlace:60132",
+"Kil station"
+],
+"NSR:Quay:100196": [
+"NSR:StopPlace:60132",
+"Kil station"
+],
+"NSR:Quay:100197": [
+"NSR:StopPlace:60132",
+"Kil station"
+],
+"NSR:Quay:1002": [
+"NSR:StopPlace:58863",
+"Svingen stasjon"
+],
+"NSR:Quay:100302": [
+"NSR:StopPlace:374",
+"Göteborg Centralstation"
+],
+"NSR:Quay:100303": [
+"NSR:StopPlace:374",
+"Göteborg Centralstation"
+],
+"NSR:Quay:100304": [
+"NSR:StopPlace:374",
+"Göteborg Centralstation"
+],
+"NSR:Quay:100305": [
+"NSR:StopPlace:374",
+"Göteborg Centralstation"
+],
+"NSR:Quay:100306": [
+"NSR:StopPlace:374",
+"Göteborg Centralstation"
+],
+"NSR:Quay:100308": [
+"NSR:StopPlace:374",
+"Göteborg Centralstation"
+],
+"NSR:Quay:100309": [
+"NSR:StopPlace:374",
+"Göteborg Centralstation"
+],
+"NSR:Quay:100390": [
+"NSR:StopPlace:58635",
+"Stockholm Centralstation"
+],
+"NSR:Quay:1004": [
+"NSR:StopPlace:58916",
+"Charlottenberg station"
+],
+"NSR:Quay:1008": [
+"NSR:StopPlace:60016",
+"Kråkstad stasjon"
+],
+"NSR:Quay:1009": [
+"NSR:StopPlace:60016",
+"Kråkstad stasjon"
+],
+"NSR:Quay:101293": [
+"NSR:StopPlace:58815",
+"Bleiken stasjon"
+],
+"NSR:Quay:101368": [
+"NSR:StopPlace:59393",
+"Västerås Centralstation"
+],
+"NSR:Quay:1014": [
+"NSR:StopPlace:60016",
+"Kråkstad stasjon"
+],
+"NSR:Quay:1015": [
+"NSR:StopPlace:59647",
+"Dal stasjon"
+],
+"NSR:Quay:101560": [
+"NSR:StopPlace:58836",
+"Mjøndalen stasjon"
+],
+"NSR:Quay:101598": [
+"NSR:StopPlace:59952",
+"Drammen stasjon"
+],
+"NSR:Quay:1017": [
+"NSR:StopPlace:59647",
+"Dal stasjon"
+],
+"NSR:Quay:1019": [
+"NSR:StopPlace:59180",
+"Karlstad Centralstation"
+],
+"NSR:Quay:102": [
+"NSR:StopPlace:58798",
+"Rakkestad stasjon"
+],
+"NSR:Quay:102001": [
+"NSR:StopPlace:61304",
+"Fagerås station"
+],
+"NSR:Quay:102029": [
+"NSR:StopPlace:61891",
+"Väse station"
+],
+"NSR:Quay:102055": [
+"NSR:StopPlace:62339",
+"Lillestrøm stasjon"
+],
+"NSR:Quay:102437": [
+"NSR:StopPlace:61336",
+"Trollhättan Centralstation"
+],
+"NSR:Quay:102438": [
+"NSR:StopPlace:61336",
+"Trollhättan Centralstation"
+],
+"NSR:Quay:102461": [
+"NSR:StopPlace:58870",
+"Holmestrand stasjon"
+],
+"NSR:Quay:1025": [
+"NSR:StopPlace:628",
+"Darbu stasjon"
+],
+"NSR:Quay:102669": [
+"NSR:StopPlace:60737",
+"Bondivann stasjon"
+],
+"NSR:Quay:1027": [
+"NSR:StopPlace:62349",
+"Kvam stasjon"
+],
+"NSR:Quay:1028": [
+"NSR:StopPlace:58829",
+"Stryken stasjon"
+],
+"NSR:Quay:1029": [
+"NSR:StopPlace:58829",
+"Stryken stasjon"
+],
+"NSR:Quay:1030": [
+"NSR:StopPlace:15247",
+"Darbu skole"
+],
+"NSR:Quay:103067": [
+"NSR:StopPlace:58799",
+"Rygge stasjon"
+],
+"NSR:Quay:103167": [
+"NSR:StopPlace:62341",
+"Tangen stasjon"
+],
+"NSR:Quay:1033": [
+"NSR:StopPlace:61305",
+"Degerfors station"
+],
+"NSR:Quay:103309": [
+"NSR:StopPlace:62455",
+"Strømsø torg"
+],
+"NSR:Quay:103316": [
+"NSR:StopPlace:63092",
+"Lensmannslia"
+],
+"NSR:Quay:1034": [
+"NSR:StopPlace:58808",
+"Kongsvinger stasjon"
+],
+"NSR:Quay:103462": [
+"NSR:StopPlace:59958",
+"Voss stasjon"
+],
+"NSR:Quay:1037": [
+"NSR:StopPlace:58808",
+"Kongsvinger stasjon"
+],
+"NSR:Quay:1038": [
+"NSR:StopPlace:58808",
+"Kongsvinger stasjon"
+],
+"NSR:Quay:104127": [
+"NSR:StopPlace:60944",
+"Ski stasjon"
+],
+"NSR:Quay:1043": [
+"NSR:StopPlace:58926",
+"Dale stasjon"
+],
+"NSR:Quay:104381": [
+"NSR:StopPlace:60944",
+"Ski stasjon"
+],
+"NSR:Quay:1044": [
+"NSR:StopPlace:58926",
+"Dale stasjon"
+],
+"NSR:Quay:1045": [
+"NSR:StopPlace:58864",
+"Sørumsand stasjon"
+],
+"NSR:Quay:104582": [
+"NSR:StopPlace:61101",
+"Notodden stasjon"
+],
+"NSR:Quay:10463": [
+"NSR:StopPlace:58872",
+"Sandefjord stasjon"
+],
+"NSR:Quay:1047": [
+"NSR:StopPlace:58864",
+"Sørumsand stasjon"
+],
+"NSR:Quay:105": [
+"NSR:StopPlace:58826",
+"Reinsvoll stasjon"
+],
+"NSR:Quay:1054": [
+"NSR:StopPlace:58816",
+"Dombås stasjon"
+],
+"NSR:Quay:1055": [
+"NSR:StopPlace:62341",
+"Tangen stasjon"
+],
+"NSR:Quay:1057": [
+"NSR:StopPlace:62341",
+"Tangen stasjon"
+],
+"NSR:Quay:105763": [
+"NSR:StopPlace:58823",
+"Jaren stasjon"
+],
+"NSR:Quay:106": [
+"NSR:StopPlace:62335",
+"Eidsberg stasjon"
+],
+"NSR:Quay:1061": [
+"NSR:StopPlace:62392",
+"Slependen stasjon"
+],
+"NSR:Quay:106158": [
+"NSR:StopPlace:61823",
+"Ottebol station"
+],
+"NSR:Quay:106159": [
+"NSR:StopPlace:61821",
+"Lene station"
+],
+"NSR:Quay:106166": [
+"NSR:StopPlace:58826",
+"Reinsvoll stasjon"
+],
+"NSR:Quay:1063": [
+"NSR:StopPlace:62392",
+"Slependen stasjon"
+],
+"NSR:Quay:106575": [
+"NSR:StopPlace:10559",
+"Hamar skysstasjon"
+],
+"NSR:Quay:1067": [
+"NSR:StopPlace:59690",
+"Dovre stasjon"
+],
+"NSR:Quay:107150": [
+"NSR:StopPlace:60944",
+"Ski stasjon"
+],
+"NSR:Quay:107151": [
+"NSR:StopPlace:60944",
+"Ski stasjon"
+],
+"NSR:Quay:1072": [
+"NSR:StopPlace:60017",
+"Slitu stasjon"
+],
+"NSR:Quay:1074": [
+"NSR:StopPlace:58876",
+"Tønsberg stasjon"
+],
+"NSR:Quay:1075": [
+"NSR:StopPlace:60017",
+"Slitu stasjon"
+],
+"NSR:Quay:107764": [
+"NSR:StopPlace:398",
+"Arna stasjon"
+],
+"NSR:Quay:108": [
+"NSR:StopPlace:58799",
+"Rygge stasjon"
+],
+"NSR:Quay:108748": [
+"NSR:StopPlace:63705",
+"Enköping station"
+],
+"NSR:Quay:108749": [
+"NSR:StopPlace:63701",
+"Bålsta station"
+],
+"NSR:Quay:108750": [
+"NSR:StopPlace:63699",
+"Arboga station"
+],
+"NSR:Quay:108751": [
+"NSR:StopPlace:63710",
+"Köping station"
+],
+"NSR:Quay:109": [
+"NSR:StopPlace:58799",
+"Rygge stasjon"
+],
+"NSR:Quay:109126": [
+"NSR:StopPlace:59983",
+"Bergen stasjon"
+],
+"NSR:Quay:109342": [
+"NSR:StopPlace:59952",
+"Drammen stasjon"
+],
+"NSR:Quay:109752": [
+"NSR:StopPlace:374",
+"Göteborg Centralstation"
+],
+"NSR:Quay:1099": [
+"NSR:StopPlace:666",
+"Snippen stasjon"
+],
+"NSR:Quay:1100": [
+"NSR:StopPlace:58803",
+"Tomter stasjon"
+],
+"NSR:Quay:1101": [
+"NSR:StopPlace:58803",
+"Tomter stasjon"
+],
+"NSR:Quay:1102": [
+"NSR:StopPlace:668",
+"Snippen"
+],
+"NSR:Quay:110511": [
+"NSR:StopPlace:58211",
+"Oslo lufthavn"
+],
+"NSR:Quay:1106": [
+"NSR:StopPlace:58875",
+"Torp stasjon"
+],
+"NSR:Quay:110763": [
+"NSR:StopPlace:63874",
+"Brunsberg station"
+],
+"NSR:Quay:11081": [
+"NSR:StopPlace:61268",
+"Sinsen T"
+],
+"NSR:Quay:11092": [
+"NSR:StopPlace:59652",
+"Tøyen stasjon"
+],
+"NSR:Quay:111": [
+"NSR:StopPlace:71",
+"Hallingskeid stasjon"
+],
+"NSR:Quay:11108": [
+"NSR:StopPlace:59643",
+"Grefsen stasjon"
+],
+"NSR:Quay:1112": [
+"NSR:StopPlace:60042",
+"Trengereid stasjon"
+],
+"NSR:Quay:1113": [
+"NSR:StopPlace:60042",
+"Trengereid stasjon"
+],
+"NSR:Quay:11136": [
+"NSR:StopPlace:59649",
+"Nydalen stasjon"
+],
+"NSR:Quay:1116": [
+"NSR:StopPlace:58861",
+"Solbråtan stasjon"
+],
+"NSR:Quay:1117": [
+"NSR:StopPlace:58861",
+"Solbråtan stasjon"
+],
+"NSR:Quay:1118": [
+"NSR:StopPlace:61336",
+"Trollhättan Centralstation"
+],
+"NSR:Quay:111835": [
+"NSR:StopPlace:64546",
+"Horten stasjon"
+],
+"NSR:Quay:1120": [
+"NSR:StopPlace:61336",
+"Trollhättan Centralstation"
+],
+"NSR:Quay:1121": [
+"NSR:StopPlace:59639",
+"Sonsveien stasjon"
+],
+"NSR:Quay:1122": [
+"NSR:StopPlace:59639",
+"Sonsveien stasjon"
+],
+"NSR:Quay:11238": [
+"NSR:StopPlace:59648",
+"Kjelsås stasjon"
+],
+"NSR:Quay:1129": [
+"NSR:StopPlace:58885",
+"Trykkerud stasjon"
+],
+"NSR:Quay:113": [
+"NSR:StopPlace:60131",
+"Ed station"
+],
+"NSR:Quay:1130": [
+"NSR:StopPlace:58802",
+"Spydeberg stasjon"
+],
+"NSR:Quay:1131": [
+"NSR:StopPlace:58802",
+"Spydeberg stasjon"
+],
+"NSR:Quay:1132": [
+"NSR:StopPlace:58885",
+"Trykkerud stasjon"
+],
+"NSR:Quay:1134": [
+"NSR:StopPlace:60736",
+"Spikkestad stasjon"
+],
+"NSR:Quay:1136": [
+"NSR:StopPlace:60736",
+"Spikkestad stasjon"
+],
+"NSR:Quay:1137": [
+"NSR:StopPlace:61544",
+"Tuen stasjon"
+],
+"NSR:Quay:1138": [
+"NSR:StopPlace:60736",
+"Spikkestad stasjon"
+],
+"NSR:Quay:1140": [
+"NSR:StopPlace:698",
+"Skiple stasjon"
+],
+"NSR:Quay:1150": [
+"NSR:StopPlace:59654",
+"Stabekk stasjon"
+],
+"NSR:Quay:1151": [
+"NSR:StopPlace:59654",
+"Stabekk stasjon"
+],
+"NSR:Quay:1154": [
+"NSR:StopPlace:708",
+"Stange stasjon"
+],
+"NSR:Quay:1157": [
+"NSR:StopPlace:62295",
+"Stanghelle stasjon"
+],
+"NSR:Quay:1158": [
+"NSR:StopPlace:62295",
+"Stanghelle stasjon"
+],
+"NSR:Quay:1168": [
+"NSR:StopPlace:58862",
+"Strømmen stasjon"
+],
+"NSR:Quay:1170": [
+"NSR:StopPlace:58862",
+"Strømmen stasjon"
+],
+"NSR:Quay:119": [
+"NSR:StopPlace:60131",
+"Ed station"
+],
+"NSR:Quay:121": [
+"NSR:StopPlace:58838",
+"Røyken stasjon"
+],
+"NSR:Quay:122032": [
+"NSR:StopPlace:59872",
+"Oslo S"
+],
+"NSR:Quay:129": [
+"NSR:StopPlace:58800",
+"Råde stasjon"
+],
+"NSR:Quay:13": [
+"NSR:StopPlace:6",
+"Greverud stasjon"
+],
+"NSR:Quay:130": [
+"NSR:StopPlace:58800",
+"Råde stasjon"
+],
+"NSR:Quay:131": [
+"NSR:StopPlace:58800",
+"Råde stasjon"
+],
+"NSR:Quay:13516": [
+"NSR:StopPlace:7441",
+"Stange skysstasjon"
+],
+"NSR:Quay:14": [
+"NSR:StopPlace:6",
+"Greverud stasjon"
+],
+"NSR:Quay:141": [
+"NSR:StopPlace:58839",
+"Steinberg stasjon"
+],
+"NSR:Quay:142": [
+"NSR:StopPlace:58839",
+"Steinberg stasjon"
+],
+"NSR:Quay:144": [
+"NSR:StopPlace:58801",
+"Sarpsborg stasjon"
+],
+"NSR:Quay:149": [
+"NSR:StopPlace:58801",
+"Sarpsborg stasjon"
+],
+"NSR:Quay:152": [
+"NSR:StopPlace:59789",
+"Skotbu stasjon"
+],
+"NSR:Quay:153": [
+"NSR:StopPlace:61295",
+"Haugastøl stasjon"
+],
+"NSR:Quay:155": [
+"NSR:StopPlace:59789",
+"Skotbu stasjon"
+],
+"NSR:Quay:157": [
+"NSR:StopPlace:101",
+"Sagdalen stasjon"
+],
+"NSR:Quay:158": [
+"NSR:StopPlace:101",
+"Sagdalen stasjon"
+],
+"NSR:Quay:163": [
+"NSR:StopPlace:58817",
+"Eina stasjon"
+],
+"NSR:Quay:165": [
+"NSR:StopPlace:58817",
+"Eina stasjon"
+],
+"NSR:Quay:169": [
+"NSR:StopPlace:58872",
+"Sandefjord stasjon"
+],
+"NSR:Quay:170": [
+"NSR:StopPlace:58872",
+"Sandefjord stasjon"
+],
+"NSR:Quay:178": [
+"NSR:StopPlace:114",
+"Seimsgrend stasjon"
+],
+"NSR:Quay:18": [
+"NSR:StopPlace:59952",
+"Drammen stasjon"
+],
+"NSR:Quay:1844": [
+"NSR:StopPlace:58802",
+"Spydeberg stasjon"
+],
+"NSR:Quay:18650": [
+"NSR:StopPlace:58824",
+"Lunner stasjon"
+],
+"NSR:Quay:18837": [
+"NSR:StopPlace:58828",
+"Roa stasjon"
+],
+"NSR:Quay:1884": [
+"NSR:StopPlace:58800",
+"Råde stasjon"
+],
+"NSR:Quay:18931": [
+"NSR:StopPlace:58819",
+"Grua stasjon"
+],
+"NSR:Quay:19": [
+"NSR:StopPlace:58966",
+"Porsgrunn stasjon"
+],
+"NSR:Quay:19060": [
+"NSR:StopPlace:58820",
+"Harestua stasjon"
+],
+"NSR:Quay:194": [
+"NSR:StopPlace:58813",
+"Skarnes stasjon"
+],
+"NSR:Quay:195": [
+"NSR:StopPlace:58813",
+"Skarnes stasjon"
+],
+"NSR:Quay:197": [
+"NSR:StopPlace:58851",
+"Heggedal stasjon"
+],
+"NSR:Quay:198": [
+"NSR:StopPlace:58851",
+"Heggedal stasjon"
+],
+"NSR:Quay:19848": [
+"NSR:StopPlace:58823",
+"Jaren stasjon"
+],
+"NSR:Quay:199": [
+"NSR:StopPlace:60944",
+"Ski stasjon"
+],
+"NSR:Quay:20": [
+"NSR:StopPlace:59952",
+"Drammen stasjon"
+],
+"NSR:Quay:200": [
+"NSR:StopPlace:60944",
+"Ski stasjon"
+],
+"NSR:Quay:201": [
+"NSR:StopPlace:60944",
+"Ski stasjon"
+],
+"NSR:Quay:20191": [
+"NSR:StopPlace:58818",
+"Gran stasjon"
+],
+"NSR:Quay:206": [
+"NSR:StopPlace:58874",
+"Stokke stasjon"
+],
+"NSR:Quay:207": [
+"NSR:StopPlace:58874",
+"Stokke stasjon"
+],
+"NSR:Quay:208": [
+"NSR:StopPlace:61413",
+"Heia stasjon"
+],
+"NSR:Quay:209": [
+"NSR:StopPlace:58874",
+"Stokke stasjon"
+],
+"NSR:Quay:212": [
+"NSR:StopPlace:58884",
+"Skien stasjon"
+],
+"NSR:Quay:213": [
+"NSR:StopPlace:58884",
+"Skien stasjon"
+],
+"NSR:Quay:214": [
+"NSR:StopPlace:61413",
+"Heia stasjon"
+],
+"NSR:Quay:22": [
+"NSR:StopPlace:59952",
+"Drammen stasjon"
+],
+"NSR:Quay:2222": [
+"NSR:StopPlace:58801",
+"Sarpsborg stasjon"
+],
+"NSR:Quay:234": [
+"NSR:StopPlace:151",
+"Evanger stasjon"
+],
+"NSR:Quay:235": [
+"NSR:StopPlace:151",
+"Evanger stasjon"
+],
+"NSR:Quay:236": [
+"NSR:StopPlace:59651",
+"Skøyen stasjon"
+],
+"NSR:Quay:237": [
+"NSR:StopPlace:59651",
+"Skøyen stasjon"
+],
+"NSR:Quay:238": [
+"NSR:StopPlace:59651",
+"Skøyen stasjon"
+],
+"NSR:Quay:239": [
+"NSR:StopPlace:59651",
+"Skøyen stasjon"
+],
+"NSR:Quay:24": [
+"NSR:StopPlace:58966",
+"Porsgrunn stasjon"
+],
+"NSR:Quay:241": [
+"NSR:StopPlace:59651",
+"Skøyen stasjon"
+],
+"NSR:Quay:24312": [
+"NSR:StopPlace:58825",
+"Raufoss stasjon"
+],
+"NSR:Quay:246": [
+"NSR:StopPlace:58856",
+"Lysaker stasjon"
+],
+"NSR:Quay:247": [
+"NSR:StopPlace:58856",
+"Lysaker stasjon"
+],
+"NSR:Quay:248": [
+"NSR:StopPlace:58856",
+"Lysaker stasjon"
+],
+"NSR:Quay:250": [
+"NSR:StopPlace:58856",
+"Lysaker stasjon"
+],
+"NSR:Quay:25119": [
+"NSR:StopPlace:14563",
+"Reinsvoll sør"
+],
+"NSR:Quay:25120": [
+"NSR:StopPlace:14563",
+"Reinsvoll sør"
+],
+"NSR:Quay:25429": [
+"NSR:StopPlace:14744",
+"Gjøvik skysstasjon"
+],
+"NSR:Quay:25434": [
+"NSR:StopPlace:14744",
+"Gjøvik skysstasjon"
+],
+"NSR:Quay:25536": [
+"NSR:StopPlace:58817",
+"Eina stasjon"
+],
+"NSR:Quay:257": [
+"NSR:StopPlace:58844",
+"Eidsvoll stasjon"
+],
+"NSR:Quay:258": [
+"NSR:StopPlace:60049",
+"Hønefoss stasjon"
+],
+"NSR:Quay:26": [
+"NSR:StopPlace:59952",
+"Drammen stasjon"
+],
+"NSR:Quay:260": [
+"NSR:StopPlace:58844",
+"Eidsvoll stasjon"
+],
+"NSR:Quay:261": [
+"NSR:StopPlace:58844",
+"Eidsvoll stasjon"
+],
+"NSR:Quay:26294": [
+"NSR:StopPlace:58834",
+"Hokksund stasjon"
+],
+"NSR:Quay:26437": [
+"NSR:StopPlace:58840",
+"Vestfossen stasjon"
+],
+"NSR:Quay:269": [
+"NSR:StopPlace:58857",
+"Lørenskog stasjon"
+],
+"NSR:Quay:271": [
+"NSR:StopPlace:58857",
+"Lørenskog stasjon"
+],
+"NSR:Quay:274": [
+"NSR:StopPlace:58845",
+"Eidsvoll verk stasjon"
+],
+"NSR:Quay:275": [
+"NSR:StopPlace:58845",
+"Eidsvoll verk stasjon"
+],
+"NSR:Quay:276": [
+"NSR:StopPlace:59653",
+"Haugenstua stasjon"
+],
+"NSR:Quay:278": [
+"NSR:StopPlace:59653",
+"Haugenstua stasjon"
+],
+"NSR:Quay:28309": [
+"NSR:StopPlace:58838",
+"Røyken stasjon"
+],
+"NSR:Quay:2865": [
+"NSR:StopPlace:1676",
+"Knapstad"
+],
+"NSR:Quay:2880": [
+"NSR:StopPlace:58803",
+"Tomter stasjon"
+],
+"NSR:Quay:30": [
+"NSR:StopPlace:58825",
+"Raufoss stasjon"
+],
+"NSR:Quay:300": [
+"NSR:StopPlace:61458",
+"Mjølfjell stasjon"
+],
+"NSR:Quay:302": [
+"NSR:StopPlace:184",
+"Hallsberg station"
+],
+"NSR:Quay:304": [
+"NSR:StopPlace:58846",
+"Fetsund stasjon"
+],
+"NSR:Quay:305": [
+"NSR:StopPlace:58846",
+"Fetsund stasjon"
+],
+"NSR:Quay:30529": [
+"NSR:StopPlace:58875",
+"Torp stasjon"
+],
+"NSR:Quay:306": [
+"NSR:StopPlace:58836",
+"Mjøndalen stasjon"
+],
+"NSR:Quay:308": [
+"NSR:StopPlace:58836",
+"Mjøndalen stasjon"
+],
+"NSR:Quay:30905": [
+"NSR:StopPlace:58871",
+"Sande stasjon"
+],
+"NSR:Quay:312": [
+"NSR:StopPlace:58811",
+"Moelv stasjon"
+],
+"NSR:Quay:313": [
+"NSR:StopPlace:58811",
+"Moelv stasjon"
+],
+"NSR:Quay:314": [
+"NSR:StopPlace:60053",
+"Halden stasjon"
+],
+"NSR:Quay:315": [
+"NSR:StopPlace:60053",
+"Halden stasjon"
+],
+"NSR:Quay:316": [
+"NSR:StopPlace:60053",
+"Halden stasjon"
+],
+"NSR:Quay:317": [
+"NSR:StopPlace:58811",
+"Moelv stasjon"
+],
+"NSR:Quay:32": [
+"NSR:StopPlace:17",
+"Ringebu stasjon"
+],
+"NSR:Quay:322": [
+"NSR:StopPlace:60053",
+"Halden stasjon"
+],
+"NSR:Quay:326": [
+"NSR:StopPlace:200",
+"Finse stasjon"
+],
+"NSR:Quay:329": [
+"NSR:StopPlace:59636",
+"Holmlia stasjon"
+],
+"NSR:Quay:330": [
+"NSR:StopPlace:59636",
+"Holmlia stasjon"
+],
+"NSR:Quay:331": [
+"NSR:StopPlace:58796",
+"Moss stasjon"
+],
+"NSR:Quay:332": [
+"NSR:StopPlace:58796",
+"Moss stasjon"
+],
+"NSR:Quay:333": [
+"NSR:StopPlace:58796",
+"Moss stasjon"
+],
+"NSR:Quay:3340": [
+"NSR:StopPlace:58798",
+"Rakkestad stasjon"
+],
+"NSR:Quay:339": [
+"NSR:StopPlace:59641",
+"Fjellhamar stasjon"
+],
+"NSR:Quay:340": [
+"NSR:StopPlace:59641",
+"Fjellhamar stasjon"
+],
+"NSR:Quay:34931": [
+"NSR:StopPlace:58884",
+"Skien stasjon"
+],
+"NSR:Quay:35": [
+"NSR:StopPlace:61326",
+"Gulskogen stasjon"
+],
+"NSR:Quay:353": [
+"NSR:StopPlace:61301",
+"Movatn stasjon"
+],
+"NSR:Quay:354": [
+"NSR:StopPlace:61301",
+"Movatn stasjon"
+],
+"NSR:Quay:355": [
+"NSR:StopPlace:60045",
+"Hamar stasjon"
+],
+"NSR:Quay:36": [
+"NSR:StopPlace:61326",
+"Gulskogen stasjon"
+],
+"NSR:Quay:36039": [
+"NSR:StopPlace:20662",
+"Nisterud"
+],
+"NSR:Quay:36091": [
+"NSR:StopPlace:20694",
+"Nordagutu"
+],
+"NSR:Quay:361": [
+"NSR:StopPlace:60045",
+"Hamar stasjon"
+],
+"NSR:Quay:363": [
+"NSR:StopPlace:61301",
+"Movatn stasjon"
+],
+"NSR:Quay:364": [
+"NSR:StopPlace:222",
+"Myrdal stasjon"
+],
+"NSR:Quay:365": [
+"NSR:StopPlace:222",
+"Myrdal stasjon"
+],
+"NSR:Quay:366": [
+"NSR:StopPlace:222",
+"Myrdal stasjon"
+],
+"NSR:Quay:368": [
+"NSR:StopPlace:58831",
+"Flå stasjon"
+],
+"NSR:Quay:371": [
+"NSR:StopPlace:58797",
+"Mysen stasjon"
+],
+"NSR:Quay:373": [
+"NSR:StopPlace:58797",
+"Mysen stasjon"
+],
+"NSR:Quay:379": [
+"NSR:StopPlace:59638",
+"Myrvoll stasjon"
+],
+"NSR:Quay:38": [
+"NSR:StopPlace:59952",
+"Drammen stasjon"
+],
+"NSR:Quay:380": [
+"NSR:StopPlace:59638",
+"Myrvoll stasjon"
+],
+"NSR:Quay:381": [
+"NSR:StopPlace:58927",
+"Flåm stasjon"
+],
+"NSR:Quay:3822": [
+"NSR:StopPlace:2211",
+"Slitu"
+],
+"NSR:Quay:390": [
+"NSR:StopPlace:58859",
+"Nordby stasjon"
+],
+"NSR:Quay:3900": [
+"NSR:StopPlace:58797",
+"Mysen stasjon"
+],
+"NSR:Quay:391": [
+"NSR:StopPlace:58794",
+"Fredrikstad stasjon"
+],
+"NSR:Quay:392": [
+"NSR:StopPlace:58794",
+"Fredrikstad stasjon"
+],
+"NSR:Quay:398": [
+"NSR:StopPlace:243",
+"Fredrikstad stasjon"
+],
+"NSR:Quay:400": [
+"NSR:StopPlace:58834",
+"Hokksund stasjon"
+],
+"NSR:Quay:401": [
+"NSR:StopPlace:58834",
+"Hokksund stasjon"
+],
+"NSR:Quay:402": [
+"NSR:StopPlace:58834",
+"Hokksund stasjon"
+],
+"NSR:Quay:417": [
+"NSR:StopPlace:61315",
+"Nerdrum stasjon"
+],
+"NSR:Quay:418": [
+"NSR:StopPlace:58847",
+"Frogner stasjon"
+],
+"NSR:Quay:428": [
+"NSR:StopPlace:58837",
+"Nesbyen stasjon"
+],
+"NSR:Quay:432": [
+"NSR:StopPlace:58882",
+"Nordagutu stasjon"
+],
+"NSR:Quay:433": [
+"NSR:StopPlace:58882",
+"Nordagutu stasjon"
+],
+"NSR:Quay:439": [
+"NSR:StopPlace:58850",
+"Hauerseter stasjon"
+],
+"NSR:Quay:440": [
+"NSR:StopPlace:58858",
+"Nittedal stasjon"
+],
+"NSR:Quay:441": [
+"NSR:StopPlace:58850",
+"Hauerseter stasjon"
+],
+"NSR:Quay:442": [
+"NSR:StopPlace:58858",
+"Nittedal stasjon"
+],
+"NSR:Quay:451": [
+"NSR:StopPlace:58211",
+"Oslo lufthavn"
+],
+"NSR:Quay:4517": [
+"NSR:StopPlace:58795",
+"Kambo stasjon"
+],
+"NSR:Quay:452": [
+"NSR:StopPlace:58211",
+"Oslo lufthavn"
+],
+"NSR:Quay:455": [
+"NSR:StopPlace:64518",
+"Hunderfossen stasjon"
+],
+"NSR:Quay:461": [
+"NSR:StopPlace:58820",
+"Harestua stasjon"
+],
+"NSR:Quay:462": [
+"NSR:StopPlace:61463",
+"Nordstrand stasjon"
+],
+"NSR:Quay:463": [
+"NSR:StopPlace:61463",
+"Nordstrand stasjon"
+],
+"NSR:Quay:47": [
+"NSR:StopPlace:59642",
+"Rånåsfoss stasjon"
+],
+"NSR:Quay:473": [
+"NSR:StopPlace:59635",
+"Hauketo stasjon"
+],
+"NSR:Quay:474": [
+"NSR:StopPlace:59635",
+"Hauketo stasjon"
+],
+"NSR:Quay:475": [
+"NSR:StopPlace:58404",
+"Nationaltheatret"
+],
+"NSR:Quay:476": [
+"NSR:StopPlace:58404",
+"Nationaltheatret"
+],
+"NSR:Quay:477": [
+"NSR:StopPlace:58404",
+"Nationaltheatret"
+],
+"NSR:Quay:478": [
+"NSR:StopPlace:58404",
+"Nationaltheatret"
+],
+"NSR:Quay:479": [
+"NSR:StopPlace:60735",
+"Gullhella stasjon"
+],
+"NSR:Quay:48": [
+"NSR:StopPlace:59642",
+"Rånåsfoss stasjon"
+],
+"NSR:Quay:481": [
+"NSR:StopPlace:291",
+"Nisterud stasjon"
+],
+"NSR:Quay:483": [
+"NSR:StopPlace:60735",
+"Gullhella stasjon"
+],
+"NSR:Quay:485": [
+"NSR:StopPlace:61464",
+"Hvalstad stasjon"
+],
+"NSR:Quay:487": [
+"NSR:StopPlace:61464",
+"Hvalstad stasjon"
+],
+"NSR:Quay:494": [
+"NSR:StopPlace:59649",
+"Nydalen stasjon"
+],
+"NSR:Quay:495": [
+"NSR:StopPlace:59646",
+"Høvik stasjon"
+],
+"NSR:Quay:496": [
+"NSR:StopPlace:59646",
+"Høvik stasjon"
+],
+"NSR:Quay:497": [
+"NSR:StopPlace:302",
+"Gjøvik stasjon"
+],
+"NSR:Quay:502": [
+"NSR:StopPlace:302",
+"Gjøvik stasjon"
+],
+"NSR:Quay:504": [
+"NSR:StopPlace:59650",
+"Nyland stasjon"
+],
+"NSR:Quay:505": [
+"NSR:StopPlace:59650",
+"Nyland stasjon"
+],
+"NSR:Quay:512": [
+"NSR:StopPlace:311",
+"Gjerdåker stasjon"
+],
+"NSR:Quay:515": [
+"NSR:StopPlace:313",
+"Høybråten stasjon"
+],
+"NSR:Quay:516": [
+"NSR:StopPlace:313",
+"Høybråten stasjon"
+],
+"NSR:Quay:522": [
+"NSR:StopPlace:58832",
+"Geilo stasjon"
+],
+"NSR:Quay:523": [
+"NSR:StopPlace:58832",
+"Geilo stasjon"
+],
+"NSR:Quay:524": [
+"NSR:StopPlace:58852",
+"Høn stasjon"
+],
+"NSR:Quay:525": [
+"NSR:StopPlace:58852",
+"Høn stasjon"
+],
+"NSR:Quay:529": [
+"NSR:StopPlace:58860",
+"Oppegård stasjon"
+],
+"NSR:Quay:530": [
+"NSR:StopPlace:58833",
+"Gol stasjon"
+],
+"NSR:Quay:531": [
+"NSR:StopPlace:58860",
+"Oppegård stasjon"
+],
+"NSR:Quay:532": [
+"NSR:StopPlace:58833",
+"Gol stasjon"
+],
+"NSR:Quay:53267": [
+"NSR:StopPlace:30940",
+"Bulken E16"
+],
+"NSR:Quay:53268": [
+"NSR:StopPlace:30940",
+"Bulken E16"
+],
+"NSR:Quay:534": [
+"NSR:StopPlace:61926",
+"Håreina stasjon"
+],
+"NSR:Quay:53943": [
+"NSR:StopPlace:31323",
+"Bolstad"
+],
+"NSR:Quay:54144": [
+"NSR:StopPlace:31440",
+"Evanger"
+],
+"NSR:Quay:5444": [
+"NSR:StopPlace:58844",
+"Eidsvoll stasjon"
+],
+"NSR:Quay:548": [
+"NSR:StopPlace:58823",
+"Jaren stasjon"
+],
+"NSR:Quay:550": [
+"NSR:StopPlace:59872",
+"Oslo S"
+],
+"NSR:Quay:551": [
+"NSR:StopPlace:59872",
+"Oslo S"
+],
+"NSR:Quay:553": [
+"NSR:StopPlace:59872",
+"Oslo S"
+],
+"NSR:Quay:554": [
+"NSR:StopPlace:59872",
+"Oslo S"
+],
+"NSR:Quay:555": [
+"NSR:StopPlace:59872",
+"Oslo S"
+],
+"NSR:Quay:556": [
+"NSR:StopPlace:59872",
+"Oslo S"
+],
+"NSR:Quay:55633": [
+"NSR:StopPlace:32260",
+"Trengereid rundkøyring"
+],
+"NSR:Quay:557": [
+"NSR:StopPlace:59872",
+"Oslo S"
+],
+"NSR:Quay:558": [
+"NSR:StopPlace:58818",
+"Gran stasjon"
+],
+"NSR:Quay:559": [
+"NSR:StopPlace:59872",
+"Oslo S"
+],
+"NSR:Quay:561": [
+"NSR:StopPlace:59872",
+"Oslo S"
+],
+"NSR:Quay:562": [
+"NSR:StopPlace:59872",
+"Oslo S"
+],
+"NSR:Quay:563": [
+"NSR:StopPlace:59872",
+"Oslo S"
+],
+"NSR:Quay:564": [
+"NSR:StopPlace:59872",
+"Oslo S"
+],
+"NSR:Quay:565": [
+"NSR:StopPlace:59872",
+"Oslo S"
+],
+"NSR:Quay:566": [
+"NSR:StopPlace:59872",
+"Oslo S"
+],
+"NSR:Quay:567": [
+"NSR:StopPlace:59872",
+"Oslo S"
+],
+"NSR:Quay:56786": [
+"NSR:StopPlace:32876",
+"Vaksdal E16"
+],
+"NSR:Quay:568": [
+"NSR:StopPlace:59872",
+"Oslo S"
+],
+"NSR:Quay:56814": [
+"NSR:StopPlace:32891",
+"Stanghelle sør"
+],
+"NSR:Quay:56853": [
+"NSR:StopPlace:58926",
+"Dale stasjon"
+],
+"NSR:Quay:569": [
+"NSR:StopPlace:59872",
+"Oslo S"
+],
+"NSR:Quay:570": [
+"NSR:StopPlace:59872",
+"Oslo S"
+],
+"NSR:Quay:571": [
+"NSR:StopPlace:59872",
+"Oslo S"
+],
+"NSR:Quay:572": [
+"NSR:StopPlace:59652",
+"Tøyen stasjon"
+],
+"NSR:Quay:573": [
+"NSR:StopPlace:59652",
+"Tøyen stasjon"
+],
+"NSR:Quay:5732": [
+"NSR:StopPlace:59616",
+"Asker stasjon"
+],
+"NSR:Quay:5741": [
+"NSR:StopPlace:59647",
+"Dal stasjon"
+],
+"NSR:Quay:577": [
+"NSR:StopPlace:59643",
+"Grefsen stasjon"
+],
+"NSR:Quay:580": [
+"NSR:StopPlace:58963",
+"Jessheim stasjon"
+],
+"NSR:Quay:582": [
+"NSR:StopPlace:58963",
+"Jessheim stasjon"
+],
+"NSR:Quay:584": [
+"NSR:StopPlace:59643",
+"Grefsen stasjon"
+],
+"NSR:Quay:589": [
+"NSR:StopPlace:349",
+"Upsete stasjon"
+],
+"NSR:Quay:595": [
+"NSR:StopPlace:61383",
+"Urdland stasjon"
+],
+"NSR:Quay:596": [
+"NSR:StopPlace:61383",
+"Urdland stasjon"
+],
+"NSR:Quay:600": [
+"NSR:StopPlace:59620",
+"Grorud stasjon"
+],
+"NSR:Quay:601": [
+"NSR:StopPlace:358",
+"Ustaoset stasjon"
+],
+"NSR:Quay:602": [
+"NSR:StopPlace:59620",
+"Grorud stasjon"
+],
+"NSR:Quay:604": [
+"NSR:StopPlace:59620",
+"Grorud stasjon"
+],
+"NSR:Quay:610": [
+"NSR:StopPlace:364",
+"Vaksdal stasjon"
+],
+"NSR:Quay:611": [
+"NSR:StopPlace:364",
+"Vaksdal stasjon"
+],
+"NSR:Quay:612": [
+"NSR:StopPlace:58819",
+"Grua stasjon"
+],
+"NSR:Quay:613": [
+"NSR:StopPlace:58819",
+"Grua stasjon"
+],
+"NSR:Quay:6143": [
+"NSR:StopPlace:58851",
+"Heggedal stasjon"
+],
+"NSR:Quay:616": [
+"NSR:StopPlace:61466",
+"Vakås stasjon"
+],
+"NSR:Quay:617": [
+"NSR:StopPlace:61466",
+"Vakås stasjon"
+],
+"NSR:Quay:623": [
+"NSR:StopPlace:374",
+"Göteborg Centralstation"
+],
+"NSR:Quay:625": [
+"NSR:StopPlace:374",
+"Göteborg Centralstation"
+],
+"NSR:Quay:627": [
+"NSR:StopPlace:58854",
+"Langhus stasjon"
+],
+"NSR:Quay:628": [
+"NSR:StopPlace:58854",
+"Langhus stasjon"
+],
+"NSR:Quay:632": [
+"NSR:StopPlace:62357",
+"Varingskollen stasjon"
+],
+"NSR:Quay:634": [
+"NSR:StopPlace:62094",
+"Lindeberg stasjon"
+],
+"NSR:Quay:635": [
+"NSR:StopPlace:62094",
+"Lindeberg stasjon"
+],
+"NSR:Quay:636": [
+"NSR:StopPlace:62357",
+"Varingskollen stasjon"
+],
+"NSR:Quay:638": [
+"NSR:StopPlace:58865",
+"Vestby stasjon"
+],
+"NSR:Quay:639": [
+"NSR:StopPlace:58865",
+"Vestby stasjon"
+],
+"NSR:Quay:640": [
+"NSR:StopPlace:62308",
+"Alna stasjon"
+],
+"NSR:Quay:641": [
+"NSR:StopPlace:62308",
+"Alna stasjon"
+],
+"NSR:Quay:642": [
+"NSR:StopPlace:62094",
+"Lindeberg stasjon"
+],
+"NSR:Quay:643": [
+"NSR:StopPlace:58865",
+"Vestby stasjon"
+],
+"NSR:Quay:65": [
+"NSR:StopPlace:41",
+"Hanaborg stasjon"
+],
+"NSR:Quay:656": [
+"NSR:StopPlace:58866",
+"Vevelstad stasjon"
+],
+"NSR:Quay:657": [
+"NSR:StopPlace:58866",
+"Vevelstad stasjon"
+],
+"NSR:Quay:659": [
+"NSR:StopPlace:398",
+"Arna stasjon"
+],
+"NSR:Quay:66": [
+"NSR:StopPlace:41",
+"Hanaborg stasjon"
+],
+"NSR:Quay:660": [
+"NSR:StopPlace:398",
+"Arna stasjon"
+],
+"NSR:Quay:666": [
+"NSR:StopPlace:58840",
+"Vestfossen stasjon"
+],
+"NSR:Quay:667": [
+"NSR:StopPlace:58840",
+"Vestfossen stasjon"
+],
+"NSR:Quay:67": [
+"NSR:StopPlace:62361",
+"Reimegrend stasjon"
+],
+"NSR:Quay:672": [
+"NSR:StopPlace:59185",
+"Arvika station"
+],
+"NSR:Quay:682": [
+"NSR:StopPlace:58793",
+"Askim stasjon"
+],
+"NSR:Quay:684": [
+"NSR:StopPlace:58793",
+"Askim stasjon"
+],
+"NSR:Quay:690": [
+"NSR:StopPlace:58793",
+"Askim stasjon"
+],
+"NSR:Quay:695": [
+"NSR:StopPlace:59616",
+"Asker stasjon"
+],
+"NSR:Quay:696": [
+"NSR:StopPlace:59616",
+"Asker stasjon"
+],
+"NSR:Quay:697": [
+"NSR:StopPlace:59616",
+"Asker stasjon"
+],
+"NSR:Quay:698": [
+"NSR:StopPlace:59616",
+"Asker stasjon"
+],
+"NSR:Quay:699": [
+"NSR:StopPlace:59616",
+"Asker stasjon"
+],
+"NSR:Quay:700": [
+"NSR:StopPlace:59616",
+"Asker stasjon"
+],
+"NSR:Quay:701": [
+"NSR:StopPlace:420",
+"Lillehammer stasjon"
+],
+"NSR:Quay:702": [
+"NSR:StopPlace:420",
+"Lillehammer stasjon"
+],
+"NSR:Quay:703": [
+"NSR:StopPlace:420",
+"Lillehammer stasjon"
+],
+"NSR:Quay:706": [
+"NSR:StopPlace:14115",
+"Lillehammer skysstasjon"
+],
+"NSR:Quay:709": [
+"NSR:StopPlace:425",
+"Vinstra stasjon"
+],
+"NSR:Quay:711": [
+"NSR:StopPlace:58835",
+"Lier stasjon"
+],
+"NSR:Quay:712": [
+"NSR:StopPlace:58835",
+"Lier stasjon"
+],
+"NSR:Quay:718": [
+"NSR:StopPlace:429",
+"Vikersund stasjon"
+],
+"NSR:Quay:72": [
+"NSR:StopPlace:45",
+"Reinunga stasjon"
+],
+"NSR:Quay:721": [
+"NSR:StopPlace:62309",
+"Ljan stasjon"
+],
+"NSR:Quay:723": [
+"NSR:StopPlace:62309",
+"Ljan stasjon"
+],
+"NSR:Quay:73": [
+"NSR:StopPlace:58828",
+"Roa stasjon"
+],
+"NSR:Quay:731": [
+"NSR:StopPlace:439",
+"Ljosanbotn stasjon"
+],
+"NSR:Quay:732": [
+"NSR:StopPlace:59958",
+"Voss stasjon"
+],
+"NSR:Quay:733": [
+"NSR:StopPlace:59958",
+"Voss stasjon"
+],
+"NSR:Quay:734": [
+"NSR:StopPlace:59958",
+"Voss stasjon"
+],
+"NSR:Quay:7353": [
+"NSR:StopPlace:58847",
+"Frogner stasjon"
+],
+"NSR:Quay:736": [
+"NSR:StopPlace:441",
+"Auli stasjon"
+],
+"NSR:Quay:7373": [
+"NSR:StopPlace:58404",
+"Nationaltheatret"
+],
+"NSR:Quay:7375": [
+"NSR:StopPlace:58864",
+"Sørumsand stasjon"
+],
+"NSR:Quay:740": [
+"NSR:StopPlace:445",
+"Vieren stasjon"
+],
+"NSR:Quay:746": [
+"NSR:StopPlace:448",
+"Vatnahalsen stasjon"
+],
+"NSR:Quay:747": [
+"NSR:StopPlace:62339",
+"Lillestrøm stasjon"
+],
+"NSR:Quay:749": [
+"NSR:StopPlace:62339",
+"Lillestrøm stasjon"
+],
+"NSR:Quay:750": [
+"NSR:StopPlace:62339",
+"Lillestrøm stasjon"
+],
+"NSR:Quay:754": [
+"NSR:StopPlace:62339",
+"Lillestrøm stasjon"
+],
+"NSR:Quay:755": [
+"NSR:StopPlace:62339",
+"Lillestrøm stasjon"
+],
+"NSR:Quay:756": [
+"NSR:StopPlace:62339",
+"Lillestrøm stasjon"
+],
+"NSR:Quay:761": [
+"NSR:StopPlace:62339",
+"Lillestrøm stasjon"
+],
+"NSR:Quay:768": [
+"NSR:StopPlace:61927",
+"Berekvam stasjon"
+],
+"NSR:Quay:77": [
+"NSR:StopPlace:58828",
+"Roa stasjon"
+],
+"NSR:Quay:775": [
+"NSR:StopPlace:462",
+"Ygre stasjon"
+],
+"NSR:Quay:778": [
+"NSR:StopPlace:61696",
+"Lunden stasjon"
+],
+"NSR:Quay:78": [
+"NSR:StopPlace:58828",
+"Roa stasjon"
+],
+"NSR:Quay:782": [
+"NSR:StopPlace:468",
+"Ørneberget stasjon"
+],
+"NSR:Quay:788": [
+"NSR:StopPlace:474",
+"Øyeflaten stasjon"
+],
+"NSR:Quay:790": [
+"NSR:StopPlace:58855",
+"Leirsund stasjon"
+],
+"NSR:Quay:793": [
+"NSR:StopPlace:58815",
+"Bleiken stasjon"
+],
+"NSR:Quay:800": [
+"NSR:StopPlace:61928",
+"Blomheller stasjon"
+],
+"NSR:Quay:803": [
+"NSR:StopPlace:58842",
+"Blaker stasjon"
+],
+"NSR:Quay:804": [
+"NSR:StopPlace:58842",
+"Blaker stasjon"
+],
+"NSR:Quay:8044": [
+"NSR:StopPlace:58855",
+"Leirsund stasjon"
+],
+"NSR:Quay:810": [
+"NSR:StopPlace:58843",
+"Blommenholm stasjon"
+],
+"NSR:Quay:8102": [
+"NSR:StopPlace:62790",
+"Lillestrøm bussterminal"
+],
+"NSR:Quay:811": [
+"NSR:StopPlace:58843",
+"Blommenholm stasjon"
+],
+"NSR:Quay:812": [
+"NSR:StopPlace:58824",
+"Lunner stasjon"
+],
+"NSR:Quay:822": [
+"NSR:StopPlace:58867",
+"Åneby stasjon"
+],
+"NSR:Quay:823": [
+"NSR:StopPlace:58867",
+"Åneby stasjon"
+],
+"NSR:Quay:827": [
+"NSR:StopPlace:58930",
+"Larvik stasjon"
+],
+"NSR:Quay:829": [
+"NSR:StopPlace:58930",
+"Larvik stasjon"
+],
+"NSR:Quay:83": [
+"NSR:StopPlace:58848",
+"Haga stasjon"
+],
+"NSR:Quay:830": [
+"NSR:StopPlace:58930",
+"Larvik stasjon"
+],
+"NSR:Quay:835": [
+"NSR:StopPlace:58841",
+"Ål stasjon"
+],
+"NSR:Quay:836": [
+"NSR:StopPlace:58841",
+"Ål stasjon"
+],
+"NSR:Quay:840": [
+"NSR:StopPlace:58930",
+"Larvik stasjon"
+],
+"NSR:Quay:842": [
+"NSR:StopPlace:59640",
+"Bodung stasjon"
+],
+"NSR:Quay:843": [
+"NSR:StopPlace:58795",
+"Kambo stasjon"
+],
+"NSR:Quay:845": [
+"NSR:StopPlace:58795",
+"Kambo stasjon"
+],
+"NSR:Quay:8487": [
+"NSR:StopPlace:4689",
+"Skogtun"
+],
+"NSR:Quay:849": [
+"NSR:StopPlace:518",
+"Bolstadøyri stasjon"
+],
+"NSR:Quay:850": [
+"NSR:StopPlace:518",
+"Bolstadøyri stasjon"
+],
+"NSR:Quay:8507": [
+"NSR:StopPlace:4699",
+"Kremmerhuset"
+],
+"NSR:Quay:851": [
+"NSR:StopPlace:60603",
+"Kongsberg stasjon"
+],
+"NSR:Quay:852": [
+"NSR:StopPlace:60603",
+"Kongsberg stasjon"
+],
+"NSR:Quay:853": [
+"NSR:StopPlace:60603",
+"Kongsberg stasjon"
+],
+"NSR:Quay:8558": [
+"NSR:StopPlace:59639",
+"Sonsveien stasjon"
+],
+"NSR:Quay:862": [
+"NSR:StopPlace:60603",
+"Kongsberg stasjon"
+],
+"NSR:Quay:863": [
+"NSR:StopPlace:60737",
+"Bondivann stasjon"
+],
+"NSR:Quay:8642": [
+"NSR:StopPlace:4771",
+"Åneby"
+],
+"NSR:Quay:8657": [
+"NSR:StopPlace:58858",
+"Nittedal stasjon"
+],
+"NSR:Quay:8670": [
+"NSR:StopPlace:58867",
+"Åneby stasjon"
+],
+"NSR:Quay:8679": [
+"NSR:StopPlace:4791",
+"Varingskollen"
+],
+"NSR:Quay:869": [
+"NSR:StopPlace:61897",
+"Bryn stasjon"
+],
+"NSR:Quay:8697": [
+"NSR:StopPlace:4800",
+"Sagstua"
+],
+"NSR:Quay:870": [
+"NSR:StopPlace:61897",
+"Bryn stasjon"
+],
+"NSR:Quay:8704": [
+"NSR:StopPlace:58849",
+"Hakadal stasjon"
+],
+"NSR:Quay:872": [
+"NSR:StopPlace:59648",
+"Kjelsås stasjon"
+],
+"NSR:Quay:873": [
+"NSR:StopPlace:59648",
+"Kjelsås stasjon"
+],
+"NSR:Quay:878": [
+"NSR:StopPlace:535",
+"Kjosfossen stasjon"
+],
+"NSR:Quay:879": [
+"NSR:StopPlace:58830",
+"Brakerøya stasjon"
+],
+"NSR:Quay:880": [
+"NSR:StopPlace:58830",
+"Brakerøya stasjon"
+],
+"NSR:Quay:886": [
+"NSR:StopPlace:58868",
+"Årnes stasjon"
+],
+"NSR:Quay:890": [
+"NSR:StopPlace:58805",
+"Brumunddal stasjon"
+],
+"NSR:Quay:896": [
+"NSR:StopPlace:58805",
+"Brumunddal stasjon"
+],
+"NSR:Quay:898": [
+"NSR:StopPlace:58869",
+"Ås stasjon"
+],
+"NSR:Quay:899": [
+"NSR:StopPlace:59983",
+"Bergen stasjon"
+],
+"NSR:Quay:900": [
+"NSR:StopPlace:59983",
+"Bergen stasjon"
+],
+"NSR:Quay:901": [
+"NSR:StopPlace:59983",
+"Bergen stasjon"
+],
+"NSR:Quay:9014": [
+"NSR:StopPlace:58963",
+"Jessheim stasjon"
+],
+"NSR:Quay:905": [
+"NSR:StopPlace:59983",
+"Bergen stasjon"
+],
+"NSR:Quay:906": [
+"NSR:StopPlace:62360",
+"Kløve stasjon"
+],
+"NSR:Quay:9064": [
+"NSR:StopPlace:58859",
+"Nordby stasjon"
+],
+"NSR:Quay:907": [
+"NSR:StopPlace:58869",
+"Ås stasjon"
+],
+"NSR:Quay:909": [
+"NSR:StopPlace:58869",
+"Ås stasjon"
+],
+"NSR:Quay:910": [
+"NSR:StopPlace:59983",
+"Bergen stasjon"
+],
+"NSR:Quay:9103": [
+"NSR:StopPlace:58964",
+"Kløfta stasjon"
+],
+"NSR:Quay:911": [
+"NSR:StopPlace:58964",
+"Kløfta stasjon"
+],
+"NSR:Quay:912": [
+"NSR:StopPlace:58964",
+"Kløfta stasjon"
+],
+"NSR:Quay:9181": [
+"NSR:StopPlace:58850",
+"Hauerseter stasjon"
+],
+"NSR:Quay:922": [
+"NSR:StopPlace:62336",
+"Knapstad stasjon"
+],
+"NSR:Quay:926": [
+"NSR:StopPlace:62336",
+"Knapstad stasjon"
+],
+"NSR:Quay:935": [
+"NSR:StopPlace:58853",
+"Kolbotn stasjon"
+],
+"NSR:Quay:936": [
+"NSR:StopPlace:58853",
+"Kolbotn stasjon"
+],
+"NSR:Quay:94": [
+"NSR:StopPlace:59637",
+"Rosenholm stasjon"
+],
+"NSR:Quay:943": [
+"NSR:StopPlace:62393",
+"Billingstad stasjon"
+],
+"NSR:Quay:945": [
+"NSR:StopPlace:62393",
+"Billingstad stasjon"
+],
+"NSR:Quay:95": [
+"NSR:StopPlace:59637",
+"Rosenholm stasjon"
+],
+"NSR:Quay:951": [
+"NSR:StopPlace:584",
+"Bulken stasjon"
+],
+"NSR:Quay:96": [
+"NSR:StopPlace:58849",
+"Hakadal stasjon"
+],
+"NSR:Quay:97": [
+"NSR:StopPlace:58849",
+"Hakadal stasjon"
+],
+"NSR:Quay:975": [
+"NSR:StopPlace:59181",
+"Kristinehamn station"
+],
+"NSR:Quay:98502": [
+"NSR:StopPlace:58796",
+"Moss stasjon"
+],
+"NSR:Quay:990": [
+"NSR:StopPlace:610",
+"Sandvika stasjon"
+],
+"NSR:Quay:991": [
+"NSR:StopPlace:610",
+"Sandvika stasjon"
+],
+"NSR:Quay:992": [
+"NSR:StopPlace:610",
+"Sandvika stasjon"
+],
+"NSR:Quay:99264": [
+"NSR:StopPlace:62287",
+"Åmotfors station"
+],
+"NSR:Quay:993": [
+"NSR:StopPlace:610",
+"Sandvika stasjon"
+],
+"NSR:Quay:99392": [
+"NSR:StopPlace:58000",
+"Göteborg Nils Ericsonterminalen"
+],
+"NSR:Quay:99672": [
+"NSR:StopPlace:58966",
+"Porsgrunn stasjon"
+],
+"NSR:Quay:99928": [
+"NSR:StopPlace:32154",
+"Arna terminal"
+],
+"NSR:Quay:99951": [
+"NSR:StopPlace:20762",
+"Notodden skysstasjon"
+]
+}

@@ -1,0 +1,133 @@
+"""Turn Entur's SIRI-ET archive (Vy-group trains) into compact per-day JSON files for the web app.
+
+Browsers can't read Entur's archive bucket (no CORS), so this republishes it. Locally it writes to
+web/data/; later a nightly job runs the same script. Public timetable data only, no personal data.
+
+  .venv/bin/python tools/archive/build_web_data.py                 # last 90 days that are available
+  .venv/bin/python tools/archive/build_web_data.py --since 2026-11-03 --until 2026-11-20
+
+Output: web/data/vyg/YYYY-MM-DD.json and web/data/vyg/index.json. Day file format:
+  {"date": "2026-11-12", "stops": {"<idx>": ["NSR:StopPlace:59872", "Oslo S"], ...},
+   "journeys": [{"id": ..., "line": "R31", "dest": "Hakadal", "extra": false, "cancelled": false,
+                 "calls": [[stopIdx, aimedArr "HH:MM"|null, aimedDep "HH:MM"|null,
+                            actualArr "HH:MM:SS"|null, stopCancelled 0|1], ...]}, ...]}
+Times are Oslo local time. stopIdx refers to station-level ids (the ones Vy's form and the app use).
+"""
+from __future__ import annotations
+
+import argparse
+import datetime as dt
+import json
+import sys
+from pathlib import Path
+
+import httpx
+
+ROOT = Path(__file__).resolve().parents[2]
+sys.path.insert(0, str(ROOT / "cli"))
+import innstilt  # noqa: E402  (archive download/export + Entur constants)
+
+OUT = ROOT / "web" / "data" / "vyg"
+QUAY_MAP = Path(__file__).parent / "quay_stations.json"   # public NSR data, cached between runs
+
+
+def station_for_quays(quays: set[str]) -> dict[str, list[str]]:
+    """Quay id -> [station-level stop place id, name], via Entur Journey Planner (batched, cached)."""
+    known = json.loads(QUAY_MAP.read_text()) if QUAY_MAP.exists() else {}
+    todo = sorted(q for q in quays if q not in known)
+    for i in range(0, len(todo), 80):
+        batch = todo[i:i + 80]
+        query = "{" + " ".join(
+            f'q{n}: quay(id: "{q}") {{ id stopPlace {{ id name parent {{ id name }} }} }}'
+            for n, q in enumerate(batch)) + "}"
+        r = httpx.post(innstilt.ENTUR_JP, json={"query": query}, headers=innstilt.HEADERS, timeout=60)
+        r.raise_for_status()
+        for n, q in enumerate(batch):
+            hit = (r.json().get("data") or {}).get(f"q{n}")
+            sp = (hit or {}).get("stopPlace")
+            if sp:
+                top = sp.get("parent") or sp
+                known[q] = [top["id"], top["name"]]
+            else:
+                known[q] = None  # quay no longer in the stop register
+        print(f"  mapped {min(i + 80, len(todo))}/{len(todo)} new quays", file=sys.stderr)
+    QUAY_MAP.write_text(json.dumps(known, ensure_ascii=False, indent=0, sort_keys=True))
+    return known
+
+
+def hhmm(ts: str, seconds: bool = False) -> str | None:
+    return ts[11:19 if seconds else 16] if ts else None  # archive times are already Oslo local
+
+
+def build_day(day: dt.date) -> dict | None:
+    rows = innstilt.archive_rows(day)
+    rows = [r for r in rows if r["vehicleMode"] == "rail" or r["extraJourney"] == "True"]
+    if not rows:
+        return None
+    qmap = station_for_quays({r["stopPointRef"] for r in rows})
+    stops: dict[str, int] = {}
+    names: dict[int, list[str]] = {}
+    by_sj: dict[str, list[dict]] = {}
+    for r in rows:
+        by_sj.setdefault(r["serviceJourneyId"], []).append(r)
+    journeys = []
+    for sj, calls in by_sj.items():
+        calls.sort(key=lambda c: int(c["sequenceNr"]))
+        out_calls = []
+        for c in calls:
+            st = qmap.get(c["stopPointRef"])
+            if not st:
+                continue
+            if st[0] not in stops:
+                stops[st[0]] = len(stops)
+                names[stops[st[0]]] = st
+            recorded = c["estimated"] == "False"
+            out_calls.append([stops[st[0]], hhmm(c["aimedArrivalTime"]), hhmm(c["aimedDepartureTime"]),
+                              hhmm(c["arrivalTime"], seconds=True) if recorded else None,
+                              1 if c["stopCancellation"] == "True" else 0])
+        if len(out_calls) < 2:
+            continue
+        first, last = calls[0], calls[-1]
+        journeys.append({
+            "id": sj,
+            "line": first["lineRef"].rsplit(":", 1)[-1],
+            "dest": (last["stopPointName"] or "").removesuffix(" stasjon"),
+            "extra": first["extraJourney"] == "True",
+            "cancelled": first["journeyCancellation"] == "True",
+            "calls": out_calls,
+        })
+    journeys.sort(key=lambda j: next((c[2] or c[1] or "") for c in j["calls"]))
+    return {"date": day.isoformat(), "source": "Entur SIRI-ET archive (Vy-group), NLOD",
+            "stops": {str(i): names[i] for i in sorted(names)}, "journeys": journeys}
+
+
+def main() -> None:
+    ap = argparse.ArgumentParser()
+    today = dt.datetime.now(innstilt.TZ).date()
+    ap.add_argument("--since", default=str(today - dt.timedelta(days=90)))
+    ap.add_argument("--until", default=str(today - dt.timedelta(days=1)))
+    ap.add_argument("--force", action="store_true", help="rebuild days that already exist")
+    args = ap.parse_args()
+    OUT.mkdir(parents=True, exist_ok=True)
+    day, until = dt.date.fromisoformat(args.since), dt.date.fromisoformat(args.until)
+    while day <= until:
+        target = OUT / f"{day}.json"
+        if target.exists() and not args.force:
+            day += dt.timedelta(days=1)
+            continue
+        try:
+            data = build_day(day)
+        except Exception as e:  # noqa: BLE001  (one bad day shouldn't stop the run)
+            print(f"{day}: FAILED {e}", file=sys.stderr)
+            data = None
+        if data:
+            target.write_text(json.dumps(data, ensure_ascii=False, separators=(",", ":")))
+            print(f"{day}: {len(data['journeys'])} journeys, {target.stat().st_size // 1024} KB")
+        day += dt.timedelta(days=1)
+    days = sorted(p.stem for p in OUT.glob("????-??-??.json"))
+    (OUT / "index.json").write_text(json.dumps({"days": days, "updated": dt.datetime.now(innstilt.TZ).isoformat()}))
+    print(f"index: {len(days)} days")
+
+
+if __name__ == "__main__":
+    main()

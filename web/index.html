@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="nb">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<!-- Only our own files may run or load; the only outside service is Entur's open API. -->
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src 'self' https://api.entur.io; manifest-src 'self'; worker-src 'self'; base-uri 'none'; form-action 'none'">
+<meta name="referrer" content="no-referrer">
+<meta name="theme-color" content="#0e3a30">
+<meta name="description" content="Få pengene tilbake fra Vy for forsinkede og innstilte tog. Ikke tilknyttet Vy.">
+<title>Innstilt</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icons/ghost-32.png" sizes="32x32">
+<link rel="icon" href="icons/ghost-64.png" sizes="64x64">
+<link rel="apple-touch-icon" href="icons/ghost-180.png">
+<link rel="stylesheet" href="style.css">
+<script type="module" src="js/app.js"></script>
+</head>
+<body>
+<header>
+  <a class="brand" href="#/trips"><img src="icons/ghost-64.png" width="32" height="32" alt=""> Innstilt</a>
+  <nav id="nav" hidden></nav>
+  <div id="lang" class="lang" aria-label="Språk / Language"></div>
+</header>
+<main id="main"></main>
+<footer id="foot"></footer>
+<dialog id="dlg"></dialog>
+<noscript><p>Innstilt trenger JavaScript. / Innstilt needs JavaScript.</p></noscript>
+</body>
+</html>

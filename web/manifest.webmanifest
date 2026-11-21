@@ -1,0 +1,17 @@
+{
+  "name": "Innstilt",
+  "short_name": "Innstilt",
+  "description": "Få pengene tilbake fra Vy for forsinkede og innstilte tog. Ikke tilknyttet Vy.",
+  "lang": "nb",
+  "start_url": "./#/trips",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#0e3a30",
+  "theme_color": "#0e3a30",
+  "icons": [
+    { "src": "icons/ghost-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icons/ghost-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icons/ghost-maskable-192.png", "sizes": "192x192", "type": "image/png", "purpose": "maskable" },
+    { "src": "icons/ghost-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}

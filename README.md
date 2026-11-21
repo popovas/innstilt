@@ -1,6 +1,6 @@
 <p align="center"><img src="assets/icons/ghost-180.png" width="120" alt="Innstilt ghost train"></p>
 
-# 👻 Innstilt
+# Innstilt
 
 **Få pengene tilbake fra Vy for forsinkede og innstilte tog.** Innstilt finds your delayed and
 cancelled trips in Entur's open data and opens Vy's own claim form already filled in. You check it and

@@ -9,6 +9,34 @@
 (async () => {
   const sleep = ms => new Promise(r => setTimeout(r, ms));
 
+  /* Our logo, built with DOM calls (no innerHTML: works under Vy's Content Security Policy / Trusted Types). */
+  const logo = () => {
+    const NS = 'http://www.w3.org/2000/svg';
+    const el = (tag, attrs) => {
+      const e = document.createElementNS(NS, tag);
+      for (const k in attrs) e.setAttribute(k, attrs[k]);
+      return e;
+    };
+    const svg = el('svg', { viewBox: '0 0 512 512', width: '30', height: '30', 'aria-hidden': 'true' });
+    svg.style.cssText = 'flex:none;border-radius:7px';
+    [
+      ['rect', { width: 512, height: 512, rx: 112, fill: '#1c5a4a' }],
+      ['rect', { x: 36, y: 430, width: 440, height: 22, rx: 11, fill: '#8fbfa8' }],
+      ['path', { fill: '#e9f6ee', d: 'M40 210Q40 150 100 150H330Q410 150 440 236L452 290Q458 318 440 336L440 400Q414 380 388 400Q362 420 336 400Q310 380 284 400Q258 420 232 400Q206 380 180 400Q154 420 128 400Q102 380 76 400Q58 414 40 400Z' }],
+      ['path', { fill: '#14473b', d: 'M64 196H336Q384 196 404 246L410 268H64Z' }],
+      ['ellipse', { cx: 170, cy: 234, rx: 34, ry: 26, fill: '#e9f6ee' }],
+      ['ellipse', { cx: 290, cy: 234, rx: 34, ry: 26, fill: '#e9f6ee' }],
+      ['path', { fill: '#14473b', d: 'M134 234A36 30 0 0 1 206 234ZM254 234A36 30 0 0 1 326 234Z' }],
+      ['circle', { cx: 178, cy: 244, r: 11, fill: '#0e3a30' }],
+      ['circle', { cx: 298, cy: 244, r: 11, fill: '#0e3a30' }],
+      ['rect', { x: 40, y: 340, width: 400, height: 26, fill: '#2fa36b' }],
+      ['circle', { cx: 404, cy: 108, r: 84, fill: '#f5c400', stroke: '#0e3a30', 'stroke-width': 14 }],
+      ['rect', { x: 390, y: 56, width: 28, height: 74, rx: 14, fill: '#0e3a30' }],
+      ['circle', { cx: 404, cy: 158, r: 16, fill: '#0e3a30' }],
+    ].forEach(([tag, attrs]) => svg.appendChild(el(tag, attrs)));
+    return svg;
+  };
+
   const toast = (msg, kind) => {
     let t = document.getElementById('innstilt-toast');
     if (!t) {
@@ -16,13 +44,16 @@
       t.id = 'innstilt-toast';
       t.setAttribute('role', 'status');
       t.style.cssText = 'position:fixed;z-index:2147483647;left:50%;top:16px;transform:translateX(-50%);'
-        + 'max-width:min(92vw,520px);padding:12px 16px;border-radius:12px;font:600 15px/1.35 system-ui,sans-serif;'
+        + 'display:flex;gap:10px;align-items:center;'
+        + 'max-width:min(92vw,520px);padding:10px 16px 10px 10px;border-radius:12px;font:600 15px/1.35 system-ui,sans-serif;'
         + 'box-shadow:0 6px 24px rgba(0,0,0,.25);color:#0b0b0c;cursor:pointer';
       t.onclick = () => t.remove();
+      t.appendChild(logo());
+      t.appendChild(document.createElement('span'));
       document.body.appendChild(t);
     }
     t.style.background = kind === 'ok' ? '#d8f5e3' : kind === 'err' ? '#ffd9d6' : '#fff4c2';
-    t.textContent = '👻 Innstilt: ' + msg;
+    t.lastChild.textContent = 'Innstilt: ' + msg;
     if (kind === 'ok') setTimeout(() => t.remove(), 9000);
   };
 
@@ -54,19 +85,26 @@
     }
   };
 
+  /* Re-query the segment every step: the form may re-render it. Missing for a moment -> wait. */
+  const value = max => { const e = seg(max); return e ? Number(e.getAttribute('aria-valuenow')) : undefined; };
+  const pressOn = async (max, key) => {
+    for (let i = 0; i < 20 && !seg(max); i++) await sleep(100);
+    if (seg(max)) press(seg(max), key);
+    await sleep(60);
+  };
+
   const setSegment = async (max, target) => {
-    press(seg(max), 'ArrowUp'); await sleep(80);
-    press(seg(max), 'ArrowDown'); await sleep(80);
+    await pressOn(max, 'ArrowUp');
+    await pressOn(max, 'ArrowDown');
     const size = Number(max) + 1;
     for (let i = 0; i < size + 5; i++) {
-      const el = seg(max);
-      const now = Number(el.getAttribute('aria-valuenow'));
+      const now = value(max);
+      if (now === undefined) return false;
       if (now === target) return true;
       const up = Number.isNaN(now) || (target - now + size) % size <= size / 2;
-      press(el, up ? 'ArrowUp' : 'ArrowDown');
-      await sleep(40);
+      await pressOn(max, up ? 'ArrowUp' : 'ArrowDown');
     }
-    return Number(seg(max).getAttribute('aria-valuenow')) === target;
+    return value(max) === target;
   };
 
   const okH = await setSegment('23', wantH);

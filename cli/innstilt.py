@@ -14,11 +14,11 @@ Past trains are verified with Entur's public SIRI-ET archive (siri-data-exporter
 licence). Generating a day that nobody has exported yet needs Playwright (pip install playwright &&
 playwright install chromium); already-exported days are a plain download.
 
-  innstilt bookmarklet                  install the "Innstilt: fyll ut" bookmark and use your own browser
+  innstilt bookmarklet                  install the "👻 Innstilt: fyll ut" bookmark and use your own browser
   innstilt ticket [add|edit|remove]     your tickets and their validity (a monthly pass gets a new code
                                         every month; each claim uses the ticket valid on the trip's day)
-  innstilt status [CASE paid|rejected [AMOUNT]]
-                                        list sent claims and record what Vy paid
+  innstilt status [CASE paid|rejected [AMOUNT]] [--row N --case CASE]
+                                        list sent claims, record what Vy paid, add missing case numbers
 
 Nothing is submitted automatically: the form opens prefilled, you check it and press Send. To finish
 the form (Vy only accepts the departure time once it's changed by hand) either click the Innstilt
@@ -591,13 +591,17 @@ def _claims_summary() -> list[dict]:
     """One row per submitted claim, with the latest outcome recorded for its case."""
     if not CLAIMS.exists():
         return []
-    rows, outcomes = [], {}
+    rows, outcomes, cases = [], {}, {}
     for line in CLAIMS.read_text().splitlines():
         c = json.loads(line)
         if c.get("status") == "submitted":
             rows.append(c)
         elif c.get("status") == "outcome":
             outcomes[c["case"]] = c
+        elif c.get("status") == "case":  # case number attached later (innstilt status --row N --case C)
+            cases[(c["from"], c["to"], c["planned"])] = c["case"]
+    for r in rows:
+        r["case"] = cases.get((r["from"], r["to"], r["planned"])) or r.get("case")
     for r in rows:
         o = outcomes.pop(r.get("case") or "", None)
         r["outcome"], r["amount"] = (o["outcome"], o.get("amount")) if o else ("pending", None)
@@ -607,8 +611,28 @@ def _claims_summary() -> list[dict]:
     return rows
 
 
+def _sorted_rows() -> list[dict]:
+    return sorted(_claims_summary(), key=lambda r: r["planned"] or "")
+
+
 def cmd_status(args) -> None:
     cfg = load_config()
+    if args.row is not None:  # attach a case number and/or an outcome to a numbered row
+        rows = _sorted_rows()
+        if not 1 <= args.row <= len(rows):
+            sys.exit(f"No row {args.row} - run 'innstilt status' to see the numbers.")
+        r = rows[args.row - 1]
+        if args.set_case:
+            if not r.get("planned"):
+                sys.exit("That row is a case without a trip; it already has its number.")
+            _append_private(CLAIMS, {"at": dt.datetime.now(TZ).isoformat(), "status": "case", "from": r["from"],
+                                     "to": r["to"], "planned": r["planned"], "case": args.set_case})
+            r["case"] = args.set_case
+            print(f"Row {args.row}: case number {args.set_case}.")
+        if args.case:  # with --row, the positionals are OUTCOME [AMOUNT]
+            args.outcome, args.amount, args.case = args.case, args.outcome, r.get("case")
+            if not args.case:
+                sys.exit("That row has no case number yet - add it: innstilt status --row N --case NUMBER")
     if args.case:
         if args.outcome not in ("paid", "rejected", "pending"):
             sys.exit("Usage: innstilt status CASE paid|rejected|pending [AMOUNT]")
@@ -624,21 +648,24 @@ def cmd_status(args) -> None:
     if not rows:
         print("No claims marked as sent yet.")
         return
-    print(f"\n{'When':<11} {'Trip':<28} {'Case':>8}  Result")
-    for r in sorted(rows, key=lambda r: r["planned"] or ""):
+    rows = _sorted_rows()
+    print(f"\n{'#':>2}  {'When':<11} {'Trip':<28} {'Case':>8}  Result")
+    for n, r in enumerate(rows, 1):
         when = dt.datetime.fromisoformat(r["planned"]).strftime("%d.%m %H:%M") if r["planned"] else "  ?  "
         a = (r.get("from_name") or names.get(r["from"], r["from"])).removesuffix(" stasjon")
         b = (r.get("to_name") or names.get(r["to"], r["to"])).removesuffix(" stasjon")
         res = r["outcome"] + (f" {r['amount']:g} kr" if r["amount"] is not None else "")
         trip = f"{a} -> {b}" if b else a
-        print(f"{when:<11} {trip:<28} {r.get('case') or '-':>8}  {res}")
+        print(f"{n:>2}  {when:<11} {trip:<28} {r.get('case') or '-':>8}  {res}")
     paid = [r for r in rows if r["outcome"] == "paid"]
     total = sum(r["amount"] or 0 for r in paid)
     print(f"\n{len(rows)} sent, {len(paid)} paid ({total:g} kr), "
           f"{sum(r['outcome'] == 'rejected' for r in rows)} rejected, "
           f"{sum(r['outcome'] == 'pending' for r in rows)} pending.")
     if any(not r.get("case") for r in rows):
-        print("(Claims without a case number can't be updated - the number is in Vy's confirmation e-mail.)")
+        print("Rows without a case number: find it in Vy's confirmation e-mail, then\n"
+              "  innstilt status --row N --case NUMBER          (optionally add: paid 21)")
+    print("Record a result: innstilt status CASE paid AMOUNT   (or: rejected)")
 
 
 def cmd_bookmarklet(_args) -> None:
@@ -1198,6 +1225,8 @@ def main(argv=None) -> None:
     st.add_argument("case", nargs="?")
     st.add_argument("outcome", nargs="?")
     st.add_argument("amount", nargs="?")
+    st.add_argument("--row", type=int, help="row number from the list")
+    st.add_argument("--case", dest="set_case", help="with --row: the case number from Vy's e-mail")
     st.set_defaults(fn=cmd_status)
     for name, fn in (("check", cmd_check), ("claim", cmd_claim), ("scan", cmd_scan)):
         sp = sub.add_parser(name)
