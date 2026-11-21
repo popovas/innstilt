@@ -22,6 +22,10 @@ const C = { bg1: '#0e3a30', bg2: '#113f35', mint: '#f2faf5', mint2: '#cfeadb', s
   tree: '#2b7a3d', tree2: '#1f5c2d', trunk: '#6b4a2a', moose: '#7a4a26', antler: '#e2c898',
   yellow: '#f5c400', leaf: '#d9822b', leaf2: '#8a4512', ice: '#bfe6ff', red: '#ff6b57', go: '#3fe08a', stop: '#ff3b2f' };
 
+/* the slow-running sign as drawn on the board, for the rules text */
+const SIGN = '<svg class="g-sign" viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><circle cx="12" cy="12" r="11" fill="#d8262c"/>'
+  + '<circle cx="12" cy="12" r="8" fill="#fff"/><text x="12" y="15.5" text-anchor="middle" font-family="system-ui,sans-serif" font-size="9.5" font-weight="800" fill="#0b0b0c">40</text></svg>';
+
 const TXT = {
   no: {
     title: 'Forsinket?', intro: 'Plukk opp så mange passasjerer du rekker med spøkelsestoget. Forsinkelsen tikker hele tiden – ved 31 minutter er det slutt. Grønt signal hjelper, rødt signal koster. Pass deg for kanten og dine egne vogner – og for mer etter hvert.',
@@ -29,7 +33,7 @@ const TXT = {
     ahead: 'Foran rute! 😎', spare: 'Ekstra togsett! 🚆', streak: '10 på rad uten uhell – ekstra togsett!',
     green: 'Grønt signal! −3 min', redSig: 'Venter på signal… +3 min', lvl: 'Nivå {n}',
     levels: { 2: 'Nivå 2: løv og is!', 3: 'Nivå 3: tunneler!', 4: 'Nivå 4: trær over sporet!', 5: 'Nivå 5: elg!' }, levelMore: 'Nivå {n}: litt mer av alt!',
-    slowSign: 'Saktekjøring i 5 sekunder 🚧',
+    slowSign: 'Saktekjøring i 5 sekunder',
     tunnel: 'Tunnel: {a} ⟷ {b}', sides: { left: 'venstre', right: 'høyre', top: 'topp', bottom: 'bunn' }, tree: 'Trær over sporet!', moose: 'Elg på sporet!',
     paused: 'Pause', leaf: 'Løv på skinnene!', ice: 'Is i kontaktledningen!', self: 'Materiellmangel!', edge: 'Signalfeil!',
     lateTitle: '31 minutter forsinket!', lateText: 'Gratulerer – du har krav på erstatning.',
@@ -37,12 +41,12 @@ const TXT = {
     result: '{n} passasjerer kom fram.', newBest: 'Ny rekord!', best: 'Rekord: {n}',
     keys: 'Piltaster eller WASD · P eller mellomrom = pause', pad: { up: 'Opp', down: 'Ned', left: 'Venstre', right: 'Høyre', pause: 'Pause' },
     score: 'Passasjerer', late: 'Forsinkelse', lives: 'Togsett igjen', help: 'Hvordan spiller jeg?',
-    rules: ['👤 Kjør inn i passasjerene for å plukke dem opp – toget blir én vogn lengre.',
+    rules: ['👤 Kjør til passasjerene for å ta dem med – toget blir én vogn lengre.',
       '⏱ Forsinkelsen tikker hele tiden: +1 minutt hvert 3. sekund (streken viser neste minutt). Ved 31 minutter er spillet over.',
       '🟢 Grønt signal tar 3 minutter av forsinkelsen – under null er du foran rute. 🔴 Rødt signal legger til 3 – kjør rundt det.',
       '🚆 Ekstra togsett: plukk opp reservetoget med + når det dukker opp, eller ta 10 passasjerer på rad uten uhell (opptil 5 togsett).',
-      '📈 Nytt nivå hver 4. passasjer. 2: løv og is 🍂❄️ dukker opp noen sekunder. 3: tunneler – to kanter (gule og svarte) åpnes en stund: kjør ut på den ene og kom inn fra den andre, også fra siden. 4: trær over sporet 🌲 (de blinker først). 5: elg som rusler over brettet. Fra nivå 6 kommer hindringene litt oftere.',
-      '🚧 Saktekjøring (skilt med 40, fra nivå 3): toget kjører halvt så fort i 5 sekunder – lettere å styre, men klokka går.',
+      '📈 Nytt nivå hver 4. passasjer. 2: løv og is 🍂❄️ dukker opp noen sekunder. 3: tunneler – to kanter (gule og svarte) åpnes en stund: kjør ut på den ene og kom inn fra den andre. 4: trær over sporet 🌲 (de blinker først). 5: elg som rusler over brettet. Fra nivå 6 kommer hindringene litt oftere.',
+      `${SIGN} Saktekjøring (fra nivå 3): toget kjører halvt så fort i 5 sekunder – lettere å styre, men klokka går.`,
       '💥 Kjører du inn i løv, is, trær, elg, en lukket kant eller dine egne vogner, mister du et togsett (3 i alt), og farten starter rolig igjen.',
       '🕹 Styr med pilene, eller sveip på brettet. ⏸ nede til venstre tar pause.'],
   },
@@ -52,7 +56,7 @@ const TXT = {
     ahead: 'Ahead of schedule! 😎', spare: 'Spare train set! 🚆', streak: '10 in a row without a mishap – extra train set!',
     green: 'Green signal! −3 min', redSig: 'Waiting for a signal… +3 min', lvl: 'Level {n}',
     levels: { 2: 'Level 2: leaves and ice!', 3: 'Level 3: tunnels!', 4: 'Level 4: trees on the line!', 5: 'Level 5: moose!' }, levelMore: 'Level {n}: a bit more of everything!',
-    slowSign: 'Slow running for 5 seconds 🚧',
+    slowSign: 'Slow running for 5 seconds',
     tunnel: 'Tunnel: {a} ⟷ {b}', sides: { left: 'left', right: 'right', top: 'top', bottom: 'bottom' }, tree: 'Trees on the line!', moose: 'Moose on the line!',
     paused: 'Paused', leaf: 'Leaves on the line!', ice: 'Ice on the overhead wire!', self: 'Rolling stock shortage!', edge: 'Signal failure!',
     lateTitle: '31 minutes late!', lateText: 'Congratulations – you are entitled to compensation.',
@@ -60,12 +64,12 @@ const TXT = {
     result: '{n} passengers got there.', newBest: 'New record!', best: 'Record: {n}',
     keys: 'Arrow keys or WASD · P or Space = pause', pad: { up: 'Up', down: 'Down', left: 'Left', right: 'Right', pause: 'Pause' },
     score: 'Passengers', late: 'Delay', lives: 'Train sets left', help: 'How do I play?',
-    rules: ['👤 Drive into passengers to pick them up – the train gets one wagon longer.',
+    rules: ['👤 Drive to the passengers to pick them up – the train gets one wagon longer.',
       '⏱ The delay keeps ticking: +1 minute every 3 seconds (the bar shows the next minute). At 31 minutes the game is over.',
       '🟢 A green signal takes 3 minutes off the delay – below zero you are ahead of schedule. 🔴 A red signal adds 3 – drive around it.',
       '🚆 Extra train sets: pick up the spare train with + when it shows up, or take 10 passengers in a row without a mishap (up to 5 train sets).',
-      '📈 A new level every 4 passengers. 2: leaves and ice 🍂❄️ show up for a few seconds. 3: tunnels – two edges (yellow and black) open for a while: drive out of one and come in from the other, sometimes from the side. 4: trees on the line 🌲 (they blink first). 5: a moose wandering across. From level 6, obstacles come a little more often.',
-      '🚧 Slow running (a 40 sign, from level 3): the train runs at half speed for 5 seconds – easier to steer, but the clock keeps going.',
+      '📈 A new level every 4 passengers. 2: leaves and ice 🍂❄️ show up for a few seconds. 3: tunnels – two edges (yellow and black) open for a while: drive out of one and come in from the other. 4: trees on the line 🌲 (they blink first). 5: a moose wandering across. From level 6, obstacles come a little more often.',
+      `${SIGN} Slow running (from level 3): the train runs at half speed for 5 seconds – easier to steer, but the clock keeps going.`,
       '💥 Hit leaves, ice, trees, a moose, a closed edge or your own wagons and you lose a train set (3 in all), and the speed starts calm again.',
       '🕹 Steer with the arrows, or swipe on the board. ⏸ bottom left pauses.'],
   },

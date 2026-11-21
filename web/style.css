@@ -290,3 +290,4 @@ dialog.helpdlg .intro h1 { font-size: 20px; }
 .g-msg > :last-child { margin-bottom: auto; }
 .g-rules { font-size: 13px; line-height: 1.35; }
 .g-rules li { margin: 5px 0; }
+.g-sign { vertical-align: -5px; }
