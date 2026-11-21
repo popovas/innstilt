@@ -136,3 +136,8 @@ input::placeholder { color: #8aa79b; opacity: 1; }
 .small-hero { padding-top: 8px; }
 .small-hero h1 { font-size: 26px; }
 .about p { margin: 0 0 12px; }
+.counter { font-weight: 700; margin: 8px 0; }
+.counter small { font-weight: 400; }
+.sharecard pre { background: var(--bg); border-radius: 8px; padding: 8px 10px; font-size: 12px; overflow-x: auto; }
+.sharecard summary { cursor: pointer; color: var(--stripe); font-weight: 600; }
+.jab { background: var(--card); border-left: 4px solid var(--yellow); border-radius: 10px; padding: 8px 12px; font-size: 14px; margin: 8px 0; text-align: left; }

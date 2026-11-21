@@ -86,3 +86,11 @@ function livePiece(id, t) {
   p.catch(() => live.delete(key));
   return p;
 }
+
+let statsPromise = null;
+/** Monthly per-line statistics built nightly (tools/archive/build_web_data.py), or null. */
+export function loadStats() {
+  statsPromise ??= fetch(`${DATA}/stats.json`, { cache: 'no-cache' })
+    .then(r => (r.ok ? r.json() : null)).catch(() => null);
+  return statsPromise;
+}

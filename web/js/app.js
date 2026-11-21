@@ -4,6 +4,7 @@ import * as data from './data.js';
 import { t, getLang, setLang, fmtDate, fmtDay } from './i18n.js';
 import { BOOKMARKLET } from './bookmarklet-href.js';
 import { VERSION, ABOUT, contactAddress } from './about.js';
+import * as stats from './stats.js';
 
 const DONATE_URL = '';  /* e.g. a Vipps or Buy Me a Coffee link; the footer button stays hidden while empty */
 const $ = sel => document.querySelector(sel);
@@ -26,6 +27,7 @@ function shell() {
 
 function render() {
   shell();
+  syncStats();
   const s = store.get();
   const route = location.hash.slice(2) || 'trips';
   if (route === 'about') return viewAbout();  /* readable before setup too */
@@ -54,6 +56,8 @@ function viewWelcome() {
       <img src="icons/ghost-192.png" width="120" height="120" alt="">
       <h1>Innstilt</h1>
       <p class="lead">${esc(t('tagline'))}</p>
+      <p class="counter" data-counter hidden></p>
+      <p class="jab" data-jab hidden></p>
     </section>
     <section class="card privacy">
       <h2>🔒 ${esc(t('privacyTitle'))}</h2>
@@ -62,11 +66,14 @@ function viewWelcome() {
     </section>
     <button class="primary big" id="start">${esc(t('start'))}</button>`;
   $('#start').onclick = () => { store.update(s => { s.welcomed = true; }); go('trips'); };
+  fillCounter();
+  fillJab();
 }
 
 /* ------------------------------------------------------------------ about */
 
-function viewAbout() {
+async function viewAbout() {
+  const address = await contactAddress();
   const paras = ABOUT[getLang()] || ABOUT.no;
   $('#main').innerHTML = `
     <section class="hero small-hero">
@@ -74,20 +81,22 @@ function viewAbout() {
       <h1>${esc(t('about'))}</h1>
       <p class="muted">${esc(t('version', { v: VERSION }))}</p>
     </section>
+    <p class="counter center" data-counter hidden></p>
     <section class="card about">
       <p class="lead"><strong>${esc(paras[0])}</strong></p>
       ${paras.slice(1).map(x => `<p>${esc(x)}</p>`).join('')}
     </section>
-    ${contactAddress() ? `<section class="card center">
+    ${address ? `<section class="card center">
       <p>${esc(t('contactBody'))}</p>
       <button type="button" class="primary" id="contact">✉️ ${esc(t('contact'))}</button>
     </section>` : ''}
     <p class="center"><button type="button" class="link" id="back">← ${esc(t('back'))}</button></p>`;
   $('#back').onclick = () => (history.length > 1 ? history.back() : go('trips'));
+  fillCounter();
   $('#contact')?.addEventListener('click', () => {
     /* Opens the visitor's own mail app; only the version and language are filled in, nothing personal. */
     const q = new URLSearchParams({ subject: `Innstilt ${VERSION}`, body: `\n\n— Innstilt ${VERSION} (${getLang()})` });
-    location.href = `mailto:${contactAddress()}?${q.toString().replace(/\+/g, '%20')}`;
+    location.href = `mailto:${address}?${q.toString().replace(/\+/g, '%20')}`;
   });
 }
 
@@ -287,6 +296,7 @@ function settingsExtrasHtml() {
     <section class="card">
       <h2>${esc(t('yourData'))}</h2>
       <p class="muted">${esc(t('privacyBody'))}</p>
+      ${stats.enabled() ? `<label class="check"><input type="checkbox" id="share" ${store.get().stats.share ? 'checked' : ''}> ${esc(t('shareSetting'))}</label>` : ''}
       <button type="button" id="export">${esc(t('exportData'))}</button>
       <button type="button" class="danger" id="wipe">${esc(t('deleteData'))}</button>
     </section>`;
@@ -295,6 +305,7 @@ function settingsExtrasHtml() {
 function wireSettingsExtras() {
   $('#bm').addEventListener('click', e => { e.preventDefault(); alert(t('bookmarkClick')); });
   $('#bmHave').addEventListener('change', e => store.update(st => { st.bookmarkDone = e.target.checked; }));
+  $('#share')?.addEventListener('change', e => setShare(e.target.checked));
   $('#export').onclick = () => {
     const a = document.createElement('a');
     a.href = URL.createObjectURL(new Blob([store.exportJson()], { type: 'application/json' }));
@@ -337,6 +348,7 @@ async function viewTrips() {
       <p class="center"><a class="bookmarklet" href="${esc(BOOKMARKLET)}" id="bm"><img src="icons/ghost-32.png" width="22" height="22" alt=""><span class="vh">👻 </span>Innstilt: fyll ut</a></p>
       <div class="actions"><button type="button" id="bmLater">${esc(t('bmLater'))}</button>
         <button type="button" class="primary" id="bmDone">${esc(t('bmDone'))}</button></div></section>` : ''}
+    <p class="jab" data-jab hidden></p>
     ${otherTripHtml()}
     <p class="muted">${esc(t('tripsIntro', { min: core.DEFAULT_THRESHOLD, days: core.CLAIM_DEADLINE_DAYS }))}</p>
     <div id="trips"></div>
@@ -345,6 +357,7 @@ async function viewTrips() {
   $('#bmDone')?.addEventListener('click', () => { store.update(st => { st.bookmarkDone = true; }); $('.bmcard').remove(); });
   $('#bmLater')?.addEventListener('click', () => $('.bmcard').remove());
   wireOtherTrip();
+  fillJab();
   const index = await data.loadIndex();
   const today = core.todayOslo();
   const oldest = core.addDays(today, -core.CLAIM_DEADLINE_DAYS);
@@ -561,10 +574,16 @@ function viewClaims() {
   const kr = paid.reduce((sum, c) => sum + (c.amount || 0), 0);
   $('#main').innerHTML = `
     <h1>${esc(t('claimsTitle'))}</h1>
+    ${shareCardHtml(claims)}
     ${claims.length ? `<p class="totals">${esc(t('totals', {
       sent: claims.length, paid: paid.length, kr: kr.toLocaleString(getLang() === 'no' ? 'nb-NO' : 'en-GB'),
       rejected: claims.filter(c => c.status === 'rejected').length }))}</p>` : ''}
-    <div id="claims">${claims.length ? claims.map(claimRowHtml).join('') : `<p class="empty">${esc(t('noClaims'))}</p>`}</div>`;
+    <div id="claims">${claims.length ? claims.map(claimRowHtml).join('') : `<p class="empty">${esc(t('noClaims'))}</p>`}</div>
+    <p class="counter center" data-counter hidden></p>`;
+  fillCounter();
+  syncStats();
+  $('#shareYes')?.addEventListener('click', () => { setShare(true); viewClaims(); });
+  $('#shareNo')?.addEventListener('click', () => { setShare(false); viewClaims(); });
   document.querySelectorAll('.claim').forEach(row => {
     const key = row.dataset.key;
     const change = () => {
@@ -589,6 +608,74 @@ function claimRowHtml(c) {
       `<option value="${s}" ${s === c.status ? 'selected' : ''}>${esc(t(s))}</option>`).join('')}</select>
     <input aria-label="${esc(t('amount'))}" placeholder="kr" inputmode="decimal" value="${c.amount ?? ''}" ${c.status === 'paid' ? '' : 'hidden'}>
   </article>`;
+}
+
+/* ------------------------------------------------------------------ anonymous statistics (opt-in) */
+
+/** Asked once, on the Claims page, after the first claim; shows exactly what would be sent. */
+function shareCardHtml(claims) {
+  const s = store.get();
+  if (!stats.enabled() || s.stats.share !== null || !claims.length) return '';
+  const preview = JSON.stringify(stats.report('…', s.claims).months, null, 1);
+  return `<section class="card sharecard">
+    <h2>${esc(t('shareTitle'))}</h2>
+    <p>${esc(t('shareBody'))}</p>
+    <details><summary>${esc(t('sharePreview'))}</summary><pre>${esc(preview)}</pre></details>
+    <div class="actions"><button type="button" id="shareNo">${esc(t('shareNo'))}</button>
+      <button type="button" class="primary" id="shareYes">${esc(t('shareYes'))}</button></div>
+  </section>`;
+}
+
+function setShare(on) {
+  const before = store.get().stats;
+  if (!on && before.share && before.id) {
+    stats.send({ id: before.id, months: {} }).catch(() => {});  /* deletes what was shared */
+  }
+  store.update(s => {
+    s.stats = on ? { share: true, id: s.stats.id || stats.newId(), lastSent: '' } : { share: false, id: '', lastSent: '' };
+  });
+  syncStats();
+}
+
+/* Sends the current totals when they changed since the last successful report (idempotent on the server). */
+let syncing = false;
+async function syncStats() {
+  const s = store.get();
+  if (!stats.enabled() || s.stats.share !== true || syncing) return;
+  const body = stats.report(s.stats.id, s.claims);
+  const text = JSON.stringify(body);
+  if (text === s.stats.lastSent) return;
+  syncing = true;
+  try {
+    await stats.send(body);
+    store.update(st => { st.stats.lastSent = text; });
+  } catch { /* offline or server down: try again next time */ } finally { syncing = false; }
+}
+
+/** "Most cancelled line of the month", from public data. */
+async function fillJab() {
+  const w = core.worstLine(await data.loadStats());
+  if (!w) return;
+  const loc = getLang() === 'no' ? 'nb-NO' : 'en-GB';
+  const ends = w.ends.length ? ` (${w.ends.join(' – ')})` : '';
+  const text = t(w.current ? 'jabMonth' : 'jabLastMonth', {
+    line: w.line + ends, n: w.cancelled.toLocaleString(loc), trips: w.trips.toLocaleString(loc),
+    pct: w.pct.toLocaleString(loc, { maximumFractionDigits: w.pct < 10 ? 1 : 0 }) });
+  const more = w.partly ? t('jabPartly', { n: w.partly.toLocaleString(loc) }) : '';
+  document.querySelectorAll('[data-jab]').forEach(el => {
+    el.innerHTML = `🏆 ${esc(text)}${more ? ` <span class="muted">${esc(more)}</span>` : ''}`;
+    el.hidden = false;
+  });
+}
+
+async function fillCounter() {
+  const total = await stats.fetchTotal();
+  if (!total || total.kr < 1) return;
+  const fmt = n => n.toLocaleString(getLang() === 'no' ? 'nb-NO' : 'en-GB');
+  document.querySelectorAll('[data-counter]').forEach(el => {
+    el.innerHTML = `💸 ${esc(t('counter', { kr: fmt(total.kr), n: fmt(total.paid) }))}<small>${esc(t('counterNote'))}</small>`;
+    el.hidden = false;
+  });
 }
 
 /* ------------------------------------------------------------------ start */

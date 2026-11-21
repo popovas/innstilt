@@ -7,6 +7,7 @@ const EMPTY = {
   profile: { name: '', email: '', account: '', routes: [] },  /* routes: [{a, b, timesOut, timesBack}], a/b = {id, name} */
   tickets: [],   /* {code, validFrom: ms|null, validTo: ms|null} */
   claims: [],    /* {key, fromId, toId, fromName, toName, date, dep, line, depMs, case, status, amount, sentAt} */
+  stats: { share: null, id: '', lastSent: '' },  /* opt-in anonymous statistics; share: null = not asked yet */
 };
 
 let state = load();

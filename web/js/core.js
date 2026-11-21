@@ -237,3 +237,20 @@ export function claimLink(profile, ticket, from, to, j) {
   });
   return `${FORM_URL}?${p}`;
 }
+
+/* ---------- "most cancelled line of the month" (data/vyg/stats.json) ---------- */
+
+/** The line with the highest share of fully cancelled departures (at least `minTrips`) in the current month,
+    or last month while this one has under a week of data. {month, current, line, ends, trips, cancelled,
+    partly, pct} or null. */
+export function worstLine(stats, today = todayOslo(), minTrips = 100) {
+  if (!stats?.months) return null;
+  const cur = today.slice(0, 7);
+  const prev = addDays(`${cur}-01`, -1).slice(0, 7);
+  const month = (stats.months[cur]?.days >= 7 || !stats.months[prev]) ? cur : prev;
+  const lines = Object.entries(stats.months[month]?.lines || {})
+    .filter(([, v]) => v.trips >= minTrips && v.cancelled > 0)
+    .map(([line, v]) => ({ line, ...v, pct: (100 * v.cancelled) / v.trips }))
+    .sort((a, b) => b.pct - a.pct || b.cancelled - a.cancelled);
+  return lines.length ? { month, current: month === cur, ...lines[0] } : null;
+}
