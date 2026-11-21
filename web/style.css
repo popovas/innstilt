@@ -158,3 +158,4 @@ details.jabfold .jab-body { padding: 0 16px 12px; }
 .suggest li.small { padding: 8px 10px; font-size: 13px; }
 .homecard { border: 2px dashed var(--stripe); }
 .homecard h2 { margin-top: 0; }
+.reassure { background: var(--bg); border-radius: 10px; padding: 10px 12px; font-size: 14px; margin: 4px 0 10px; }

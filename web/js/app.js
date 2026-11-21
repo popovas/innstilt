@@ -154,6 +154,7 @@ function viewSetup(first) {
       ${s.tickets.length ? `<button type="button" class="link" id="newTicket">＋ ${esc(t('addTicket'))}</button>` : ''}
 
       <h2>${esc(t('secYou'))}</h2>
+      <p class="reassure">🔒 ${esc(t('youWhy'))}</p>
       <label>${esc(t('name'))}<input name="name" value="${esc(p.name)}" autocomplete="name"></label>
       <label>${esc(t('email'))}<input type="email" name="email" value="${esc(p.email)}" autocomplete="email"><small>${esc(t('emailHelp'))}</small></label>
       <label>${esc(t('account'))}<input name="account" value="${esc(p.account)}" inputmode="numeric" placeholder="${esc(t('accountPh'))}" autocomplete="off"></label>
