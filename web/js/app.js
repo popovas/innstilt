@@ -27,6 +27,7 @@ function shell() {
 
 function render() {
   shell();
+  offlineBanner();
   syncStats();
   const s = store.get();
   const route = location.hash.slice(2) || 'trips';
@@ -47,6 +48,15 @@ document.addEventListener('click', e => {
   if (b) { setLang(b.dataset.lang); render(); }
 });
 addEventListener('hashchange', render);
+
+/* A small banner while the device is offline (no re-render, so nothing being typed is lost). */
+function offlineBanner() {
+  const el = $('#offline');
+  el.textContent = `📡 ${t('offline')}`;
+  el.hidden = navigator.onLine;
+}
+addEventListener('online', offlineBanner);
+addEventListener('offline', offlineBanner);
 
 /* ------------------------------------------------------------------ welcome */
 
@@ -220,7 +230,10 @@ function wireStations(root) {
           list.innerHTML = hits.map(h => `<li><button type="button" data-id="${esc(h.id)}">${esc(h.name)}</button></li>`).join('');
           list.hidden = !hits.length;
           input.setAttribute('aria-expanded', String(!!hits.length));
-        } catch { list.hidden = true; }
+        } catch {
+          list.innerHTML = `<li class="muted small">${esc(t('searchFailed'))}</li>`;
+          list.hidden = false;
+        }
       }, 250);
     });
     list.addEventListener('click', e => {
@@ -361,7 +374,8 @@ async function viewTrips() {
   const index = await data.loadIndex();
   const today = core.todayOslo();
   const oldest = core.addDays(today, -core.CLAIM_DEADLINE_DAYS);
-  const days = index.days.filter(d => d >= oldest && d < today).sort().reverse();
+  const days = (index?.days || []).filter(d => d >= oldest && d < today).sort().reverse();
+  let failedDays = index ? 0 : -1, liveFailed = false;  /* -1 = the list of days itself failed */
   const done = new Set(s.claims.map(c => c.key));
   const pairs = p.routes.flatMap(r => [[r.a, r.b, r.timesOut], [r.b, r.a, r.timesBack]]);
   let shown = 0, urgent = 0, skipped = new Set();
@@ -375,10 +389,11 @@ async function viewTrips() {
     $('#progress').textContent = isToday ? t('loadingLive') : t('loading', { date: fmtDay(day) });
     let routeJourneys;
     if (isToday) {
-      routeJourneys = (from, to) => liveForRoute(from, to, now - LIVE_LOOKBACK, now + HOUR).catch(() => []);
+      routeJourneys = (from, to) => liveForRoute(from, to, now - LIVE_LOOKBACK, now + HOUR)
+        .catch(() => { liveFailed = true; return []; });
     } else {
       let dayData;
-      try { dayData = await data.loadDay(day); } catch { continue; }
+      try { dayData = await data.loadDay(day); } catch { failedDays += 1; continue; }
       routeJourneys = async (from, to) => core.journeysForRoute(dayData, from.id, to.id);
     }
     const items = [], seen = new Set();  /* two routes may share a leg */
@@ -405,7 +420,14 @@ async function viewTrips() {
   }
   if (run !== tripsRun) return;
   $('#progress').textContent = (skipped.size ? t('noTicketDay', { n: skipped.size }) + ' ' : '');
-  if (!shown) $('#trips').innerHTML = `<p class="empty">${esc(t('noTrips'))}</p>`;
+  const problems = [failedDays < 0 ? t('dataFailed') : failedDays ? t('daysFailed', { n: failedDays }) : '',
+    liveFailed ? t('liveFailedShort') : ''].filter(Boolean);
+  if (!shown && !problems.length) $('#trips').innerHTML = `<p class="empty">${esc(t('noTrips'))}</p>`;
+  if (problems.length) {
+    $('#trips').insertAdjacentHTML('afterbegin', `<div class="notice problem" role="alert">⚠️ ${esc(problems.join(' '))}
+      ${navigator.onLine ? '' : esc(t('offlineHint'))} <button type="button" class="link" id="retry">${esc(t('retry'))}</button></div>`);
+    $('#retry').onclick = () => render();
+  }
   /* the list is newest first, so trips about to expire are at the bottom: say so at the top */
   if (urgent) $('#trips').insertAdjacentHTML('afterbegin', `<p class="notice urgent">⏳ ${esc(t('urgentTop', { n: urgent }))}</p>`);
 }
@@ -523,9 +545,10 @@ async function findOther(q) {
   } else {
     say(t('loading', { date: fmtDay(q.date) }));
     const index = await data.loadIndex();
+    if (!index) return say(t('dataFailed'));
     if (!index.days.includes(q.date)) return say(t('otherNoData'));
     let day;
-    try { day = await data.loadDay(q.date); } catch { return say(t('otherNoData')); }
+    try { day = await data.loadDay(q.date); } catch { return say(t('dataFailed')); }
     all = core.journeysForRoute(day, q.from.id, q.to.id);
   }
   if (otherQuery !== q) return;  /* a newer search started meanwhile */

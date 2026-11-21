@@ -153,3 +153,6 @@ details.jabfold summary::before { color: var(--yellow); }
 details.jabfold .pct { font-weight: 800; }
 details.jabfold .jab-body { padding: 0 16px 12px; }
 .trip .deadline { grid-column: 1 / -1; order: 3; margin: -4px 0 0; color: var(--red); font-weight: 700; }
+.offline { margin: 0; padding: 6px 16px; background: var(--ink); color: var(--yellow); font-size: 14px; text-align: center; }
+.notice.problem { background: #ffe1dc; }
+.suggest li.small { padding: 8px 10px; font-size: 13px; }

@@ -4,6 +4,8 @@
 const GEOCODER = 'https://api.entur.io/geocoder/v1/autocomplete';
 const HEADERS = { 'ET-Client-Name': 'innstilt-web' };
 const DATA = 'data/vyg';
+const TIMEOUT = 20000;  /* ms; a stuck download fails instead of loading forever */
+const timed = (opts = {}) => ({ ...opts, signal: AbortSignal.timeout(TIMEOUT) });
 const JP = 'https://api.entur.io/journey-planner/v3/graphql';
 const LIVE_Q = `query($id: String!, $t: DateTime!, $range: Int!) {
   stopPlace(id: $id) {
@@ -25,7 +27,7 @@ export async function searchStations(text) {
   if (!text || text.trim().length < 2) return [];
   const u = new URL(GEOCODER);
   u.search = new URLSearchParams({ text, layers: 'venue', size: '20', lang: 'no' });
-  const r = await fetch(u, { headers: HEADERS });
+  const r = await fetch(u, timed({ headers: HEADERS }));
   if (!r.ok) throw new Error(`station search ${r.status}`);
   const { features } = await r.json();
   return features
@@ -35,21 +37,24 @@ export async function searchStations(text) {
     .map(p => ({ id: p.id, name: p.name }));
 }
 
+/** The list of days with train data, or null if it couldn't be loaded (offline, server down). */
 let indexPromise = null;
 export function loadIndex() {
-  indexPromise ??= fetch(`${DATA}/index.json`, { cache: 'no-cache' })
-    .then(r => (r.ok ? r.json() : { days: [] }))
-    .catch(() => ({ days: [] }));
+  indexPromise ??= fetch(`${DATA}/index.json`, timed({ cache: 'no-cache' }))
+    .then(r => { if (!r.ok) throw new Error(`index ${r.status}`); return r.json(); })
+    .catch(() => { indexPromise = null; return null; });  /* not cached, so "try again" refetches */
   return indexPromise;
 }
 
 const days = new Map();
 export function loadDay(date) {
   if (!days.has(date)) {
-    days.set(date, fetch(`${DATA}/${date}.json`).then(r => {
+    const p = fetch(`${DATA}/${date}.json`, timed()).then(r => {
       if (!r.ok) throw new Error(`${date}: ${r.status}`);
       return r.json();
-    }));
+    });
+    p.catch(() => days.delete(date));  /* failures aren't cached */
+    days.set(date, p);
   }
   return days.get(date);
 }
@@ -72,6 +77,7 @@ function livePiece(id, t) {
   const hit = live.get(key);
   if (hit && Date.now() - hit.at < 60000) return hit.p;
   const p = fetch(JP, {
+    signal: AbortSignal.timeout(TIMEOUT),
     method: 'POST',
     headers: { ...HEADERS, 'Content-Type': 'application/json' },
     body: JSON.stringify({ query: LIVE_Q, variables: { id, t: new Date(t).toISOString(), range: HOUR / 1000 } }),
