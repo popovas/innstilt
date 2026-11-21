@@ -5,7 +5,7 @@ import { t, getLang, setLang, fmtDate, fmtDay } from './i18n.js';
 import { BOOKMARKLET } from './bookmarklet-href.js';
 import { VERSION, ABOUT, ROADMAP, FAQ, contactAddress } from './about.js';
 import * as stats from './stats.js';
-import { INTRO, picture as introPicture } from './intro.js';
+import { slides as introSlides, picture as introPicture, HELP } from './intro.js';
 
 /* Android app test (Google Play closed test). Empty group link = the tester card stays hidden. */
 const TESTER_GROUP_URL = '';  /* e.g. 'https://groups.google.com/g/innstilt-testere' */
@@ -39,6 +39,9 @@ function shell() {
   $('#nav').innerHTML = [['trips', t('navTrips')], ['claims', t('navClaims')], ['settings', t('navSettings')]]
     .map(([r, label]) => `<a href="#/${r}" ${r === route ? 'aria-current="page"' : ''}>${esc(label)}</a>`).join('');
   $('#nav').hidden = !store.get().welcomed;
+  const help = $('#helpBtn');
+  help.hidden = !store.get().welcomed || route === 'intro';
+  help.setAttribute('aria-label', t('help')); help.title = t('help');
   $('#foot').innerHTML = `<a href="#/about">${esc(t('about'))}</a> · <a href="${data.NATIVE ? 'https://innstilt.app/' : ''}personvern.html${getLang() === 'en' ? '#en' : ''}">${esc(t('privacy'))}</a> · ${esc(t('notVy'))} ${esc(t('dataFrom'))}`
     + (DONATE_URL ? ` · <a href="${esc(DONATE_URL)}" target="_blank" rel="noopener">${esc(t('coffee'))}</a>` : '');
 }
@@ -86,29 +89,31 @@ addEventListener('offline', offlineBanner);
 
 /* ------------------------------------------------------------------ welcome */
 
-/* First start: four short slides (one drawing, a line or two each). "Skip" is always there; the last slide
-   links the privacy page and starts setup. Re-openable from About (#/intro). */
+/* First start: a walk through the app's own screens (one screenshot or drawing, a line or two each). "Skip" is
+   always there; the first slide links the privacy page; the last starts setup. Re-openable from About (#/intro). */
 let introIdx = 0;
+const privacyHref = () => `${data.NATIVE ? 'https://innstilt.app/' : ''}personvern.html${getLang() === 'en' ? '#en' : ''}`;
+
+function slideHtml(sl) {
+  return `<div class="intro-pic">${introPicture(sl, getLang())}</div>
+    <h1>${esc(sl[2])}</h1>
+    <p class="lead">${esc(sl[3])}</p>
+    ${sl[0] === 'setup' ? `<p><a href="${esc(privacyHref())}">${esc(t('readPrivacy'))}</a></p>` : ''}`;
+}
+
 function viewWelcome(again = false) {
-  const slides = INTRO[getLang()] || INTRO.no;
-  const i = Math.min(introIdx, slides.length - 1), last = i === slides.length - 1;
-  const privacyHref = `${data.NATIVE ? 'https://innstilt.app/' : ''}personvern.html${getLang() === 'en' ? '#en' : ''}`;
+  const all = introSlides(getLang());
+  const i = Math.min(introIdx, all.length - 1), last = i === all.length - 1;
   $('#main').innerHTML = `
     <section class="intro">
       <div class="intro-top"><button type="button" class="link" id="start">${esc(t(again ? 'introClose' : 'introSkip'))}</button></div>
-      <div class="intro-slide" id="slide">
-        <div class="intro-pic">${introPicture(i)}</div>
-        <h1>${esc(slides[i][0])}</h1>
-        <p class="lead">${esc(slides[i][1])}</p>
-        ${i === 0 ? '<p class="counter" data-counter hidden></p><details class="card fold jabfold" data-jab-fold hidden><summary></summary><div class="jab-body"></div></details>' : ''}
-        ${last ? `<p><a href="${esc(privacyHref)}">${esc(t('readPrivacy'))}</a></p>` : ''}
-      </div>
-      <div class="dots">${slides.map((_, k) => `<button type="button" class="dot" data-go="${k}" aria-label="${k + 1}" ${k === i ? 'aria-current="step"' : ''}></button>`).join('')}</div>
+      <div class="intro-slide" id="slide">${slideHtml(all[i])}</div>
+      <div class="dots">${all.map((_, k) => `<button type="button" class="dot" data-go="${k}" aria-label="${k + 1}" ${k === i ? 'aria-current="step"' : ''}></button>`).join('')}</div>
       ${last ? `<button class="primary big" id="startEnd">${esc(t(again ? 'introClose' : 'start'))}</button>`
         : `<button class="primary big" id="next">${esc(t('introNext'))}</button>`}
       ${last && !again ? (wantsTester() ? testerHtml() : wantsHomeScreen() ? `<section class="card homecard">${homeHtml(true)}</section>` : '') : ''}
     </section>`;
-  const goTo = k => { introIdx = Math.max(0, Math.min(slides.length - 1, k)); viewWelcome(again); };
+  const goTo = k => { introIdx = Math.max(0, Math.min(all.length - 1, k)); viewWelcome(again); };
   const done = () => {
     introIdx = 0;
     if (again) { go('about'); return; }
@@ -119,16 +124,42 @@ function viewWelcome(again = false) {
   $('#startEnd')?.addEventListener('click', done);
   $('#next')?.addEventListener('click', () => goTo(i + 1));
   document.querySelectorAll('.dot').forEach(d => d.addEventListener('click', () => goTo(Number(d.dataset.go))));
-  let x0 = null;  /* swipe left/right */
-  $('#slide').addEventListener('touchstart', e => { x0 = e.touches[0].clientX; }, { passive: true });
-  $('#slide').addEventListener('touchend', e => {
+  swipe($('#slide'), dir => goTo(i + dir));
+  wireInstall();
+}
+
+/** Calls back with +1 (swipe left) or -1 (swipe right). */
+function swipe(el, cb) {
+  let x0 = null;
+  el.addEventListener('touchstart', e => { x0 = e.touches[0].clientX; }, { passive: true });
+  el.addEventListener('touchend', e => {
     if (x0 === null) return;
     const dx = e.changedTouches[0].clientX - x0; x0 = null;
-    if (Math.abs(dx) > 50) goTo(i + (dx < 0 ? 1 : -1));
+    if (Math.abs(dx) > 50) cb(dx < 0 ? 1 : -1);
   });
-  wireInstall();
-  if (i === 0) { fillCounter(); fillJab(); }
 }
+
+/* The "?" in the header: the introduction's slides for the screen you are on. */
+function openHelp() {
+  const route = location.hash.slice(2) || 'trips';
+  const key = !store.isReady() ? 'setup' : (route.split('?')[0] in HELP ? route.split('?')[0] : 'trips');
+  const all = introSlides(getLang());
+  const mine = HELP[key].map(k => all.find(sl => sl[0] === k));
+  const dlg = $('#helpDlg');
+  let i = 0;
+  const draw = () => {
+    dlg.innerHTML = `<div class="intro">${slideHtml(mine[i])}
+      ${mine.length > 1 ? `<div class="dots">${mine.map((_, k) => `<span class="dot" ${k === i ? 'aria-current="step"' : ''}></span>`).join('')}</div>` : ''}
+      <div class="actions">${i < mine.length - 1 ? `<button type="button" id="helpNext">${esc(t('introNext'))}</button>` : ''}
+        <button type="button" class="primary" id="helpClose">${esc(t('introClose'))}</button></div></div>`;
+    $('#helpNext')?.addEventListener('click', () => { i += 1; draw(); });
+    $('#helpClose').onclick = () => dlg.close();
+    swipe(dlg.querySelector('.intro'), dir => { const k = i + dir; if (k >= 0 && k < mine.length) { i = k; draw(); } });
+  };
+  draw();
+  dlg.showModal();
+}
+$('#helpBtn').addEventListener('click', openHelp);
 
 /* ------------------------------------------------------------------ case number from the bookmarklet */
 
