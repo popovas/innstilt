@@ -60,6 +60,8 @@ const STRINGS = {
     claimTip: 'Tips: med bokmerket «👻 Innstilt: fyll ut» blir dette ett klikk (se Innstillinger).',
     caseNo: 'Saksnummer fra Vy (valgfritt)', markSent: 'Jeg har sendt det', notSent: 'Ikke sendt',
     openAgain: 'Åpne skjemaet igjen',
+    alreadyClaimed: 'Allerede krevd', claimedEarlier: 'krevd utenom Innstilt',
+    removeClaim: 'Fjern kravet', removeClaimConfirm: 'Fjerne dette kravet fra listen? Turen dukker opp igjen under Turer.',
     /* claims */
     claimsTitle: 'Dine krav', noClaims: 'Ingen krav sendt ennå.',
     pending: 'Venter', paid: 'Utbetalt', rejected: 'Avslått', amount: 'Beløp (kr)',
@@ -139,6 +141,8 @@ const STRINGS = {
     claimTip: 'Tip: with the "👻 Innstilt: fyll ut" bookmark this is one click (see Settings).',
     caseNo: 'Case number from Vy (optional)', markSent: 'I\'ve sent it', notSent: 'Not sent',
     openAgain: 'Open the form again',
+    alreadyClaimed: 'Already claimed', claimedEarlier: 'claimed outside Innstilt',
+    removeClaim: 'Remove claim', removeClaimConfirm: 'Remove this claim from the list? The trip shows up again under Trips.',
     claimsTitle: 'Your claims', noClaims: 'No claims sent yet.',
     pending: 'Pending', paid: 'Paid', rejected: 'Rejected', amount: 'Amount (kr)',
     totals: '{sent} sent · {paid} paid ({kr} kr) · {rejected} rejected',

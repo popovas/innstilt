@@ -105,7 +105,10 @@ button.danger { color: var(--red); border-color: var(--red); }
 .badge.bad { background: var(--ink); color: var(--yellow); }
 .badge.warn { background: var(--yellow); color: var(--ink); }
 .badge.quiet { background: var(--mint-2); color: var(--green-2); font-weight: 700; }
-.claim { grid-template-columns: 1fr auto auto; }
+.claim { grid-template-columns: 1fr auto auto auto; }
+.acts { display: flex; flex-direction: column; align-items: center; gap: 2px; }
+button.small { font-size: 13px; padding: 2px 0; }
+button.remove { color: var(--muted); font-size: 16px; padding: 4px 6px; }
 .claim select { width: auto; } .claim input { width: 90px; }
 .totals { font-weight: 700; }
 .empty { text-align: center; padding: 30px 10px; color: var(--muted); }

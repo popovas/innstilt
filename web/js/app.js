@@ -400,10 +400,7 @@ async function viewTrips() {
     sec.className = 'day';
     sec.innerHTML = `<h2>${esc(fmtDay(day))}${isToday ? ` <span class="pill live">${esc(t('live'))}</span>` : ''}</h2>` + items.map((it, i) => tripHtml(it, `${day}-${i}`)).join('');
     $('#trips').appendChild(sec);
-    sec.querySelectorAll('[data-claim]').forEach(b => {
-      const it = items[Number(b.dataset.claim.split('-').pop())];
-      b.addEventListener('click', () => startClaim(it));
-    });
+    wireTrips(sec, items);
   }
   if (run !== tripsRun) return;
   $('#progress').textContent = (skipped.size ? t('noTicketDay', { n: skipped.size }) + ' ' : '');
@@ -431,8 +428,34 @@ function tripHtml({ from, to, j, next }, id, action = null) {
   return `<article class="trip">
     <div class="when"><strong>${esc(j.dep)}</strong><span>${esc(j.line)}</span></div>
     <div class="what">${esc(from.name.replace(/ stasjon$/, ''))} → ${esc(to.name.replace(/ stasjon$/, ''))} ${statusHtml(j)}${nx}</div>
-    ${action === null ? `<button class="primary" data-claim="${id}">${esc(t('claimBtn'))}</button>` : `<span class="muted">${esc(action)}</span>`}
+    ${action === null ? `<div class="acts"><button class="primary" data-claim="${id}">${esc(t('claimBtn'))}</button>
+      <button type="button" class="link small" data-done="${id}">${esc(t('alreadyClaimed'))}</button></div>`
+    : `<span class="muted">${esc(action)}</span>`}
   </article>`;
+}
+
+/** Wires the claim and "already claimed" buttons of rendered trips; `items` are indexed by the id's last part. */
+function wireTrips(root, items) {
+  const pick = b => items[Number((b.dataset.claim ?? b.dataset.done).split('-').pop())];
+  root.querySelectorAll('[data-claim]').forEach(b => b.addEventListener('click', () => startClaim(pick(b))));
+  root.querySelectorAll('[data-done]').forEach(b => b.addEventListener('click', () => {
+    const { from, to, j } = pick(b);
+    recordClaim(from, to, j, '', true);  /* claimed before, outside Innstilt */
+    const row = b.closest('.trip');
+    const day = row.closest('.day');
+    row.remove();
+    if (day && !day.querySelector('.trip')) day.remove();
+    if (!root.closest('#otherResult') && !$('#trips .trip')) $('#trips').innerHTML = `<p class="empty">${esc(t('noTrips'))}</p>`;
+    if (root.closest('#otherResult')) findOther(otherQuery);
+  }));
+}
+
+function recordClaim(from, to, j, caseNo, earlier = false) {
+  store.update(st => st.claims.push({
+    key: store.claimKey(from.id, to.id, j.depMs), fromId: from.id, toId: to.id,
+    fromName: from.name, toName: to.name, date: j.date, dep: j.dep, line: j.line, depMs: j.depMs,
+    case: caseNo, status: 'pending', amount: null, sentAt: Date.now(), ...(earlier ? { earlier: true } : {}),
+  }));
 }
 
 /* ------------------------------------------------------------------ another trip (one-off search) */
@@ -519,8 +542,7 @@ async function findOther(q) {
   box.innerHTML = `<h3>${esc(fmtDay(q.date))}${q.date === today ? ` <span class="pill live">${esc(t('live'))}</span>` : ''}</h3>`
     + items.map((it, i) => tripHtml(it, `other-${i}`, action(it))).join('')
     + (known ? '' : `<button type="button" class="link" id="saveRoute">＋ ${esc(t('saveRoute'))}</button>`);
-  box.querySelectorAll('[data-claim]').forEach(b =>
-    b.addEventListener('click', () => startClaim(items[Number(b.dataset.claim.split('-').pop())])));
+  wireTrips(box, items);
   $('#saveRoute')?.addEventListener('click', e => {
     store.update(st => st.profile.routes.push({ a: q.from, b: q.to, timesOut: q.time ? [q.time] : [], timesBack: [] }));
     e.target.replaceWith(Object.assign(document.createElement('p'), { className: 'ok', textContent: `✓ ${t('routeSaved')}` }));
@@ -556,11 +578,7 @@ function startClaim({ from, to, j }) {
   dlg.onclose = () => {
     if (dlg.returnValue !== 'sent') return;
     const caseNo = (dlg.querySelector('[name=case]').value.match(/\d+/) || [''])[0];
-    store.update(st => st.claims.push({
-      key: store.claimKey(from.id, to.id, j.depMs), fromId: from.id, toId: to.id,
-      fromName: from.name, toName: to.name, date: j.date, dep: j.dep, line: j.line, depMs: j.depMs,
-      case: caseNo, status: 'pending', amount: null, sentAt: Date.now(),
-    }));
+    recordClaim(from, to, j, caseNo);
     render();
   };
   dlg.showModal();
@@ -597,16 +615,22 @@ function viewClaims() {
     };
     row.querySelector('select').addEventListener('change', change);
     row.querySelector('input').addEventListener('change', change);
+    row.querySelector('[data-remove]').addEventListener('click', () => {
+      if (!confirm(t('removeClaimConfirm'))) return;
+      store.update(s => { s.claims = s.claims.filter(x => x.key !== key); });
+      viewClaims();
+    });
   });
 }
 
 function claimRowHtml(c) {
   return `<article class="claim" data-key="${esc(c.key)}">
     <div><strong>${esc(fmtDay(c.date))} ${esc(c.dep)}</strong> ${esc(c.line)}
-      <div class="muted">${esc(c.fromName.replace(/ stasjon$/, ''))} → ${esc(c.toName.replace(/ stasjon$/, ''))}${c.case ? ` · #${esc(c.case)}` : ''}</div></div>
+      <div class="muted">${esc(c.fromName.replace(/ stasjon$/, ''))} → ${esc(c.toName.replace(/ stasjon$/, ''))}${c.case ? ` · #${esc(c.case)}` : ''}${c.earlier ? ` · ${esc(t('claimedEarlier'))}` : ''}</div></div>
     <select aria-label="status">${['pending', 'paid', 'rejected'].map(s =>
       `<option value="${s}" ${s === c.status ? 'selected' : ''}>${esc(t(s))}</option>`).join('')}</select>
     <input aria-label="${esc(t('amount'))}" placeholder="kr" inputmode="decimal" value="${c.amount ?? ''}" ${c.status === 'paid' ? '' : 'hidden'}>
+    <button type="button" class="link remove" data-remove aria-label="${esc(t('removeClaim'))}" title="${esc(t('removeClaim'))}">✕</button>
   </article>`;
 }
 
