@@ -6,12 +6,18 @@
 const LANES = 5;
 const BEST_KEY = 'innstilt.game.best.fart';
 const MAX_LIVES = 5;               /* the train is its carriages (a multiple unit, no engine): 3 at the start, up to 5 */
-const HEAD_Y = 0.56;               /* the front carriage's top, as a share of the board height */
+const HEAD_Y = 0.56;               /* the front carriage's front, in track units (0 = far end, 1 = near edge) */
+const CAR = 0.085;                 /* one carriage's length in track units */
+const SKY = 0.13;                  /* the sky strip at the top, share of the board height */
 const THEMES = [   /* a season per kilometre, as in Sporarbeid */
-  { key: 'summer', bg: '#1f5130', bed: '#6f6a5c', rail: '#dfe7e3', specks: ['#f5c400', '#ffffff', '#e84a5f'] },
-  { key: 'autumn', bg: '#4a3a22', bed: '#7a7060', rail: '#e3ddd2', specks: ['#d9822b', '#b5521b', '#e0b040'] },
-  { key: 'winter', bg: '#9fbccb', bed: '#8e9aa2', rail: '#4b5560', specks: ['#ffffff'] },
-  { key: 'night', bg: '#0d1b2e', bed: '#3c4656', rail: '#c9d3df', specks: ['#f5f2c0', '#ffffff'] },
+  { key: 'summer', bg: '#2a6a3a', bed: '#77705f', rail: '#dfe7e3', specks: ['#f5c400', '#ffffff', '#e84a5f'],
+    sky: ['#7cc4ea', '#d6f0fb'], hills: ['#4f7d6c', '#3c6a5a'], snow: false },
+  { key: 'autumn', bg: '#5a4526', bed: '#7f7563', rail: '#e3ddd2', specks: ['#d9822b', '#b5521b', '#e0b040'],
+    sky: ['#e9a96a', '#fbe2c0'], hills: ['#6b5a48', '#55473a'], snow: false },
+  { key: 'winter', bg: '#b4cdd9', bed: '#8e9aa2', rail: '#4b5560', specks: ['#ffffff'],
+    sky: ['#a9c6d8', '#eef6fb'], hills: ['#7d97a6', '#6a8292'], snow: true },
+  { key: 'night', bg: '#10223a', bed: '#3c4656', rail: '#c9d3df', specks: ['#f5f2c0', '#ffffff'],
+    sky: ['#060c18', '#1c2c48'], hills: ['#14233a', '#0e1a2c'], snow: true },
 ];
 const C = { mint: '#f2faf5', stripe: '#2fa36b', win: '#0e3a30', ink: '#0b0b0c', yellow: '#f5c400', sleeper: '#7a5a3a',
   tree: '#2b7a3d', tree2: '#1f5c2d', trunk: '#6b4a2a', rock: '#8a958f', rock2: '#6c7671', leaf: '#d9822b', leaf2: '#8a4512',
@@ -90,9 +96,11 @@ export function start(root, { lang = 'no', back = () => {}, other = null } = {})
   /* ------------------------------------------------------------ rules */
 
   function newGame() {
-    g = { t: 0, dist: 0, pace: 1, score: 0, pax: 0, lives: 3, lane: 2, x: 2, objs: [], nextRow: 0.6, specks: [],
+    g = { hist: [], vx: 0, t: 0, dist: 0, pace: 1, score: 0, pax: 0, lives: 3, lane: 2, x: 2, objs: [], nextRow: 0.6, specks: [],
       boostUntil: 0, redUntil: 0, slipUntil: 0, safeUntil: 0, season: 0, nextSpare: 25000 };
-    g.specks = Array.from({ length: 40 }, () => ({ x: Math.random(), y: Math.random(), r: 0.5 + Math.random(), a: Math.random() * 3 }));
+    g.specks = Array.from({ length: 70 }, () => ({ x: Math.random(), y: Math.random(), r: 0.5 + Math.random(), a: Math.random() * 3 }));
+    g.gravel = Array.from({ length: 220 }, () => ({ l: rnd(LANES), o: Math.random() * 0.6 - 0.3, y: Math.random(), r: 0.4 + Math.random() * 0.8, c: rnd(3) }));
+    g.peaks = Array.from({ length: 9 }, (_, i) => ({ x: i / 8 + (Math.random() - 0.5) * 0.08, h: 0.35 + Math.random() * 0.65 }));
     hud();
     msg.hidden = true;
     last = performance.now();
@@ -167,7 +175,11 @@ export function start(root, { lang = 'no', back = () => {}, other = null } = {})
     const v = speed(), dy = v * dt / 1000;
     g.dist += dy * 100;
     g.score = Math.floor(g.dist / 10) + g.pax * 10;
-    g.x += (g.lane - g.x) * Math.min(1, dt / 70);       /* slide smoothly to the chosen track */
+    const px = g.x;
+    g.x += (g.lane - g.x) * Math.min(1, dt / 90);       /* slide smoothly to the chosen track */
+    g.vx = dt ? (g.x - px) / dt * 1000 : 0;             /* sideways speed, tracks per second (the tail swings with it) */
+    g.hist.push({ d: g.dist, x: g.x });                 /* the path the front has taken: the carriages follow it */
+    while (g.hist.length > 2 && g.hist[1].d < g.dist - 80) g.hist.shift();
     /* seasons per kilometre */
     const season = Math.floor(g.dist / 1000);
     if (season !== g.season) {
@@ -183,7 +195,7 @@ export function start(root, { lang = 'no', back = () => {}, other = null } = {})
     }
     g.objs = g.objs.filter(o => !o.gone && o.y < 1.1);
     /* collisions: the train's front half sits at 72–84 % of the board height */
-    const lane = Math.round(g.x), top = HEAD_Y, bottom = HEAD_Y + 0.55 * (cv.width / LANES) / cv.height;   /* the front carriage */
+    const lane = Math.round(g.x), top = HEAD_Y, bottom = HEAD_Y + CAR * 0.9;   /* the front carriage */
     for (const o of g.objs) {
       if (o.kind === 'station' && !o.hit && (lane === o.edge - 1 || lane === o.edge) && o.y + o.h >= top && o.y <= bottom) {
         o.hit = true;                                         /* driving past: they get on (the platform stays) */
@@ -278,34 +290,86 @@ export function start(root, { lang = 'no', back = () => {}, other = null } = {})
     ctx.arcTo(x, y + h, x, y, r); ctx.arcTo(x, y, x + w, y, r); ctx.closePath();
   }
 
+  /* ---- the 2.5D view: the camera sits above and behind the train, tilted forward. Track position u runs from
+     0 (far end, just under the sky) to 1 (near edge); things far away are smaller and closer to the middle. */
+  const P = u => Math.sign(u) * Math.abs(u) ** 1.35;                 /* far things are squeezed together */
+  const Y = u => cv.height * (SKY + (1 - SKY) * P(u));
+  const S = u => 0.42 + 0.58 * P(Math.max(0, u));                     /* size at that distance */
+  const X = (lane, u) => cv.width / 2 + (lane - (LANES - 1) / 2) * (cv.width / LANES) * S(u);
+  /** Where the front of the train was `back` metres ago (the carriages follow that path). */
+  function xAt(back) {
+    const d = g.dist - back, h = g.hist;
+    for (let i = h.length - 1; i > 0; i--) {
+      if (h[i - 1].d <= d) { const a = h[i - 1], b = h[i]; return a.x + (b.x - a.x) * ((d - a.d) / ((b.d - a.d) || 1)); }
+    }
+    return h.length ? h[0].x : g.x;
+  }
+
+  function quad(pts, fill) {
+    ctx.fillStyle = fill; ctx.beginPath(); ctx.moveTo(pts[0][0], pts[0][1]);
+    for (let i = 1; i < pts.length; i++) ctx.lineTo(pts[i][0], pts[i][1]);
+    ctx.closePath(); ctx.fill();
+  }
+
   function draw(now) {
     const W = cv.width, H = cv.height, lw = W / LANES;
     const th = THEMES[(g ? g.season : 0) % THEMES.length];
-    ctx.fillStyle = th.bg; ctx.fillRect(0, 0, W, H);
-    const scroll = g ? (g.dist / 100) * H : 0;          /* how far the ground has moved, in pixels */
-    /* specks on the ground, scrolling */
-    if (g) for (const sp of g.specks) {
-      ctx.fillStyle = th.specks[Math.floor(sp.a * 10) % th.specks.length];
-      const y = ((sp.y * H + scroll) % H + H) % H;
-      ctx.beginPath(); ctx.arc(sp.x * W, y, lw * 0.03 * sp.r, 0, Math.PI * 2); ctx.fill();
+    const scroll = g ? g.dist / 100 : 0;                    /* how far the ground has moved, in track units */
+    /* sky and mountains */
+    const sky = ctx.createLinearGradient(0, 0, 0, H * SKY);
+    sky.addColorStop(0, th.sky[0]); sky.addColorStop(1, th.sky[1]);
+    ctx.fillStyle = sky; ctx.fillRect(0, 0, W, H * SKY + 2);
+    if (th.key === 'night') { ctx.fillStyle = '#f5f2c0'; for (let i = 0; i < 18; i++) ctx.fillRect((i * 97) % W, (i * 53) % (H * SKY * 0.7), 2, 2); }
+    const peaks = g ? g.peaks : [{ x: 0.2, h: 0.7 }, { x: 0.5, h: 1 }, { x: 0.8, h: 0.6 }];
+    for (const [k, col] of [[1, th.hills[0]], [0.6, th.hills[1]]]) {
+      ctx.fillStyle = col; ctx.beginPath(); ctx.moveTo(0, H * SKY + 2);
+      peaks.forEach((pk, i) => ctx.lineTo(((pk.x + (k < 1 ? 0.06 : 0)) % 1.1) * W, H * SKY * (1 - pk.h * 0.75 * k) + (i % 2) * 4));
+      ctx.lineTo(W, H * SKY + 2); ctx.closePath(); ctx.fill();
+      if (th.snow && k === 1) {   /* snow caps */
+        ctx.fillStyle = 'rgba(255,255,255,.85)';
+        for (const pk of peaks) if (pk.h > 0.6) { const x = pk.x * W, y = H * SKY * (1 - pk.h * 0.75); ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x + W * 0.03, y + H * 0.02); ctx.lineTo(x - W * 0.03, y + H * 0.02); ctx.fill(); }
+      }
     }
-    /* five tracks: gravel bed, sleepers moving down, two rails */
+    /* the ground: base colour with soft bands that rush towards you */
+    ctx.fillStyle = th.bg; ctx.fillRect(0, H * SKY, W, H);
+    for (let k = -1; k < 24; k++) {
+      const u0 = k * 0.05 + (scroll % 0.1);
+      if (k % 2) continue;
+      quad([[0, Y(u0)], [W, Y(u0)], [W, Y(u0 + 0.05)], [0, Y(u0 + 0.05)]], 'rgba(255,255,255,.045)');
+    }
+    if (g) for (const sp of g.specks) {   /* flowers, leaves, snow or stars on the ground */
+      const u = (sp.y + scroll) % 1.1, lane = -1 + sp.x * (LANES + 1), sc = S(u);
+      ctx.fillStyle = th.specks[Math.floor(sp.a * 10) % th.specks.length];
+      ctx.beginPath(); ctx.arc(X(lane, u), Y(u), lw * 0.03 * sp.r * sc, 0, Math.PI * 2); ctx.fill();
+    }
+    /* five tracks: gravel bed, sleepers with tie plates, rails with a shine and a shadow */
     for (let l = 0; l < LANES; l++) {
-      const cx = (l + 0.5) * lw;
-      ctx.fillStyle = th.bed; ctx.globalAlpha = 0.6; ctx.fillRect(cx - lw * 0.32, 0, lw * 0.64, H); ctx.globalAlpha = 1;
-      ctx.fillStyle = C.sleeper;
-      const gap = lw * 0.32, off = scroll % gap;
-      for (let y = -gap + off; y < H; y += gap) ctx.fillRect(cx - lw * 0.28, y, lw * 0.56, lw * 0.07);
-      ctx.fillStyle = th.rail;
-      ctx.fillRect(cx - lw * 0.17 - 1.5, 0, 3, H); ctx.fillRect(cx + lw * 0.17 - 1.5, 0, 3, H);
+      quad([[X(l - 0.34, 0), Y(0)], [X(l + 0.34, 0), Y(0)], [X(l + 0.34, 1.15), Y(1.15)], [X(l - 0.34, 1.15), Y(1.15)]], th.bed);
+    }
+    if (g) for (const gr of g.gravel) {
+      const u = (gr.y + scroll) % 1.1;
+      ctx.fillStyle = ['rgba(0,0,0,.18)', 'rgba(255,255,255,.16)', 'rgba(60,50,40,.22)'][gr.c];
+      ctx.beginPath(); ctx.arc(X(gr.l + gr.o, u), Y(u), lw * 0.022 * gr.r * S(u), 0, Math.PI * 2); ctx.fill();
+    }
+    const gap = 0.032;
+    for (let l = 0; l < LANES; l++) {
+      for (let u = (scroll % gap) - gap; u < 1.15; u += gap) {
+        const u1 = u + 0.011;
+        quad([[X(l - 0.29, u), Y(u)], [X(l + 0.29, u), Y(u)], [X(l + 0.29, u1), Y(u1)], [X(l - 0.29, u1), Y(u1)]], C.sleeper);
+        quad([[X(l - 0.29, u1 - 0.003), Y(u1 - 0.003)], [X(l + 0.29, u1 - 0.003), Y(u1 - 0.003)], [X(l + 0.29, u1), Y(u1)], [X(l - 0.29, u1), Y(u1)]], 'rgba(0,0,0,.25)');
+      }
+      for (const side of [-0.17, 0.17]) {
+        const w = 0.028;
+        quad([[X(l + side + w, 0), Y(0)], [X(l + side + w + 0.02, 0), Y(0)], [X(l + side + w + 0.02, 1.15), Y(1.15)], [X(l + side + w, 1.15), Y(1.15)]], 'rgba(0,0,0,.3)');
+        quad([[X(l + side - w, 0), Y(0)], [X(l + side + w, 0), Y(0)], [X(l + side + w, 1.15), Y(1.15)], [X(l + side - w, 1.15), Y(1.15)]], th.rail);
+        quad([[X(l + side - w, 0), Y(0)], [X(l + side - w * 0.2, 0), Y(0)], [X(l + side - w * 0.2, 1.15), Y(1.15)], [X(l + side - w, 1.15), Y(1.15)]], 'rgba(255,255,255,.55)');
+      }
     }
     if (!g) return;
-    for (const o of g.objs) drawObj(o, lw, H, now);
-    /* the train: one carriage per train set left; the front one has the face */
-    if (!(g.t < g.safeUntil && Math.floor(now / 120) % 2)) {
-      const cx = (g.x + 0.5) * lw;
-      for (let i = Math.max(1, g.lives) - 1; i >= 0; i--) car(cx, H * HEAD_Y + i * lw * 0.6, lw, i === 0);
-    }
+    /* things on and between the tracks, far ones first */
+    for (const o of [...g.objs].sort((a, b) => a.y - b.y)) drawObj(o, lw, now);
+    /* the train, rear carriage first so the front one is on top */
+    if (!(g.t < g.safeUntil && Math.floor(now / 120) % 2)) drawTrain(lw, now);
     if (g.t < g.boostUntil) {   /* speed lines */
       ctx.strokeStyle = 'rgba(255,255,255,.35)'; ctx.lineWidth = 2;
       for (let i = 0; i < 8; i++) { const x = ((i * 137 + now / 3) % W); ctx.beginPath(); ctx.moveTo(x, (now / 2 + i * 90) % H); ctx.lineTo(x, (now / 2 + i * 90) % H + lw * 0.6); ctx.stroke(); }
@@ -313,93 +377,159 @@ export function start(root, { lang = 'no', back = () => {}, other = null } = {})
     if (now < flashUntil) { ctx.fillStyle = 'rgba(255,107,87,.35)'; ctx.fillRect(0, 0, W, H); }
   }
 
-  function drawObj(o, lw, H, now) {
-    if (o.kind === 'station') return platform(o, lw, H, now);
-    const x = ((o.kind === 'moose' ? o.lf : o.lane) + 0.5) * lw, y = o.y * H + lw * 0.4;
-    if (o.kind === 'train' && o.warn) {   /* ⚠ at the top of its track before it comes in */
-      if (Math.floor(now / 200) % 2) return;
-      ctx.fillStyle = C.yellow; ctx.beginPath(); ctx.moveTo(x, lw * 0.1); ctx.lineTo(x + lw * 0.25, lw * 0.52); ctx.lineTo(x - lw * 0.25, lw * 0.52); ctx.closePath(); ctx.fill();
-      ctx.fillStyle = C.ink; ctx.fillRect(x - lw * 0.025, lw * 0.22, lw * 0.05, lw * 0.16); ctx.fillRect(x - lw * 0.025, lw * 0.42, lw * 0.05, lw * 0.05);
-      return;
-    }
-    ctx.save(); ctx.translate(x, y);
-    const s = lw;
+  function drawObj(o, lw, now) {
+    if (o.kind === 'station') return platform(o, lw);
+    if (o.kind === 'train') return oncoming(o, lw, now);
+    const lane = o.kind === 'moose' ? o.lf : o.lane, u = o.y + o.h / 2;
+    if (u < -0.02) return;
+    ctx.save(); ctx.translate(X(lane, u), Y(u));
+    const s = lw * S(u);
+    /* a soft shadow under everything */
+    ctx.fillStyle = 'rgba(0,0,0,.18)'; ctx.beginPath(); ctx.ellipse(0.03 * s, 0.1 * s, 0.3 * s, 0.09 * s, 0, 0, Math.PI * 2); ctx.fill();
     switch (o.kind) {
-      case 'tree':
-        ctx.fillStyle = C.trunk; ctx.fillRect(-0.36 * s, -0.05 * s, 0.72 * s, 0.1 * s);   /* fallen across the track */
-        ctx.fillStyle = C.tree2; ctx.beginPath(); ctx.arc(0.22 * s, -0.04 * s, 0.2 * s, 0, Math.PI * 2); ctx.fill();
-        ctx.fillStyle = C.tree; ctx.beginPath(); ctx.arc(0.1 * s, 0.06 * s, 0.17 * s, 0, Math.PI * 2); ctx.fill();
-        break;
-      case 'rock':
-        ctx.fillStyle = C.rock2; ctx.beginPath(); ctx.ellipse(0.06 * s, 0.06 * s, 0.28 * s, 0.18 * s, 0, 0, Math.PI * 2); ctx.fill();
-        ctx.fillStyle = C.rock; ctx.beginPath(); ctx.ellipse(-0.06 * s, -0.03 * s, 0.24 * s, 0.17 * s, 0.3, 0, Math.PI * 2); ctx.fill();
-        break;
-      case 'leaf':
-        for (const [dx, dy, a] of [[-0.15, -0.05, 0.4], [0.12, 0.08, 1.8], [0.02, -0.12, 2.6]]) {
-          ctx.fillStyle = C.leaf; ctx.beginPath(); ctx.ellipse(dx * s, dy * s, 0.13 * s, 0.07 * s, a, 0, Math.PI * 2); ctx.fill();
+      case 'tree': {   /* a spruce fallen across the track */
+        ctx.fillStyle = C.trunk; rr(-0.38 * s, -0.04 * s, 0.76 * s, 0.09 * s, 0.04 * s); ctx.fill();
+        for (const [dx, r, col] of [[0.18, 0.2, C.tree2], [0.02, 0.17, C.tree], [-0.14, 0.13, C.tree2], [0.26, 0.12, C.tree]]) {
+          ctx.fillStyle = col; ctx.beginPath(); ctx.moveTo((dx - r) * s, 0.06 * s); ctx.lineTo(dx * s, -r * 1.3 * s); ctx.lineTo((dx + r) * s, 0.06 * s); ctx.fill();
         }
         break;
-      case 'go': case 'stop': {
-        const lit = Math.floor(now / 300) % 2 === 0;
-        ctx.fillStyle = '#7d8f88'; ctx.fillRect(-0.03 * s, 0, 0.06 * s, 0.26 * s);
-        ctx.fillStyle = C.ink; rr(-0.14 * s, -0.24 * s, 0.28 * s, 0.3 * s, 0.08 * s); ctx.fill();
-        const col = o.kind === 'go' ? C.go : C.stop;
-        if (lit) { ctx.fillStyle = col; ctx.globalAlpha = 0.3; ctx.beginPath(); ctx.arc(0, -0.09 * s, 0.22 * s, 0, Math.PI * 2); ctx.fill(); ctx.globalAlpha = 1; }
-        ctx.fillStyle = lit ? col : '#33413c'; ctx.beginPath(); ctx.arc(0, -0.09 * s, 0.09 * s, 0, Math.PI * 2); ctx.fill();
+      }
+      case 'rock':
+        ctx.fillStyle = C.rock2; ctx.beginPath(); ctx.ellipse(0.06 * s, 0.03 * s, 0.28 * s, 0.17 * s, 0, 0, Math.PI * 2); ctx.fill();
+        ctx.fillStyle = C.rock; ctx.beginPath(); ctx.ellipse(-0.05 * s, -0.04 * s, 0.24 * s, 0.17 * s, 0.3, 0, Math.PI * 2); ctx.fill();
+        ctx.fillStyle = 'rgba(255,255,255,.25)'; ctx.beginPath(); ctx.ellipse(-0.1 * s, -0.1 * s, 0.09 * s, 0.05 * s, 0.3, 0, Math.PI * 2); ctx.fill();
+        break;
+      case 'leaf':
+        for (const [dx, dy, a, col] of [[-0.15, -0.03, 0.4, C.leaf], [0.12, 0.06, 1.8, '#b5521b'], [0.02, -0.1, 2.6, '#e0b040'], [-0.02, 0.08, 1, C.leaf]]) {
+          ctx.fillStyle = col; ctx.beginPath(); ctx.ellipse(dx * s, dy * s, 0.12 * s, 0.06 * s, a, 0, Math.PI * 2); ctx.fill();
+        }
+        break;
+      case 'go': case 'stop': {   /* a signal mast beside the track, lamp blinking */
+        const lit = Math.floor(now / 300) % 2 === 0, col = o.kind === 'go' ? C.go : C.stop;
+        ctx.fillStyle = '#7d8f88'; ctx.fillRect(-0.03 * s, -0.2 * s, 0.06 * s, 0.32 * s);
+        ctx.fillStyle = C.ink; rr(-0.14 * s, -0.5 * s, 0.28 * s, 0.34 * s, 0.08 * s); ctx.fill();
+        if (lit) { ctx.fillStyle = col; ctx.globalAlpha = 0.3; ctx.beginPath(); ctx.arc(0, -0.34 * s, 0.24 * s, 0, Math.PI * 2); ctx.fill(); ctx.globalAlpha = 1; }
+        ctx.fillStyle = lit ? col : '#33413c'; ctx.beginPath(); ctx.arc(0, -0.34 * s, 0.09 * s, 0, Math.PI * 2); ctx.fill();
         break;
       }
       case 'spare':
-        ctx.fillStyle = C.mint; rr(-0.22 * s, -0.2 * s, 0.44 * s, 0.4 * s, 0.08 * s); ctx.fill();
-        ctx.fillStyle = C.yellow; ctx.beginPath(); ctx.arc(0.18 * s, -0.18 * s, 0.11 * s, 0, Math.PI * 2); ctx.fill();
-        ctx.fillStyle = C.ink; ctx.fillRect(0.13 * s, -0.195 * s, 0.1 * s, 0.03 * s); ctx.fillRect(0.165 * s, -0.23 * s, 0.03 * s, 0.1 * s);
+        carriage(0, 0, 0.5 * s, 0.42 * s, 0, false, false, now);
+        ctx.fillStyle = C.yellow; ctx.beginPath(); ctx.arc(0.22 * s, -0.22 * s, 0.11 * s, 0, Math.PI * 2); ctx.fill();
+        ctx.fillStyle = C.ink; ctx.fillRect(0.17 * s, -0.235 * s, 0.1 * s, 0.03 * s); ctx.fillRect(0.205 * s, -0.27 * s, 0.03 * s, 0.1 * s);
         break;
       case 'moose':
         if (o.dir < 0) ctx.scale(-1, 1);
         ctx.fillStyle = C.moose;
-        ctx.beginPath(); ctx.ellipse(-0.05 * s, 0.02 * s, 0.26 * s, 0.15 * s, 0, 0, Math.PI * 2); ctx.fill();
-        ctx.fillRect(-0.24 * s, 0.1 * s, 0.06 * s, 0.22 * s); ctx.fillRect(0.1 * s, 0.1 * s, 0.06 * s, 0.22 * s);
-        ctx.beginPath(); ctx.ellipse(0.26 * s, -0.1 * s, 0.12 * s, 0.08 * s, 0.5, 0, Math.PI * 2); ctx.fill();
+        ctx.fillRect(-0.24 * s, 0.02 * s, 0.06 * s, 0.24 * s); ctx.fillRect(0.12 * s, 0.02 * s, 0.06 * s, 0.24 * s);
+        ctx.beginPath(); ctx.ellipse(-0.04 * s, -0.04 * s, 0.27 * s, 0.15 * s, 0, 0, Math.PI * 2); ctx.fill();
+        ctx.beginPath(); ctx.ellipse(0.27 * s, -0.16 * s, 0.12 * s, 0.08 * s, 0.5, 0, Math.PI * 2); ctx.fill();
         ctx.strokeStyle = C.antler; ctx.lineWidth = 0.05 * s; ctx.lineCap = 'round';
-        ctx.beginPath(); ctx.moveTo(0.2 * s, -0.16 * s); ctx.lineTo(0.1 * s, -0.34 * s); ctx.moveTo(0.27 * s, -0.17 * s); ctx.lineTo(0.34 * s, -0.36 * s); ctx.stroke();
-        break;
-      case 'train':   /* an oncoming grey train, nose down */
-        ctx.fillStyle = C.other;
-        rr(-0.3 * s, -0.4 * s, 0.6 * s, o.h * H - 0.1 * s, 0.1 * s); ctx.fill();
-        ctx.fillStyle = C.ink; rr(-0.2 * s, o.h * H - 0.85 * s, 0.4 * s, 0.18 * s, 0.05 * s); ctx.fill();
-        ctx.fillStyle = C.yellow; ctx.fillRect(-0.3 * s, o.h * H - 0.6 * s, 0.6 * s, 0.08 * s);
+        ctx.beginPath(); ctx.moveTo(0.21 * s, -0.22 * s); ctx.lineTo(0.1 * s, -0.4 * s); ctx.moveTo(0.28 * s, -0.23 * s); ctx.lineTo(0.36 * s, -0.42 * s); ctx.stroke();
         break;
     }
     ctx.restore();
   }
 
-  /** A platform between two tracks: grey with yellow safety edges, people waiting (gone once picked up). */
-  function platform(o, lw, H) {
-    const x = o.edge * lw, y = o.y * H, h = o.h * H, w = lw * 0.28;
-    ctx.fillStyle = '#b9c2bd'; rr(x - w / 2, y, w, h, lw * 0.04); ctx.fill();
-    ctx.fillStyle = C.yellow; ctx.fillRect(x - w / 2, y, lw * 0.03, h); ctx.fillRect(x + w / 2 - lw * 0.03, y, lw * 0.03, h);
-    ctx.fillStyle = '#5b6b64'; ctx.fillRect(x - w * 0.3, y + h * 0.06, w * 0.6, lw * 0.06);   /* the shelter roof */
+  /** An oncoming grey train: a warning ⚠ first, then a long body with its nose towards you. */
+  function oncoming(o, lw, now) {
+    const x0 = X(o.lane, 0);
+    if (o.warn) {
+      if (Math.floor(now / 200) % 2) return;
+      const y = Y(0) + lw * 0.05, s = lw * 0.5;
+      ctx.fillStyle = C.yellow; ctx.beginPath(); ctx.moveTo(x0, y); ctx.lineTo(x0 + s * 0.5, y + s * 0.85); ctx.lineTo(x0 - s * 0.5, y + s * 0.85); ctx.closePath(); ctx.fill();
+      ctx.fillStyle = C.ink; ctx.fillRect(x0 - s * 0.05, y + s * 0.25, s * 0.1, s * 0.33); ctx.fillRect(x0 - s * 0.05, y + s * 0.64, s * 0.1, s * 0.1);
+      return;
+    }
+    const a = Math.max(0, o.y), b = o.y + o.h;
+    if (b < 0) return;
+    const half = 0.3;
+    quad([[X(o.lane - half, a), Y(a)], [X(o.lane + half, a), Y(a)], [X(o.lane + half, b), Y(b)], [X(o.lane - half, b), Y(b)]], C.other);
+    quad([[X(o.lane - half, a), Y(a)], [X(o.lane - half + 0.1, a), Y(a)], [X(o.lane - half + 0.1, b), Y(b)], [X(o.lane - half, b), Y(b)]], 'rgba(0,0,0,.15)');
+    const w0 = b - 0.05, w1 = b - 0.02;   /* windscreen and a yellow nose at the near end */
+    quad([[X(o.lane - 0.22, w0), Y(w0)], [X(o.lane + 0.22, w0), Y(w0)], [X(o.lane + 0.22, w1), Y(w1)], [X(o.lane - 0.22, w1), Y(w1)]], C.ink);
+    quad([[X(o.lane - half, w1), Y(w1)], [X(o.lane + half, w1), Y(w1)], [X(o.lane + half, b), Y(b)], [X(o.lane - half, b), Y(b)]], C.yellow);
+  }
+
+  /** A platform between two tracks: grey with yellow safety edges, a shelter, people waiting (gone once picked up). */
+  function platform(o, lw) {
+    const e = o.edge - 0.5, a = Math.max(0, o.y), b = o.y + o.h;
+    if (b < 0) return;
+    quad([[X(e - 0.15, a), Y(a)], [X(e + 0.15, a), Y(a)], [X(e + 0.15, b), Y(b)], [X(e - 0.15, b), Y(b)]], '#b9c2bd');
+    for (const side of [-0.15, 0.12]) quad([[X(e + side, a), Y(a)], [X(e + side + 0.03, a), Y(a)], [X(e + side + 0.03, b), Y(b)], [X(e + side, b), Y(b)]], C.yellow);
+    const r0 = a + (b - a) * 0.15, r1 = a + (b - a) * 0.35;
+    if (r1 > 0) quad([[X(e - 0.1, r0), Y(r0)], [X(e + 0.1, r0), Y(r0)], [X(e + 0.1, r1), Y(r1)], [X(e - 0.1, r1), Y(r1)]], '#5b6b64');
     if (o.hit) return;
     const cols = ['#ff8a3d', '#e84a5f', '#4aa3ff', '#b07cff', '#ffffff'];
     for (let i = 0; i < o.n; i++) {
-      const py = y + h * (0.25 + (i / Math.max(1, o.n - 1)) * 0.6), px = x + (i % 2 ? 0.035 : -0.035) * lw;
-      ctx.fillStyle = cols[i % cols.length]; ctx.beginPath(); ctx.arc(px, py, lw * 0.05, 0, Math.PI * 2); ctx.fill();
-      ctx.fillStyle = '#2b1d12'; ctx.beginPath(); ctx.arc(px, py, lw * 0.025, 0, Math.PI * 2); ctx.fill();
+      const u = o.y + o.h * (0.45 + (i / Math.max(1, o.n - 1)) * 0.45);
+      if (u < 0) continue;
+      const px = X(e + (i % 2 ? 0.05 : -0.05), u), py = Y(u), s = lw * S(u);
+      ctx.fillStyle = cols[i % cols.length]; rr(px - 0.045 * s, py - 0.08 * s, 0.09 * s, 0.1 * s, 0.03 * s); ctx.fill();
+      ctx.fillStyle = '#e0ac85'; ctx.beginPath(); ctx.arc(px, py - 0.11 * s, 0.035 * s, 0, Math.PI * 2); ctx.fill();
     }
   }
 
-  /** A carriage seen from above, nose up; the head has the window and eyes. */
-  function car(cx, y, lw, isHead) {
-    const w = lw * 0.6, h = lw * 0.55;
-    ctx.fillStyle = C.mint; rr(cx - w / 2, y, w, h, (isHead ? 0.25 : 0.1) * lw); ctx.fill();
-    ctx.fillStyle = C.stripe; ctx.fillRect(cx - w / 2, y + h * 0.7, w, h * 0.12);
-    ctx.fillStyle = C.win;
-    if (isHead) {
-      rr(cx - w * 0.32, y + h * 0.14, w * 0.64, h * 0.34, lw * 0.05); ctx.fill();
-      for (const ex of [-0.13, 0.13]) {
-        ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(cx + ex * lw, y + h * 0.31, lw * 0.05, 0, Math.PI * 2); ctx.fill();
-        ctx.fillStyle = C.ink; ctx.beginPath(); ctx.arc(cx + ex * lw, y + h * 0.27, lw * 0.025, 0, Math.PI * 2); ctx.fill();
+  /** The train: each carriage follows the path the front took, so a track change bends it like a snake; the rear
+     carriage ends in the ghost's wavy hem, which swings with the sideways speed. */
+  function drawTrain(lw, now) {
+    const n = Math.max(1, g.lives);
+    for (let i = n - 1; i >= 0; i--) {
+      const uf = HEAD_Y + i * CAR, ub = uf + CAR * 0.92;
+      const xf = xAt(i * CAR * 100), xb = xAt((i + 0.92) * CAR * 100);
+      const fx = X(xf, uf), fy = Y(uf), bx = X(xb, ub), by = Y(ub);
+      const len = Math.hypot(bx - fx, by - fy), ang = Math.atan2(fx - bx, by - fy), w = lw * 0.62 * S((uf + ub) / 2);
+      ctx.save(); ctx.translate((fx + bx) / 2, (fy + by) / 2); ctx.rotate(-ang);
+      carriage(0, 0, w, len, i, i === 0, i === n - 1, now);
+      ctx.restore();
+      if (i > 0) {   /* the gangway between carriages */
+        ctx.fillStyle = '#5b6b64'; ctx.fillRect(fx - w * 0.18, fy - lw * 0.03, w * 0.36, lw * 0.05);
       }
-    } else { rr(cx - w * 0.3, y + h * 0.18, w * 0.6, h * 0.36, lw * 0.04); ctx.fill(); }
+    }
+  }
+
+  /** One carriage seen from above and behind, nose up, centred on (0,0): the logo's mint body with a soft shade,
+     dark window strips, roof vents; the front one has the windscreen with the sleepy eyes and the "meh" mouth;
+     the rear one ends in the ghost's hem. */
+  function carriage(cx, cy, w, h, i, front, rear, now) {
+    const x = cx - w / 2, y = cy - h / 2;
+    ctx.fillStyle = 'rgba(0,0,0,.22)'; ctx.beginPath(); ctx.ellipse(cx + w * 0.12, cy + h * 0.08, w * 0.55, h * 0.52, 0, 0, Math.PI * 2); ctx.fill();
+    const body = ctx.createLinearGradient(x, 0, x + w, 0);
+    body.addColorStop(0, '#cfeadb'); body.addColorStop(0.35, '#f2faf5'); body.addColorStop(1, '#bcdccb');
+    ctx.fillStyle = body;
+    if (rear) {   /* the hem: a wavy, fading bottom edge that swings */
+      const swing = Math.max(-1, Math.min(1, -(g ? g.vx : 0) * 0.35)) * w * 0.25, ph = (g ? g.dist : 0) / 6 + now / 260;
+      ctx.beginPath(); ctx.moveTo(x, y + h * 0.3); ctx.arcTo(x, y, x + w / 2, y, w * 0.25); ctx.arcTo(x + w, y, x + w, y + h * 0.3, w * 0.25);
+      ctx.lineTo(x + w, y + h * 0.8);
+      for (let k = 0; k <= 6; k++) {
+        const t = 1 - k / 6, wx = x + w * t + swing * (1 - Math.abs(t - 0.5) * 2) * 0.3 + swing * 0.5;
+        ctx.lineTo(wx, y + h * 0.88 + Math.sin(ph + k * 1.2) * h * 0.05 + (k % 2 ? h * 0.08 : 0));
+      }
+      ctx.closePath(); ctx.fill();
+      ctx.strokeStyle = 'rgba(207,234,219,.55)'; ctx.lineWidth = Math.max(1.5, w * 0.04); ctx.lineCap = 'round';   /* wisps */
+      for (const sd of [-1, 1]) { ctx.beginPath(); ctx.moveTo(cx + sd * w * 0.65 + swing, y + h * 0.75); ctx.quadraticCurveTo(cx + sd * w * 0.8 + swing, y + h * 0.95, cx + sd * w * 0.6 + swing * 1.4, y + h * 1.1); ctx.stroke(); }
+    } else {
+      rr(x, y, w, h, front ? w * 0.38 : w * 0.12); ctx.fill();
+    }
+    /* windows along both sides, a green livery line, roof vents */
+    ctx.fillStyle = '#14473b';
+    const wy0 = y + h * (front ? 0.42 : 0.12), wy1 = y + h * (rear ? 0.72 : 0.88);
+    rr(x + w * 0.05, wy0, w * 0.12, wy1 - wy0, w * 0.04); ctx.fill();
+    rr(x + w * 0.83, wy0, w * 0.12, wy1 - wy0, w * 0.04); ctx.fill();
+    ctx.fillStyle = C.stripe; ctx.fillRect(x + w * 0.005, wy0, w * 0.035, wy1 - wy0); ctx.fillRect(x + w * 0.96, wy0, w * 0.035, wy1 - wy0);
+    ctx.fillStyle = 'rgba(14,58,48,.18)';
+    for (const vy of [0.35, 0.6]) if (!front || vy > 0.5) { rr(cx - w * 0.16, y + h * vy, w * 0.32, h * 0.1, w * 0.04); ctx.fill(); }
+    if (front) {   /* windscreen with the logo's half-asleep eyes, and the flat mouth */
+      ctx.fillStyle = '#14473b'; rr(x + w * 0.12, y + h * 0.08, w * 0.76, h * 0.28, w * 0.12); ctx.fill();
+      for (const ex of [-0.18, 0.18]) {
+        const ex0 = cx + ex * w, ey = y + h * 0.23;
+        ctx.fillStyle = '#e9f6ee'; ctx.beginPath(); ctx.ellipse(ex0, ey, w * 0.11, h * 0.09, 0, 0, Math.PI * 2); ctx.fill();
+        ctx.fillStyle = '#0e3a30'; ctx.beginPath(); ctx.arc(ex0 + w * 0.025, ey + h * 0.025, w * 0.045, 0, Math.PI * 2); ctx.fill();
+        ctx.fillStyle = '#14473b'; ctx.beginPath(); ctx.ellipse(ex0, ey, w * 0.12, h * 0.1, 0, Math.PI, 0); ctx.fill();   /* heavy lid */
+        ctx.strokeStyle = '#cfeadb'; ctx.lineWidth = Math.max(1, w * 0.02); ctx.beginPath(); ctx.moveTo(ex0 - w * 0.11, ey); ctx.lineTo(ex0 + w * 0.11, ey); ctx.stroke();
+      }
+      ctx.strokeStyle = '#14473b'; ctx.lineWidth = Math.max(1.5, w * 0.035); ctx.lineCap = 'round';
+      ctx.beginPath(); ctx.moveTo(cx - w * 0.12, y + h * 0.44); ctx.quadraticCurveTo(cx, y + h * 0.41, cx + w * 0.12, y + h * 0.45); ctx.stroke();
+    }
   }
 
   function frame(now) {
