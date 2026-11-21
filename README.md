@@ -6,8 +6,11 @@
 cancelled trips in Entur's open data and opens Vy's own claim form already filled in. You check it and
 press *Send inn*.
 
+**Use it: [innstilt.app](https://innstilt.app)** (works in any browser; add it to your home screen).
+
 > *Innstilt is not affiliated with Vy.* Your ticket code, name, e-mail and bank account are stored only
-> on your own device, and are used only to fill in Vy's form. Nothing is sent anywhere else.
+> on your own device, and are used only to fill in Vy's form. None of it is sent anywhere else (optional
+> anonymous statistics share only numbers of claims and kroner).
 
 ## Status
 
