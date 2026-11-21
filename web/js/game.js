@@ -1,11 +1,12 @@
-/* "Forsinket?" – a small snake-style game for the platform. The ghost train picks up passengers; every 5 seconds
-   without a passenger makes it a minute later, and at 31 minutes it's over (you'd be entitled to compensation).
+/* "Forsinket?" – a small snake-style game for the platform. The ghost train picks up as many passengers as it can
+   while the delay clock runs: +1 min every 3 s, faster with every passenger; at 31 minutes it's over (you'd be
+   entitled to compensation).
    Leaves and ice pop up for a few seconds; the edge and your own wagons cost a train set (3 lives).
    Loaded only when opened (dynamic import), no network, high score in this browser only. */
 
 const N = 15;                      /* board: N × N cells */
 const LIMIT = 31;                  /* minutes late = game over */
-const SLOW_MS = 5000;              /* +1 min per 5 s without a passenger */
+const minuteMs = score => Math.max(1500, 3000 - score * 60);   /* real time per delay minute: 3 s, down to 1.5 s */
 const BEST_KEY = 'innstilt.game.best';
 const DIRS = { up: [0, -1], down: [0, 1], left: [-1, 0], right: [1, 0] };
 const OPPOSITE = { up: 'down', down: 'up', left: 'right', right: 'left' };
@@ -15,7 +16,7 @@ const C = { bg1: '#0e3a30', bg2: '#113f35', mint: '#f2faf5', mint2: '#cfeadb', s
 
 const TXT = {
   no: {
-    title: 'Forsinket?', intro: 'Plukk opp passasjerer med spøkelsestoget. Hvert 5. sekund uten en passasjer blir toget ett minutt mer forsinket – ved 31 minutter er det slutt. Pass deg for løv og is, kanten og dine egne vogner.',
+    title: 'Forsinket?', intro: 'Plukk opp så mange passasjerer du rekker med spøkelsestoget. Forsinkelsen tikker hele tiden – ved 31 minutter er det slutt. Pass deg for løv og is, kanten og dine egne vogner.',
     start: 'Start', resume: 'Fortsett', again: 'Spill igjen', back: 'Tilbake til turene', claim: 'Krev erstatning 😉',
     paused: 'Pause', leaf: 'Løv på skinnene!', ice: 'Is i kontaktledningen!', self: 'Materiellmangel!', edge: 'Signalfeil!',
     lateTitle: '31 minutter forsinket!', lateText: 'Gratulerer – du har krav på erstatning.',
@@ -24,12 +25,12 @@ const TXT = {
     keys: 'Piltaster eller WASD · P eller mellomrom = pause', pad: { up: 'Opp', down: 'Ned', left: 'Venstre', right: 'Høyre', pause: 'Pause' },
     score: 'Passasjerer', late: 'Forsinkelse', lives: 'Togsett igjen', help: 'Hvordan spiller jeg?',
     rules: ['👤 Kjør inn i passasjerene for å plukke dem opp – toget blir én vogn lengre.',
-      '⏱ Hvert 5. sekund uten en passasjer: +1 minutt forsinket (streken viser når). Ved 31 minutter er spillet over.',
+      '⏱ Forsinkelsen tikker hele tiden: +1 minutt hvert 3. sekund, og fortere jo flere passasjerer du har (streken viser neste minutt). Ved 31 minutter er spillet over.',
       '🍂 ❄️ Løv og is dukker opp noen sekunder. Kjør inn i dem, i kanten eller i dine egne vogner, og du mister et togsett (3 i alt).',
-      '🕹 Styr med pilene, eller sveip på brettet. ⏸ i midten tar pause.'],
+      '🕹 Styr med pilene, eller sveip på brettet. ⏸ nede til venstre tar pause.'],
   },
   en: {
-    title: 'Forsinket?', intro: 'Pick up passengers with the ghost train. Every 5 seconds without a passenger makes the train a minute later – at 31 minutes it\'s over. Watch out for leaves and ice, the edge and your own wagons.',
+    title: 'Forsinket?', intro: 'Pick up as many passengers as you can with the ghost train. The delay keeps ticking – at 31 minutes it\'s over. Watch out for leaves and ice, the edge and your own wagons.',
     start: 'Start', resume: 'Resume', again: 'Play again', back: 'Back to trips', claim: 'Claim compensation 😉',
     paused: 'Paused', leaf: 'Leaves on the line!', ice: 'Ice on the overhead wire!', self: 'Rolling stock shortage!', edge: 'Signal failure!',
     lateTitle: '31 minutes late!', lateText: 'Congratulations – you are entitled to compensation.',
@@ -38,9 +39,9 @@ const TXT = {
     keys: 'Arrow keys or WASD · P or Space = pause', pad: { up: 'Up', down: 'Down', left: 'Left', right: 'Right', pause: 'Pause' },
     score: 'Passengers', late: 'Delay', lives: 'Train sets left', help: 'How do I play?',
     rules: ['👤 Drive into passengers to pick them up – the train gets one wagon longer.',
-      '⏱ Every 5 seconds without a passenger: +1 minute late (the bar shows when). At 31 minutes the game is over.',
+      '⏱ The delay keeps ticking: +1 minute every 3 seconds, faster the more passengers you have (the bar shows the next minute). At 31 minutes the game is over.',
       '🍂 ❄️ Leaves and ice show up for a few seconds. Hit them, the edge or your own wagons and you lose a train set (3 in all).',
-      '🕹 Steer with the arrows, or swipe on the board. ⏸ in the middle pauses.'],
+      '🕹 Steer with the arrows, or swipe on the board. ⏸ bottom left pauses.'],
   },
 };
 
@@ -67,9 +68,9 @@ export function start(root, { lang = 'no', back = () => {} } = {}) {
       ${touch ? `<div class="g-pad">
         <button type="button" class="g-up" data-dir="up" aria-label="${T.pad.up}">▲</button>
         <button type="button" class="g-left" data-dir="left" aria-label="${T.pad.left}">◀</button>
-        <button type="button" class="g-pp" data-act="pause" aria-label="${T.pad.pause}">⏸</button>
         <button type="button" class="g-right" data-dir="right" aria-label="${T.pad.right}">▶</button>
         <button type="button" class="g-down" data-dir="down" aria-label="${T.pad.down}">▼</button>
+        <button type="button" class="g-pp" data-act="pause" aria-label="${T.pad.pause}">⏸</button>
         <button type="button" class="g-help helpbtn" data-act="help" aria-label="${T.help}">?</button>
       </div>` : `<p class="g-keys muted small">${T.keys}<button type="button" class="helpbtn" data-act="help" aria-label="${T.help}">?</button></p>`}
     </div>`;
@@ -139,7 +140,7 @@ export function start(root, { lang = 'no', back = () => {} } = {}) {
     st.snake.unshift({ x, y });
     if (st.grow) st.grow--; else st.snake.pop();
     if (st.pax && st.pax.x === x && st.pax.y === y) {
-      st.score++; st.grow++; st.slow = 0;
+      st.score++; st.grow++;
       st.pax = freeCell(3);
       hud();
     }
@@ -156,7 +157,7 @@ export function start(root, { lang = 'no', back = () => {} } = {}) {
 
   function afterCrash() {
     if (st.lives <= 0) return over('lives');
-    st.snake = spawnSnake(); st.dir = 'right'; st.queue = []; st.grow = 0; st.hazards = []; st.slow = 0;
+    st.snake = spawnSnake(); st.dir = 'right'; st.queue = []; st.grow = 0; st.hazards = [];
     if (!st.pax || on(st.snake, st.pax.x, st.pax.y)) st.pax = freeCell(3);
     st.nextHazard = 5000;
     setMode('run');
@@ -176,8 +177,8 @@ export function start(root, { lang = 'no', back = () => {} } = {}) {
     if (mode === 'crash') { if (now >= crashUntil) afterCrash(); return; }
     if (mode !== 'run') return;
     st.slow += dt;
-    if (st.slow >= SLOW_MS) {
-      st.slow -= SLOW_MS;
+    if (st.slow >= minuteMs(st.score)) {
+      st.slow -= minuteMs(st.score);
       st.delay++;
       hud();
       if (st.delay >= LIMIT) return over('late');
@@ -267,7 +268,7 @@ export function start(root, { lang = 'no', back = () => {} } = {}) {
     for (let i = st.snake.length - 1; i > 0; i--) wagon(st.snake[i].x * c, st.snake[i].y * c, c);
     head(st.snake[0], c);
     if (now < flashUntil) { ctx.fillStyle = 'rgba(255,107,87,.35)'; ctx.fillRect(0, 0, W, W); }
-    barEl.style.width = `${Math.min(100, (st.slow / SLOW_MS) * 100)}%`;
+    barEl.style.width = `${Math.min(100, (st.slow / minuteMs(st.score)) * 100)}%`;
   }
 
   function wagon(x, y, c) {

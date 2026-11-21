@@ -271,7 +271,9 @@ dialog.helpdlg .intro h1 { font-size: 20px; }
   justify-content: center; margin: 12px auto 0; touch-action: manipulation; user-select: none; -webkit-user-select: none; }
 .g-pad button { font-size: 24px; border-radius: 16px; background: var(--card); color: var(--ink); border: 2px solid var(--mint-2); padding: 0; }
 .g-pad .g-up { grid-column: 2; grid-row: 1; } .g-pad .g-left { grid-column: 1; grid-row: 2; }
-.g-pad .g-pp { grid-column: 2; grid-row: 2; background: var(--yellow); border-color: var(--yellow); color: #0b0b0c; }
+/* pause and "?" sit in the bottom corners, away from the arrows, so a thumb doesn't hit them by accident */
+.g-pad .g-pp { grid-column: 1; grid-row: 3; justify-self: start; align-self: end; width: 48px; height: 40px; font-size: 18px;
+  background: var(--yellow); border-color: var(--yellow); color: #0b0b0c; }
 .g-pad .g-right { grid-column: 3; grid-row: 2; } .g-pad .g-down { grid-column: 2; grid-row: 3; }
 .g-pad .g-help { grid-column: 3; grid-row: 3; justify-self: end; align-self: end; width: 40px; height: 40px; font-size: 20px; }
 .g-keys { display: flex; justify-content: space-between; align-items: center; gap: 8px; margin-top: 10px; }
