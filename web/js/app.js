@@ -33,7 +33,7 @@ function shell() {
   $('#nav').innerHTML = [['trips', t('navTrips')], ['claims', t('navClaims')], ['settings', t('navSettings')]]
     .map(([r, label]) => `<a href="#/${r}" ${r === route ? 'aria-current="page"' : ''}>${esc(label)}</a>`).join('');
   $('#nav').hidden = !store.get().welcomed;
-  $('#foot').innerHTML = `<a href="#/about">${esc(t('about'))}</a> · ${esc(t('notVy'))} ${esc(t('dataFrom'))}`
+  $('#foot').innerHTML = `<a href="#/about">${esc(t('about'))}</a> · <a href="${data.NATIVE ? 'https://innstilt.app/' : ''}personvern.html${getLang() === 'en' ? '#en' : ''}">${esc(t('privacy'))}</a> · ${esc(t('notVy'))} ${esc(t('dataFrom'))}`
     + (DONATE_URL ? ` · <a href="${esc(DONATE_URL)}" target="_blank" rel="noopener">${esc(t('coffee'))}</a>` : '');
 }
 

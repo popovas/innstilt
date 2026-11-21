@@ -2,7 +2,7 @@
    falls back to the last cached copy when offline. Cross-origin requests (Entur's API) are not touched.
    Personal data never passes through here: it lives in localStorage. */
 const CACHE = 'innstilt';
-const SHELL = ['./', 'index.html', 'style.css', 'manifest.webmanifest', 'js/app.js', 'js/core.js', 'js/store.js',
+const SHELL = ['./', 'index.html', 'personvern.html', 'style.css', 'manifest.webmanifest', 'js/app.js', 'js/core.js', 'js/store.js',
   'js/data.js', 'js/i18n.js', 'js/about.js', 'js/stats.js', 'js/bookmarklet-href.js', 'icons/ghost-32.png', 'icons/ghost-64.png',
   'icons/ghost-180.png', 'icons/ghost-192.png', 'icons/ghost-512.png'];
 
