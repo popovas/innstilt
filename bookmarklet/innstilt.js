@@ -4,6 +4,9 @@
    been changed by hand, and the train must be picked from a list that appears afterwards. This
    nudges the hour (arrow up, arrow down: a real change), sets hour/minute to the time in the link,
    then selects the train named in the link. It never presses "Send inn".
+   After you send the claim yourself, it spots Vy's "Saksnummer: 123456" and offers a button that opens
+   Innstilt with that case number and the trip (stations, date, time), so the app can store it.
+   Nothing is sent anywhere by the bookmarklet itself.
 
    Only block comments in this file: build.py strips them and rejects line comments. */
 (async () => {
@@ -37,6 +40,8 @@
     return svg;
   };
 
+  const APP = 'https://innstilt.app/';  /* build.py can point this elsewhere for testing */
+
   const toast = (msg, kind) => {
     let t = document.getElementById('innstilt-toast');
     if (!t) {
@@ -52,10 +57,46 @@
       t.appendChild(document.createElement('span'));
       document.body.appendChild(t);
     }
-    t.style.background = kind === 'ok' ? '#d8f5e3' : kind === 'err' ? '#ffd9d6' : '#fff4c2';
+    t.style.background = kind === 'ok' || kind === 'case' ? '#d8f5e3' : kind === 'err' ? '#ffd9d6' : '#fff4c2';
     t.lastChild.textContent = 'Innstilt: ' + msg;
-    if (kind === 'ok') setTimeout(() => t.remove(), 9000);
+    const old = t.querySelector('a');
+    if (old) old.remove();
+    if (kind === 'ok') setTimeout(() => { if (!t.querySelector('a')) t.remove(); }, 9000);
+    return t;
   };
+
+  /* After "Send inn": Vy shows "Saksnummer: 123456" (the page address no longer has the trip by then). */
+  const q0 = new URLSearchParams(location.search);
+  const trip = {
+    from: q0.get('manualJourneyInfo.departureStation.nsrCode') || '',
+    to: q0.get('manualJourneyInfo.arrivalStation.nsrCode') || '',
+    date: q0.get('manualJourneyInfo.date') || '',
+    time: (q0.get('manualJourneyInfo.time') || '').slice(0, 5),
+  };
+  if (trip.from && trip.to && trip.date && trip.time && !window.innstiltCaseWatch) {
+    const started = Date.now();
+    window.innstiltCaseWatch = setInterval(() => {
+      const m = (document.body.innerText || '').match(/Saksnummer:\s*(\d{4,12})/);
+      if (!m && Date.now() - started < 3 * 3600000) return;
+      clearInterval(window.innstiltCaseWatch);
+      window.innstiltCaseWatch = null;
+      if (!m) return;
+      const t = toast('Saksnummer ' + m[1] + ' – ', 'case');
+      const a = document.createElement('a');
+      a.textContent = 'Lagre i Innstilt';
+      a.href = APP + '#/case?' + new URLSearchParams({ n: m[1], ...trip });
+      /* opened by script (not a plain link), so Innstilt's little tab may close itself when done */
+      a.onclick = e => {
+        e.preventDefault(); e.stopPropagation();
+        const w = window.open(a.href, '_blank');
+        if (w) w.opener = null;  /* same isolation as noopener, but the tab stays closable by script */
+        else location.assign(a.href);  /* pop-up blocked: go there in this tab instead */
+        t.remove();
+      };
+      a.style.cssText = 'color:#fff;background:#0e3a30;padding:6px 12px;border-radius:8px;text-decoration:none;font-weight:700;white-space:nowrap';
+      t.appendChild(a);
+    }, 1000);
+  }
 
   const q = new URLSearchParams(location.search);
   const time = (q.get('manualJourneyInfo.time') || '').match(/^(\d{1,2}):(\d{2})/);

@@ -8,7 +8,8 @@ const EMPTY = {
   tickets: [],   /* {code, validFrom: ms|null, validTo: ms|null} */
   claims: [],    /* {key, fromId, toId, fromName, toName, date, dep, line, depMs, case, status, amount, sentAt} */
   homeDone: false,  /* "add to home screen" card dismissed for good */
-  stats: { share: null, id: '', lastSent: '' },  /* opt-in anonymous statistics; share: null = not asked yet */
+  stats: { share: null, id: '', lastSent: '' },
+  pendingCases: {},  /* claimKey -> case number caught by the bookmarklet before the claim was marked sent */  /* opt-in anonymous statistics; share: null = not asked yet */
 };
 
 let state = load();
@@ -36,6 +37,16 @@ function save() {
 }
 
 export const get = () => state;
+
+/* Another tab (e.g. the one the bookmarklet opens with a case number) changed the data: reload it here,
+   so this tab never writes back an older copy over it. */
+const listeners = [];
+export const onExternalChange = fn => listeners.push(fn);
+addEventListener('storage', e => {
+  if (e.key !== KEY) return;
+  state = load();
+  listeners.forEach(fn => fn());
+});
 
 export function update(fn) {
   fn(state);

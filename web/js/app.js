@@ -44,6 +44,7 @@ function render() {
   const s = store.get();
   const route = location.hash.slice(2) || 'trips';
   if (route === 'about') return viewAbout();  /* readable before setup too */
+  if (route.startsWith('case?')) return viewCase(new URLSearchParams(route.slice(5)));
   if (!s.welcomed) return viewWelcome();
   if (!store.isReady()) return viewSetup(true);  /* first-run setup until profile + ticket are complete */
   ({ trips: viewTrips, claims: viewClaims, settings: () => viewSetup(false) }[route] || viewTrips)();
@@ -92,6 +93,36 @@ function viewWelcome() {
   wireInstall();
   fillCounter();
   fillJab();
+}
+
+/* ------------------------------------------------------------------ case number from the bookmarklet */
+
+/* #/case?n=123456&from=NSR:StopPlace:1&to=NSR:StopPlace:2&date=2026-11-21&time=16:54, opened by the
+   bookmarklet's "Lagre i Innstilt" on Vy's confirmation page. Attaches the case number to that trip's claim,
+   or keeps it until the claim is marked as sent. Everything is checked; a bad link changes nothing. */
+function viewCase(q) {
+  const n = q.get('n') || '', from = q.get('from') || '', to = q.get('to') || '';
+  const date = q.get('date') || '', time = q.get('time') || '';
+  const okInput = /^\d{4,12}$/.test(n) && /^NSR:StopPlace:\d+$/.test(from) && /^NSR:StopPlace:\d+$/.test(to)
+    && /^\d{4}-\d\d-\d\d$/.test(date) && /^\d\d:\d\d$/.test(time);
+  let msg = t('caseBad');
+  if (okInput) {
+    const key = store.claimKey(from, to, core.osloToMs(date, time));
+    const claim = store.get().claims.find(c => c.key === key);
+    store.update(s => {
+      const c = s.claims.find(x => x.key === key);
+      if (c) c.case = n;
+      else (s.pendingCases ??= {})[key] = n;
+    });
+    msg = t(claim ? 'caseSaved' : 'casePending', { n, date: fmtDay(date), time });
+  }
+  history.replaceState(null, '', '#/claims');  /* a reload shouldn't apply it again */
+  $('#main').innerHTML = `<section class="card center casecard">
+      <h1>${okInput ? '✓' : '⚠️'} ${esc(t('caseTitle'))}</h1><p>${esc(msg)}</p>
+      ${okInput ? `<p class="muted small">${esc(t('caseClose'))}</p>` : ''}
+      <button type="button" class="primary" id="toClaims">${esc(t('caseToClaims'))}</button></section>`;
+  $('#toClaims').onclick = () => go('claims');
+  if (okInput) setTimeout(() => window.close(), 2500);  /* works when the bookmarklet opened this tab */
 }
 
 /* ------------------------------------------------------------------ about */
@@ -701,6 +732,9 @@ function wireTrips(root, items) {
 }
 
 function recordClaim(from, to, j, caseNo, earlier = false) {
+  const key = store.claimKey(from.id, to.id, j.depMs);
+  if (!caseNo && store.get().pendingCases?.[key]) caseNo = store.get().pendingCases[key];  /* caught by the bookmarklet */
+  store.update(st => { if (st.pendingCases) delete st.pendingCases[key]; });
   store.update(st => st.claims.push({
     key: store.claimKey(from.id, to.id, j.depMs), fromId: from.id, toId: to.id,
     fromName: from.name, toName: to.name, date: j.date, dep: j.dep, line: j.line, depMs: j.depMs,
@@ -828,6 +862,15 @@ function startClaim({ from, to, j, ticketCode }) {
         <button value="cancel">${esc(t('notSent'))}</button>
         <button class="primary" value="sent">${esc(t('markSent'))}</button>
       </div></form>`;
+  /* The bookmarklet's "Lagre i Innstilt" (another tab) can deliver the case number while this is open. */
+  const myKey = store.claimKey(from.id, to.id, j.depMs);
+  const fillCase = () => {
+    const n = store.get().pendingCases?.[myKey];
+    const input = dlg.querySelector('[name=case]');
+    if (n && input && !input.value) { input.value = n; input.classList.add('caught'); }
+  };
+  store.onExternalChange(() => { if (dlg.open) fillCase(); });
+  fillCase();
   dlg.onclose = () => {
     if (dlg.returnValue !== 'sent') return;
     const caseNo = (dlg.querySelector('[name=case]').value.match(/\d+/) || [''])[0];
