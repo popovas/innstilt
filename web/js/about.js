@@ -12,7 +12,7 @@ export const contactAddress = async () => CONTACT.join('@');
 export const ABOUT = {
   no: [
     'Toget er innstilt. Igjen.',
-    'Innstilt ble laget av en pendler som ble lei. På mange strekninger er innstilte og forsinkede tog blitt en del av hverdagen – samtidig som billettene blir dyrere.',
+    'Innstilt er laget av en lei pendler på Gjøvikbanen. På mange strekninger er innstilte og forsinkede tog blitt en del av hverdagen – samtidig som billettene blir dyrere.',
     'Etter Vy sine egne vilkår har du rett på prisavslag eller erstatning når toget er mer enn 30 minutter forsinket eller blir innstilt. Men skjemaet tar tid: du må huske hvilket tog det var, finne fram billettkoden og fylle ut alt for hver tur, så de fleste lar det være.',
     'Innstilt gjør jobben enklere: appen finner turene dine som var forsinket eller innstilt, ved hjelp av Entur sine åpne data, og åpner Vy sitt refusjonsskjema ferdig utfylt. Du sjekker og trykker «Send inn» selv – appen sender aldri noe på egen hånd.',
     'Hvert krav er kanskje ikke stort, men de blir mange. Og hvert krav er også et lite signal om hvor ofte toget svikter.',
@@ -22,7 +22,7 @@ export const ABOUT = {
   ],
   en: [
     'The train is cancelled. Again.',
-    'Innstilt ("cancelled") was made by a commuter who had had enough. On many lines, cancelled and late trains have become part of everyday life – while tickets keep getting more expensive.',
+    'Innstilt ("cancelled") was made by a fed-up commuter on the Gjøvik line. On many lines, cancelled and late trains have become part of everyday life – while tickets keep getting more expensive.',
     'Under Vy\'s own terms you are entitled to a price reduction or compensation when a train is more than 30 minutes late or cancelled. But the form takes time: you have to remember which train it was, dig out your ticket code and fill everything in for every trip, so most people don\'t bother.',
     'Innstilt makes it easy: it finds your trips that were late or cancelled, using Entur\'s open data, and opens Vy\'s refund form already filled in. You check it and press "Send inn" yourself – the app never sends anything on its own.',
     'Each refund may be small, but they add up. And every claim is also a small signal of how often the trains let us down.',
@@ -62,7 +62,7 @@ export const FAQ = {
     ['Hvorfor vises ikke toget mitt?',
       'Innstilt viser tog som ble innstilt eller kom mer enn 30 minutter for sent, rundt de vanlige avgangstidene dine (±2 timer), på dager der billetten din var gyldig, de siste 90 dagene. Dagens tog vises bare de siste par timene; resten kommer med natten etter. Foreløpig er bare Vy sine tog med – bruk «En annen tur» for en tur utenom de faste.'],
     ['Er Innstilt laget av Vy?',
-      'Nei. Innstilt er et uavhengig fritidsprosjekt laget av en lei pendler, og er ikke tilknyttet Vy eller Entur. Togdataene er åpne data fra Entur.'],
+      'Nei. Innstilt er et uavhengig fritidsprosjekt laget av en lei pendler på Gjøvikbanen, og er ikke tilknyttet Vy eller Entur. Togdataene er åpne data fra Entur.'],
     ['Hva skjer med opplysningene mine?',
       'Billettkode, navn, e-post og kontonummer lagres bare på denne enheten og brukes bare til å fylle ut Vy sitt skjema. Vy sitt skjema tar imot opplysningene i nettadressen, så de blir også stående i nettleserens historikk. Togdata hentes fra Entur, som ser hvilke stasjoner appen spør om, men ikke hvem du er. Vil du, kan du dele anonym statistikk – bare antall krav og kroner per måned – til den felles telleren. Du kan laste ned eller slette alt i Innstillinger.'],
     ['Koster det noe?',
@@ -82,7 +82,7 @@ export const FAQ = {
     ['Why isn\'t my train shown?',
       'Innstilt shows trains that were cancelled or more than 30 minutes late, around your usual departure times (±2 hours), on days your ticket was valid, in the last 90 days. Today\'s trains only cover the last couple of hours; the rest arrive the night after. For now only Vy\'s trains are included – use "Another trip" for a journey outside your regular ones.'],
     ['Is Innstilt made by Vy?',
-      'No. Innstilt is an independent spare-time project by a fed-up commuter and is not affiliated with Vy or Entur. The train data is open data from Entur.'],
+      'No. Innstilt is an independent spare-time project by a fed-up commuter on the Gjøvik line and is not affiliated with Vy or Entur. The train data is open data from Entur.'],
     ['What happens to my details?',
       'Ticket code, name, e-mail and account number are stored only on this device and used only to fill in Vy\'s form. Vy\'s form takes the details in its web address, so they also stay in your browser history. Train data comes from Entur, which sees which stations the app asks about, but not who you are. If you like, you can share anonymous statistics – just numbers of claims and kroner per month – for the shared counter. You can download or delete everything in Settings.'],
     ['Does it cost anything?',
