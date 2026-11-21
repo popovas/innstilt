@@ -1,6 +1,6 @@
 # Innstilt – security and privacy review
 
-Version 0.4.0, 21 November 2026 (innstilt.app live on GitHub Pages; anonymous counter on Cloudflare Workers).
+Version 0.5.0, 21 November 2026 (innstilt.app live on GitHub Pages; anonymous counter on Cloudflare Workers).
 
 ## What is where
 

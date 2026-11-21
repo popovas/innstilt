@@ -2,7 +2,7 @@
    The text below is meant to be edited freely: one string per paragraph, Norwegian first, then English.
    Plain text only (it is escaped when shown). */
 
-export const VERSION = '0.4.0';
+export const VERSION = '0.5.0';
 
 /* Contact address for the "Contact us" button (Cloudflare Email Routing forwards it). Split, so it isn't sitting
    in the page as plain text for spam bots; it is put together only when someone taps the button. */

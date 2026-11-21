@@ -54,7 +54,6 @@ form on a computer, and hands the case number back to Innstilt after sending.
 - Learn the payout amounts from paid claims.
 - iPhone app.
 - Other companies than Vy (Ruter, SJ, Go-Ahead, Flytoget …) – each has its own refund form.
-- "Forsinket?" – a small game for the platform.
 
 ## How it works
 
