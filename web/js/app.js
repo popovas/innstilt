@@ -96,17 +96,17 @@ function viewSetup(first) {
       <label>${esc(t('account'))}<input name="account" value="${esc(p.account)}" inputmode="numeric" placeholder="${esc(t('accountPh'))}" autocomplete="off"></label>
 
       <h2>${esc(t('secRoute'))}</h2>
-      ${stationField('home', p.home)}
-      ${stationField('work', p.work)}
-      <label>${esc(t('timesOut'))}<input name="timesOut" value="${esc(p.timesOut.join(', '))}" inputmode="numeric" placeholder="07:15"></label>
-      <label>${esc(t('timesBack'))}<input name="timesBack" value="${esc(p.timesBack.join(', '))}" inputmode="numeric" placeholder="16:30"><small>${esc(t('timesHelp'))}</small></label>
+      <p class="help">${esc(t('routesHelp'))}</p>
+      <div id="routes">${(p.routes.length ? p.routes : [null]).map(routeHtml).join('')}</div>
+      <button type="button" class="link" id="addRoute">＋ ${esc(t('addRoute'))}</button>
 
       <p class="error" id="err" role="alert"></p>
       <button class="primary" type="submit">${esc(t('save'))}</button>
       <span class="ok" id="ok" hidden>✓ ${esc(t('saved'))}</span>
     </form>
     ${first ? '' : settingsExtrasHtml()}`;
-  wireStations();
+  wireStations($('#setup'));
+  wireRoutes();
   $('#newTicket')?.addEventListener('click', () => {
     const f = $('#setup');
     f.code.value = '';
@@ -130,14 +130,46 @@ function ticketListHtml() {
       <button type="button" class="link" data-remove-ticket="${i}">${esc(t('remove'))}</button></li>`).join('')}</ul>`;
 }
 
+/** One regular trip: two stations and the usual departure times each way. */
+function routeHtml(r) {
+  return `<fieldset class="route" data-route>
+      <legend>${esc(t('route'))}</legend>
+      <div class="row">${stationField('from', r?.a)}${stationField('to', r?.b)}</div>
+      <div class="row">
+        <label>${esc(t('timesOut'))}<input name="timesOut" value="${esc((r?.timesOut || []).join(', '))}" inputmode="numeric" placeholder="07:15"></label>
+        <label>${esc(t('timesBack'))}<input name="timesBack" value="${esc((r?.timesBack || []).join(', '))}" inputmode="numeric" placeholder="16:30"></label>
+      </div>
+      <small>${esc(t('timesHelp'))}</small>
+      <button type="button" class="link danger-link" data-remove-route>${esc(t('removeRoute'))}</button>
+    </fieldset>`;
+}
+
+/* The remove link only shows when there is more than one trip; removal takes effect on Save. */
+function wireRoutes() {
+  const box = $('#routes');
+  const sync = () => box.querySelectorAll('[data-remove-route]').forEach(b => { b.hidden = box.children.length < 2; });
+  box.addEventListener('click', e => {
+    const b = e.target.closest('[data-remove-route]');
+    if (b) { b.closest('[data-route]').remove(); sync(); }
+  });
+  $('#addRoute').addEventListener('click', () => {
+    box.insertAdjacentHTML('beforeend', routeHtml(null));
+    const added = box.lastElementChild;
+    wireStations(added);
+    sync();
+    added.querySelector('input').focus();
+  });
+  sync();
+}
+
 function stationField(key, value) {
   return `<label class="station">${esc(t(key))}
     <input name="${key}" value="${esc(value?.name || '')}" data-id="${esc(value?.id || '')}" placeholder="${esc(t('stationPh'))}" autocomplete="off" role="combobox" aria-expanded="false">
     <ul class="suggest" hidden></ul></label>`;
 }
 
-function wireStations() {
-  document.querySelectorAll('label.station').forEach(label => {
+function wireStations(root) {
+  root.querySelectorAll('label.station').forEach(label => {
     const input = label.querySelector('input');
     const list = label.querySelector('.suggest');
     let timer;
@@ -179,11 +211,18 @@ function saveSetup(first) {
   if (!email) return err(t('errEmail'));
   const account = core.validAccount(f.account.value);
   if (!account) return err(t('errAccount'));
-  const home = f.home.dataset.id ? { id: f.home.dataset.id, name: f.home.value } : null;
-  const work = f.work.dataset.id ? { id: f.work.dataset.id, name: f.work.value } : null;
-  if (!home || !work) return err(t('errStation'));
-  const timesOut = core.parseTimes(f.timesOut.value), timesBack = core.parseTimes(f.timesBack.value);
-  if (!timesOut || !timesBack) return err(t('errTimes'));
+  const routes = [];
+  for (const fs of f.querySelectorAll('[data-route]')) {
+    const field = n => fs.querySelector(`[name=${n}]`);
+    if (!['from', 'to', 'timesOut', 'timesBack'].some(n => field(n).value.trim())) continue;  /* empty extra block */
+    const a = pickedStation(field('from')), b = pickedStation(field('to'));
+    if (!a || !b) return err(t('errStation'));
+    if (a.id === b.id) return err(t('errSame'));
+    const timesOut = core.parseTimes(field('timesOut').value), timesBack = core.parseTimes(field('timesBack').value);
+    if (!timesOut || !timesBack) return err(t('errTimes'));
+    routes.push({ a, b, timesOut, timesBack });
+  }
+  if (!routes.length) return err(t('errStation'));
   store.update(s => {
     const ticket = { code, validFrom, validTo };
     const isNew = f.code.dataset.isNew === '1';
@@ -194,13 +233,18 @@ function saveSetup(first) {
     }
     s.tickets.push(ticket);
     s.tickets.sort((a, b) => (a.validFrom || 0) - (b.validFrom || 0));
-    Object.assign(s.profile, { name, email, account, home, work, timesOut, timesBack });
+    Object.assign(s.profile, { name, email, account, routes });
   });
   $('#err').textContent = '';
   if (first) { go('trips'); return true; }
   render();
   $('#ok').hidden = false;
   return true;
+}
+
+/** {id, name} if a station was picked from the suggestions, else null. */
+function pickedStation(input) {
+  return input.dataset.id ? { id: input.dataset.id, name: input.value } : null;
 }
 
 function settingsExtrasHtml() {
@@ -256,18 +300,20 @@ async function viewTrips() {
       <p class="center"><a class="bookmarklet" href="${esc(BOOKMARKLET)}" id="bm"><img src="icons/ghost-32.png" width="22" height="22" alt=""><span class="vh">👻 </span>Innstilt: fyll ut</a></p>
       <div class="actions"><button type="button" id="bmLater">${esc(t('bmLater'))}</button>
         <button type="button" class="primary" id="bmDone">${esc(t('bmDone'))}</button></div></section>` : ''}
+    ${otherTripHtml()}
     <p class="muted">${esc(t('tripsIntro', { min: core.DEFAULT_THRESHOLD, days: core.CLAIM_DEADLINE_DAYS }))}</p>
     <div id="trips"></div>
     <p class="muted" id="progress"></p>`;
   $('#bm')?.addEventListener('click', e => { e.preventDefault(); alert(t('bookmarkClick')); });
   $('#bmDone')?.addEventListener('click', () => { store.update(st => { st.bookmarkDone = true; }); $('.bmcard').remove(); });
   $('#bmLater')?.addEventListener('click', () => $('.bmcard').remove());
+  wireOtherTrip();
   const index = await data.loadIndex();
   const today = core.todayOslo();
   const oldest = core.addDays(today, -core.CLAIM_DEADLINE_DAYS);
   const days = index.days.filter(d => d >= oldest && d < today).sort().reverse();
   const done = new Set(s.claims.map(c => c.key));
-  const pairs = [[p.home, p.work, p.timesOut], [p.work, p.home, p.timesBack]];
+  const pairs = p.routes.flatMap(r => [[r.a, r.b, r.timesOut], [r.b, r.a, r.timesBack]]);
   let shown = 0, skipped = new Set();
 
   for (const day of days) {
@@ -275,12 +321,14 @@ async function viewTrips() {
     $('#progress').textContent = t('loading', { date: fmtDay(day) });
     let dayData;
     try { dayData = await data.loadDay(day); } catch { continue; }
-    const items = [];
+    const items = [], seen = new Set();  /* two routes may share a leg */
     for (const [from, to, times] of pairs) {
       const js = core.journeysForRoute(dayData, from.id, to.id);
       for (const j of js) {
         if (!core.eligible(j) || !core.nearUsual(j, times)) continue;
-        if (done.has(store.claimKey(from.id, to.id, j.depMs))) continue;
+        const key = store.claimKey(from.id, to.id, j.depMs);
+        if (done.has(key) || seen.has(key)) continue;
+        seen.add(key);
         if (!core.ticketFor(s.tickets, j.depMs)) { skipped.add(day); continue; }
         items.push({ from, to, j, next: j.cancelled ? core.nextTrain(js, j) : null });
       }
@@ -302,17 +350,102 @@ async function viewTrips() {
   if (!shown) $('#trips').innerHTML = `<p class="empty">${esc(t('noTrips'))}</p>`;
 }
 
-function tripHtml({ from, to, j, next }, id) {
-  const status = j.cancelled
-    ? `<span class="badge bad">${esc(t('cancelled'))}</span>`
-    : `<span class="badge warn">${esc(t('late', { min: j.delayMin }))}</span>`;
+function statusHtml(j) {
+  if (j.cancelled) return `<span class="badge bad">${esc(t('cancelled'))}</span>`;
+  if (j.delayMin === null) return `<span class="badge quiet">${esc(t('noData'))}</span>`;
+  if (core.eligible(j)) return `<span class="badge warn">${esc(t('late', { min: j.delayMin }))}</span>`;
+  return `<span class="badge quiet">${esc(j.delayMin <= 1 ? t('onTime') : t('late', { min: j.delayMin }))}</span>`;
+}
+
+/** `action` replaces the claim button (e.g. "sent ✓") when the trip can't be claimed. */
+function tripHtml({ from, to, j, next }, id, action = null) {
   const nx = next ? `<small>${esc(t('nextTrain', {
     line: next.line, time: next.dep, min: core.effectiveDelay(j, next) }))}</small>` : '';
   return `<article class="trip">
     <div class="when"><strong>${esc(j.dep)}</strong><span>${esc(j.line)}</span></div>
-    <div class="what">${esc(from.name.replace(/ stasjon$/, ''))} → ${esc(to.name.replace(/ stasjon$/, ''))} ${status}${nx}</div>
-    <button class="primary" data-claim="${id}">${esc(t('claimBtn'))}</button>
+    <div class="what">${esc(from.name.replace(/ stasjon$/, ''))} → ${esc(to.name.replace(/ stasjon$/, ''))} ${statusHtml(j)}${nx}</div>
+    ${action === null ? `<button class="primary" data-claim="${id}">${esc(t('claimBtn'))}</button>` : `<span class="muted">${esc(action)}</span>`}
   </article>`;
+}
+
+/* ------------------------------------------------------------------ another trip (one-off search) */
+
+let otherQuery = null;  /* the last search, so the panel survives the re-render after a claim */
+
+function otherTripHtml() {
+  const q = otherQuery;
+  const [d, tm] = q ? [q.dateText, q.time || ''] : ['', ''];
+  return `<details class="card other" id="other" ${q ? 'open' : ''}>
+    <summary>${esc(t('otherTrip'))}</summary>
+    <form id="otherForm" novalidate>
+      <p class="help">${esc(t('otherHelp'))}</p>
+      <div class="row">${stationField('from', q?.from)}${stationField('to', q?.to)}</div>
+      <div class="row">
+        <label>${esc(t('date'))}<input name="date" value="${esc(d)}" placeholder="${esc(t('datePh'))}" inputmode="numeric" autocomplete="off"></label>
+        <label>${esc(t('approxTime'))}<input name="time" value="${esc(tm)}" placeholder="${esc(t('timePh'))}" inputmode="numeric" autocomplete="off"></label>
+      </div>
+      <p class="error" id="otherErr" role="alert"></p>
+      <button class="primary" type="submit">${esc(t('findTrains'))}</button>
+    </form>
+    <div id="otherResult" aria-live="polite"></div>
+  </details>`;
+}
+
+function wireOtherTrip() {
+  const f = $('#otherForm');
+  wireStations(f);
+  f.addEventListener('submit', e => {
+    e.preventDefault();
+    const err = msg => { $('#otherErr').textContent = msg; };
+    const from = pickedStation(f.from), to = pickedStation(f.to);
+    if (!from || !to) return err(t('errStation'));
+    if (from.id === to.id) return err(t('errSame'));
+    const ms = core.parseEuDateTime(f.date.value, '12:00');
+    if (!ms) return err(t('errDate'));
+    const times = core.parseTimes(f.time.value);
+    if (!times || times.length > 1) return err(t('errTimes'));
+    err('');
+    otherQuery = { from, to, date: core.todayOslo(ms), dateText: f.date.value.trim(), time: times[0] || null };
+    findOther(otherQuery);
+  });
+  if (otherQuery) findOther(otherQuery);
+}
+
+async function findOther(q) {
+  const box = $('#otherResult');
+  const say = msg => { box.innerHTML = `<p class="muted">${esc(msg)}</p>`; };
+  const today = core.todayOslo();
+  if (q.date >= today) return say(t('otherToday'));
+  if (q.date < core.addDays(today, -core.CLAIM_DEADLINE_DAYS)) return say(t('otherTooOld', { days: core.CLAIM_DEADLINE_DAYS }));
+  say(t('loading', { date: fmtDay(q.date) }));
+  const index = await data.loadIndex();
+  if (!index.days.includes(q.date)) return say(t('otherNoData'));
+  let day;
+  try { day = await data.loadDay(q.date); } catch { return say(t('otherNoData')); }
+  if (otherQuery !== q) return;  /* a newer search started meanwhile */
+  const all = core.journeysForRoute(day, q.from.id, q.to.id);
+  const js = q.time ? all.filter(j => core.nearUsual(j, [q.time])) : all;
+  if (!js.length) return say(t('otherNone'));
+  const s = store.get();
+  const done = new Set(s.claims.map(c => c.key));
+  const items = js.map(j => ({ from: q.from, to: q.to, j, next: j.cancelled ? core.nextTrain(all, j) : null }));
+  const action = ({ j }) => {
+    if (done.has(store.claimKey(q.from.id, q.to.id, j.depMs))) return t('alreadySent');
+    if (!core.eligible(j)) return '';
+    if (!core.ticketFor(s.tickets, j.depMs)) return t('noTicket');
+    return null;
+  };
+  const known = s.profile.routes.some(r =>
+    (r.a.id === q.from.id && r.b.id === q.to.id) || (r.a.id === q.to.id && r.b.id === q.from.id));
+  box.innerHTML = `<h3>${esc(fmtDay(q.date))}</h3>`
+    + items.map((it, i) => tripHtml(it, `other-${i}`, action(it))).join('')
+    + (known ? '' : `<button type="button" class="link" id="saveRoute">＋ ${esc(t('saveRoute'))}</button>`);
+  box.querySelectorAll('[data-claim]').forEach(b =>
+    b.addEventListener('click', () => startClaim(items[Number(b.dataset.claim.split('-').pop())])));
+  $('#saveRoute')?.addEventListener('click', e => {
+    store.update(st => st.profile.routes.push({ a: q.from, b: q.to, timesOut: q.time ? [q.time] : [], timesBack: [] }));
+    e.target.replaceWith(Object.assign(document.createElement('p'), { className: 'ok', textContent: `✓ ${t('routeSaved')}` }));
+  });
 }
 
 /* ------------------------------------------------------------------ claim dialog */

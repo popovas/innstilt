@@ -53,6 +53,26 @@ input, select {
 input:focus, select:focus { outline: 3px solid var(--yellow); outline-offset: 1px; }
 .dt { display: grid; grid-template-columns: 1fr 84px; gap: 6px; }
 .bmcard { border: 2px dashed var(--yellow); }
+
+/* regular trips in settings */
+#routes { counter-reset: route; }
+fieldset.route { counter-increment: route; border: 1px solid #b9d3c6; border-radius: 12px; padding: 4px 12px 10px; margin: 10px 0; min-width: 0; }
+fieldset.route legend { font-weight: 700; font-size: 14px; padding: 0 6px; }
+fieldset.route legend::after { content: " " counter(route); }
+button.link.danger-link { color: var(--red); display: block; margin-top: 4px; }
+
+/* "Another trip": collapsed panel at the top of Trips */
+details.other { padding: 0; }
+details.other summary { list-style: none; cursor: pointer; padding: 14px 16px; font-weight: 700; display: flex; align-items: center; gap: 10px; }
+details.other summary::-webkit-details-marker { display: none; }
+details.other summary::before { content: "›"; font-size: 22px; line-height: 1; color: var(--stripe); transition: transform .15s; }
+details.other[open] summary::before { transform: rotate(90deg); }
+details.other form, details.other #otherResult { padding: 0 16px; }
+details.other #otherResult { padding-bottom: 8px; }
+details.other #otherResult:empty { display: none; }
+details.other h3 { font-size: 15px; color: var(--muted); margin: 16px 0 6px; }
+details.other .trip { box-shadow: none; border: 1px solid #b9d3c6; }
+details.other form { padding-bottom: 14px; }
 .row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
 @media (max-width: 460px) { .row { grid-template-columns: 1fr; } }
 
@@ -84,6 +104,7 @@ button.danger { color: var(--red); border-color: var(--red); }
 .badge { display: inline-block; border-radius: 6px; padding: 0 6px; font-size: 12px; font-weight: 800; margin-left: 4px; }
 .badge.bad { background: var(--ink); color: var(--yellow); }
 .badge.warn { background: var(--yellow); color: var(--ink); }
+.badge.quiet { background: var(--mint-2); color: var(--green-2); font-weight: 700; }
 .claim { grid-template-columns: 1fr auto auto; }
 .claim select { width: auto; } .claim input { width: 90px; }
 .totals { font-weight: 700; }
@@ -108,3 +129,5 @@ footer a { color: var(--stripe); }
 
 /* visually hidden but part of the text (e.g. the 👻 that ends up in the bookmark's name) */
 .vh { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+
+[hidden] { display: none !important; }
