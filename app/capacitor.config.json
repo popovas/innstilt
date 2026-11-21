@@ -1,0 +1,8 @@
+{
+  "appId": "app.innstilt",
+  "appName": "Innstilt",
+  "webDir": "www",
+  "android": {
+    "backgroundColor": "#0e3a30"
+  }
+}

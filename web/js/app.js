@@ -12,7 +12,7 @@ const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': 
 const isTouch = () => matchMedia('(pointer: coarse)').matches;
 const isStandalone = () => matchMedia('(display-mode: standalone)').matches || navigator.standalone === true;
 const isIos = () => /iPhone|iPad|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
-const wantsHomeScreen = () => isTouch() && !isStandalone();
+const wantsHomeScreen = () => isTouch() && !isStandalone() && !data.NATIVE;  /* not inside the Android app */
 
 /* Android/Chrome offers a real install dialog; keep its event so our own "Install" button can open it. */
 let installPrompt = null;
@@ -1114,6 +1114,14 @@ async function fillCounter() {
 /* ------------------------------------------------------------------ start */
 
 render();
-if ('serviceWorker' in navigator && location.protocol === 'https:') {
+/* Android app: the back button steps back through the app's pages; at the start page it leaves the app. */
+const AppPlugin = globalThis.Capacitor?.Plugins?.App;
+AppPlugin?.addListener?.('backButton', ({ canGoBack }) => {
+  if (canGoBack && location.hash && location.hash !== '#/trips') history.back();
+  else AppPlugin.exitApp();
+});
+
+/* The service worker is for the website (offline, updates); the Android app has its files built in. */
+if ('serviceWorker' in navigator && location.protocol === 'https:' && !data.NATIVE) {
   navigator.serviceWorker.register('sw.js').catch(() => {});
 }

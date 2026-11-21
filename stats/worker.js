@@ -11,7 +11,10 @@
 const ID = /^[0-9a-f]{32}$/;
 const MONTH = /^20\d\d-(0[1-9]|1[0-2])$/;
 const MAX = { months: 36, claims: 200, kr: 20000, body: 8000 };  /* per id; per month for claims/kr */
-const ORIGINS = [/^https:\/\/innstilt\.app$/, /^http:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/];
+/* innstilt.app, local development, and the phone apps (Capacitor: https://localhost on Android,
+   capacitor://localhost on iOS) */
+const ORIGINS = [/^https:\/\/innstilt\.app$/, /^http:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/,
+  /^https:\/\/localhost$/, /^capacitor:\/\/localhost$/];
 
 class BadRequest extends Error { status = 400; }
 

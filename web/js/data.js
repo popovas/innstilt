@@ -3,7 +3,9 @@
 
 const GEOCODER = 'https://api.entur.io/geocoder/v1/autocomplete';
 const HEADERS = { 'ET-Client-Name': 'innstilt-web' };
-const DATA = 'data/vyg';
+/* In the Android app (Capacitor) the app's own files are built in, but the train data is fetched from the site. */
+export const NATIVE = Boolean(globalThis.Capacitor?.isNativePlatform?.());
+const DATA = `${NATIVE ? 'https://innstilt.app/' : ''}data/vyg`;
 const TIMEOUT = 20000;  /* ms; a stuck download fails instead of loading forever */
 const timed = (opts = {}) => ({ ...opts, signal: AbortSignal.timeout(TIMEOUT) });
 const JP = 'https://api.entur.io/journey-planner/v3/graphql';
