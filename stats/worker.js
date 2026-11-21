@@ -43,7 +43,7 @@ function json(obj, cors, cache = 'no-store', status = 200) {
     'Cache-Control': cache, 'X-Content-Type-Options': 'nosniff' } });
 }
 
-export async function total(env) {
+async function total(env) {
   const r = await env.DB.prepare(`SELECT COALESCE(SUM(kr), 0) AS kr, COALESCE(SUM(paid), 0) AS paid,
       COALESCE(SUM(sent), 0) AS sent, COALESCE(SUM(rejected), 0) AS rejected, COUNT(DISTINCT install) AS people
       FROM reports`).first();
@@ -51,7 +51,7 @@ export async function total(env) {
 }
 
 /** Validates a report; returns [[month, sent, paid, rejected, kr], ...] or throws BadRequest. */
-export function parseReport(text) {
+function parseReport(text) {
   if (text.length > MAX.body) throw new BadRequest('too large');
   let body;
   try { body = JSON.parse(text); } catch { throw new BadRequest('not JSON'); }
@@ -77,7 +77,7 @@ export function parseReport(text) {
   return { id: body.id, rows };
 }
 
-export async function report(env, text) {
+async function report(env, text) {
   const { id, rows } = parseReport(text);
   const now = Date.now();
   await env.DB.batch([
