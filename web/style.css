@@ -132,3 +132,4 @@ footer a { color: var(--stripe); }
 
 [hidden] { display: none !important; }
 input::placeholder { color: #8aa79b; opacity: 1; }
+.pill.live { background: var(--stripe); color: #fff; text-transform: uppercase; letter-spacing: .04em; vertical-align: 2px; }

@@ -285,6 +285,8 @@ def _journeys(frm: dict, to: dict, start: dt.datetime, range_s: int) -> list[dic
         raise RuntimeError(data["errors"][0].get("message"))
     out = []
     for c in (data["data"]["stopPlace"] or {}).get("estimatedCalls", []):
+        if not c["serviceJourney"]["id"].startswith("VYG:"):
+            continue  # another operator (SJ, Go-Ahead, Flytoget): Vy doesn't refund those
         calls = c["serviceJourney"]["estimatedCalls"] or []
         ids = [_station_id(x) for x in calls]
         if frm["nsr"] not in ids or to["nsr"] not in ids[ids.index(frm["nsr"]) + 1:]:

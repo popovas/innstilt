@@ -287,6 +287,14 @@ function noticeHtml() {
 /* ------------------------------------------------------------------ trips */
 
 let tripsRun = 0;
+const HOUR = 3600000;
+const LIVE_LOOKBACK = 3 * HOUR;
+
+/** Today's trains from `from` to `to`, departing between two instants, from Entur's live data. */
+async function liveForRoute(from, to, startMs, endMs) {
+  const calls = await data.liveCalls(from.id, startMs, endMs);
+  return calls.map(c => core.liveJourney(c, from.id, to.id)).filter(Boolean).sort((a, b) => a.depMs - b.depMs);
+}
 
 async function viewTrips() {
   const run = ++tripsRun;
@@ -316,16 +324,26 @@ async function viewTrips() {
   const pairs = p.routes.flatMap(r => [[r.a, r.b, r.timesOut], [r.b, r.a, r.timesBack]]);
   let shown = 0, skipped = new Set();
 
-  for (const day of days) {
+  /* Today comes live from Entur (real-time info only lasts until about an hour after a train arrives, so
+     the last few hours); earlier days come from the nightly archive files. */
+  const now = Date.now();
+  for (const day of [today, ...days]) {
     if (run !== tripsRun) return;  /* user navigated away */
-    $('#progress').textContent = t('loading', { date: fmtDay(day) });
-    let dayData;
-    try { dayData = await data.loadDay(day); } catch { continue; }
+    const isToday = day === today;
+    $('#progress').textContent = isToday ? t('loadingLive') : t('loading', { date: fmtDay(day) });
+    let routeJourneys;
+    if (isToday) {
+      routeJourneys = (from, to) => liveForRoute(from, to, now - LIVE_LOOKBACK, now + HOUR).catch(() => []);
+    } else {
+      let dayData;
+      try { dayData = await data.loadDay(day); } catch { continue; }
+      routeJourneys = async (from, to) => core.journeysForRoute(dayData, from.id, to.id);
+    }
     const items = [], seen = new Set();  /* two routes may share a leg */
     for (const [from, to, times] of pairs) {
-      const js = core.journeysForRoute(dayData, from.id, to.id);
+      const js = await routeJourneys(from, to);
       for (const j of js) {
-        if (!core.eligible(j) || !core.nearUsual(j, times)) continue;
+        if (!core.claimable(j, now) || !core.nearUsual(j, times)) continue;
         const key = store.claimKey(from.id, to.id, j.depMs);
         if (done.has(key) || seen.has(key)) continue;
         seen.add(key);
@@ -338,7 +356,7 @@ async function viewTrips() {
     shown += items.length;
     const sec = document.createElement('section');
     sec.className = 'day';
-    sec.innerHTML = `<h2>${esc(fmtDay(day))}</h2>` + items.map((it, i) => tripHtml(it, `${day}-${i}`)).join('');
+    sec.innerHTML = `<h2>${esc(fmtDay(day))}${isToday ? ` <span class="pill live">${esc(t('live'))}</span>` : ''}</h2>` + items.map((it, i) => tripHtml(it, `${day}-${i}`)).join('');
     $('#trips').appendChild(sec);
     sec.querySelectorAll('[data-claim]').forEach(b => {
       const it = items[Number(b.dataset.claim.split('-').pop())];
@@ -352,6 +370,13 @@ async function viewTrips() {
 
 function statusHtml(j) {
   if (j.cancelled) return `<span class="badge bad">${esc(t('cancelled'))}</span>`;
+  if (j.delayMin === null && j.expectedMin != null) {
+    const cls = j.expectedMin > core.DEFAULT_THRESHOLD ? 'warn' : 'quiet';
+    return `<span class="badge ${cls}">${esc(j.expectedMin > 1 ? t('expLate', { min: j.expectedMin }) : t('expOnTime'))}</span>`;
+  }
+  if (j.delayMin === null && j.live) {
+    return `<span class="badge quiet">${esc(j.depMs > Date.now() ? t('planned') : t('dataTonight'))}</span>`;
+  }
   if (j.delayMin === null) return `<span class="badge quiet">${esc(t('noData'))}</span>`;
   if (core.eligible(j)) return `<span class="badge warn">${esc(t('late', { min: j.delayMin }))}</span>`;
   return `<span class="badge quiet">${esc(j.delayMin <= 1 ? t('onTime') : t('late', { min: j.delayMin }))}</span>`;
@@ -418,15 +443,22 @@ async function findOther(q) {
   const box = $('#otherResult');
   const say = msg => { box.innerHTML = `<p class="muted">${esc(msg)}</p>`; };
   const today = core.todayOslo();
-  if (q.date >= today) return say(t('otherToday'));
+  if (q.date > today) return say(t('otherFuture'));
   if (q.date < core.addDays(today, -core.CLAIM_DEADLINE_DAYS)) return say(t('otherTooOld', { days: core.CLAIM_DEADLINE_DAYS }));
-  say(t('loading', { date: fmtDay(q.date) }));
-  const index = await data.loadIndex();
-  if (!index.days.includes(q.date)) return say(t('otherNoData'));
-  let day;
-  try { day = await data.loadDay(q.date); } catch { return say(t('otherNoData')); }
+  let all;
+  if (q.date === today) {
+    say(t('loadingLive'));
+    const at = core.osloToMs(q.date, q.time);  /* ±2 h, plus an hour after for "next train" */
+    try { all = await liveForRoute(q.from, q.to, at - 2 * HOUR, at + 3 * HOUR); } catch { return say(t('liveFailed')); }
+  } else {
+    say(t('loading', { date: fmtDay(q.date) }));
+    const index = await data.loadIndex();
+    if (!index.days.includes(q.date)) return say(t('otherNoData'));
+    let day;
+    try { day = await data.loadDay(q.date); } catch { return say(t('otherNoData')); }
+    all = core.journeysForRoute(day, q.from.id, q.to.id);
+  }
   if (otherQuery !== q) return;  /* a newer search started meanwhile */
-  const all = core.journeysForRoute(day, q.from.id, q.to.id);
   const js = q.time ? all.filter(j => core.nearUsual(j, [q.time])) : all;
   if (!js.length) return say(t('otherNone'));
   const s = store.get();
@@ -434,13 +466,15 @@ async function findOther(q) {
   const items = js.map(j => ({ from: q.from, to: q.to, j, next: j.cancelled ? core.nextTrain(all, j) : null }));
   const action = ({ j }) => {
     if (done.has(store.claimKey(q.from.id, q.to.id, j.depMs))) return t('alreadySent');
+    if (j.cancelled && j.depMs > Date.now()) return t('notYet');
+    if (j.delayMin === null && j.expectedMin > core.DEFAULT_THRESHOLD) return t('whenArrived');
     if (!core.eligible(j)) return '';
     if (!core.ticketFor(s.tickets, j.depMs)) return t('noTicket');
     return null;
   };
   const known = s.profile.routes.some(r =>
     (r.a.id === q.from.id && r.b.id === q.to.id) || (r.a.id === q.to.id && r.b.id === q.from.id));
-  box.innerHTML = `<h3>${esc(fmtDay(q.date))}</h3>`
+  box.innerHTML = `<h3>${esc(fmtDay(q.date))}${q.date === today ? ` <span class="pill live">${esc(t('live'))}</span>` : ''}</h3>`
     + items.map((it, i) => tripHtml(it, `other-${i}`, action(it))).join('')
     + (known ? '' : `<button type="button" class="link" id="saveRoute">＋ ${esc(t('saveRoute'))}</button>`);
   box.querySelectorAll('[data-claim]').forEach(b =>

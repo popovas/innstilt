@@ -150,9 +150,44 @@ export function journeysForRoute(day, fromId, toId) {
   return out.sort((x, y) => x.depMs - y.depMs);
 }
 
+/* ---------- today's trains from Entur's live Journey Planner (web/js/data.js liveCalls) ---------- */
+
+const stationOf = call => call.quay?.stopPlace?.parent?.id || call.quay?.stopPlace?.id;
+
+/** One live departure from `fromId` -> the same shape as journeysForRoute, or null if it doesn't reach `toId`
+    or isn't Vy's (live data has every operator; the archive files hold only the Vy group, ids "VYG:...").
+    delayMin is set only once the train has actually arrived; while it runs, expectedMin holds the forecast. */
+export function liveJourney(c, fromId, toId) {
+  if (!c.serviceJourney?.id?.startsWith('VYG:')) return null;  /* Vy's trains only (not SJ, Go-Ahead, Flytoget) */
+  const calls = c.serviceJourney?.estimatedCalls || [];
+  const ids = calls.map(stationOf);
+  const a = ids.indexOf(fromId);
+  const b = a < 0 ? -1 : ids.indexOf(toId, a + 1);
+  if (b < 0) return null;
+  const f = calls[a], t = calls[b];
+  const depMs = Date.parse(c.aimedDepartureTime), aimedArrMs = Date.parse(t.aimedArrivalTime);
+  const cancelled = Boolean(c.cancellation || f.cancellation || t.cancellation);
+  const realArrMs = t.actualArrivalTime ? Date.parse(t.actualArrivalTime) : null;
+  const expMs = realArrMs === null && t.realtime && t.expectedArrivalTime ? Date.parse(t.expectedArrivalTime) : null;
+  const last = calls[calls.length - 1].quay?.stopPlace || {};
+  return {
+    id: c.serviceJourney.id, line: c.serviceJourney.line?.publicCode || '', live: true, extra: false,
+    dest: (last.parent?.name || last.name || '').replace(/ stasjon$/, ''),
+    date: todayOslo(depMs), dep: formatEu(depMs)[1], arr: formatEu(aimedArrMs)[1],
+    depMs, aimedArrMs, realArrMs, recorded: realArrMs !== null, cancelled,
+    delayMin: realArrMs !== null && !cancelled ? Math.round((realArrMs - aimedArrMs) / 60000) : null,
+    expectedMin: expMs !== null && !cancelled ? Math.round((expMs - aimedArrMs) / 60000) : null,
+  };
+}
+
 export function eligible(j, threshold = DEFAULT_THRESHOLD) {
   if (j.extra) return false;
   return j.cancelled || (j.delayMin || 0) > threshold;
+}
+
+/** Eligible and claimable now: a cancelled train can be claimed once its departure time has passed. */
+export function claimable(j, now = Date.now(), threshold = DEFAULT_THRESHOLD) {
+  return eligible(j, threshold) && j.depMs <= now;
 }
 
 export function nextTrain(js, j) {
