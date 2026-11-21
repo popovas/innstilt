@@ -323,10 +323,14 @@ function ticketFieldsHtml(tk) {
       <label class="check"><input type="radio" name="kind" value="other" ${other ? 'checked' : ''}> ${esc(t('kindOther'))}</label>
     </fieldset>
     <label data-kind="vy" ${other ? 'hidden' : ''}>${esc(t('refCode'))}<input name="code" value="${esc(tk.code || '')}" placeholder="${esc(t('refCodePh'))}" autocapitalize="characters" autocomplete="off" spellcheck="false" maxlength="11"></label>
-    <div data-kind="other" class="tkimg" ${other ? '' : 'hidden'}>
-      <label>${esc(t('ticketImage'))}<input type="file" name="ticketImage" accept="image/*"><small>${esc(t('ticketImageHelp'))}</small></label>
-      <div class="tkimg-preview">${tk.image ? `<img src="${esc(tk.image)}" alt="${esc(t('ticketImage'))}"> <button type="button" class="link danger-link" data-drop-image>${esc(t('remove'))}</button>` : ''}</div>
-    </div>
+    ${IAB() ? `<fieldset data-kind="other" class="tkkind tkimg" ${other ? '' : 'hidden'}><legend>${esc(t('ticketImage'))}</legend>
+      <label class="check"><input type="radio" name="imgMode" value="self" ${tk.image ? '' : 'checked'}> ${esc(t('imgSelf'))}</label>
+      <label class="check"><input type="radio" name="imgMode" value="store" ${tk.image ? 'checked' : ''}> ${esc(t('imgStore'))}</label>
+      <div data-img-store ${tk.image ? '' : 'hidden'}>
+        <label><input type="file" name="ticketImage" accept="image/*"><small>${esc(t('ticketImageHelp'))}</small></label>
+        <div class="tkimg-preview"></div>
+      </div>
+    </fieldset>` : ''}
     <label data-kind="other" ${other ? '' : 'hidden'}>${esc(t('ticketNumber'))}<input name="number" value="${esc(tk.number || '')}" inputmode="numeric" maxlength="20" autocomplete="off" placeholder="1234567890"><small>${esc(t('ticketNumberHelp'))}</small></label>
     <div class="row">${dateFields('validFrom', tk.validFrom)}${dateFields('validTo', tk.validTo)}</div>`;
 }
@@ -347,7 +351,9 @@ function readTicket(root, requireDates) {
   }
   const number = val('number').replace(/\D/g, '');
   if (number && !/^\d{4,20}$/.test(number)) return { error: t('errTicketNumber') };
-  const image = ticketImages.get(root) || null;  /* set by wireTicketFields */
+  /* The picture choice exists only in the Android app; on the website an existing picture is simply kept. */
+  const mode = root.querySelector('[name=imgMode]:checked')?.value;
+  const image = mode === 'self' ? null : ticketImages.get(root) || null;  /* "I'll upload it myself": nothing stored */
   return { ticket: { kind, code: '', number, validFrom, validTo, ...(image ? { image } : {}) } };
 }
 
@@ -369,7 +375,11 @@ const ticketImages = new WeakMap();
 function wireTicketFields(root, existing = null) {
   ticketImages.set(root, existing?.image || null);
   const preview = root.querySelector('.tkimg-preview');
+  root.querySelectorAll('[name=imgMode]').forEach(r => r.addEventListener('change', () => {
+    root.querySelector('[data-img-store]').hidden = root.querySelector('[name=imgMode]:checked').value !== 'store';
+  }));
   const showPreview = () => {
+    if (!preview) return;
     const img = ticketImages.get(root);
     preview.innerHTML = img ? `<img src="${esc(img)}" alt=""> <button type="button" class="link danger-link" data-drop-image>${esc(t('remove'))}</button>` : '';
     preview.querySelector('[data-drop-image]')?.addEventListener('click', () => { ticketImages.set(root, null); showPreview(); });
@@ -988,7 +998,7 @@ function startClaim({ from, to, j, ticketCode }) {
   const s = store.get();
   const ticket = (ticketCode && s.tickets.find(x => core.ticketId(x) === ticketCode)) || core.ticketFor(s.tickets, j.depMs);
   const link = core.claimLink(s.profile, ticket, from, to, j);
-  const picture = core.isOtherTicket(ticket) ? ticket.image || null : null;
+  const picture = IAB() && core.isOtherTicket(ticket) ? ticket.image || null : null;  /* only the app attaches it */
   openVy(link, picture);  /* in the click handler, so pop-up blockers allow it */
   const dlg = $('#dlg');
   const train = `${j.line} ${j.dep}`;
@@ -1003,10 +1013,7 @@ function startClaim({ from, to, j, ticketCode }) {
         <li>${esc(t('claimStep3'))}</li>
       </ol>
       ${isTouch() ? '' : `<p class="muted small">${esc(t('claimTip'))}</p>`}`}
-      ${core.isOtherTicket(ticket) ? (ticket.image
-        ? `<p class="notice">📎 ${esc(t(IAB() ? 'uploadAuto' : 'uploadDownload'))}
-            ${IAB() ? '' : `<br><button type="button" class="link" id="dlTicket">⬇ ${esc(t('downloadTicket'))}</button>`}</p>`
-        : `<p class="notice">📎 ${esc(t('uploadTicket'))}</p>`) : ''}
+      ${core.isOtherTicket(ticket) ? `<p class="notice">📎 ${esc(t(IAB() && ticket.image ? 'uploadAuto' : 'uploadTicket'))}</p>` : ''}
       <p><a href="${esc(link)}" target="_blank" rel="noopener" id="openAgain">${esc(t('openAgain'))}</a></p>
       <label>${esc(t('caseNo'))}<input name="case" inputmode="numeric" autocomplete="off"></label>
       <div class="actions">
@@ -1023,10 +1030,7 @@ function startClaim({ from, to, j, ticketCode }) {
   store.onExternalChange(() => { if (dlg.open) fillCase(); });
   addEventListener('innstilt-case', () => { if (dlg.open) fillCase(); });
   dlg.querySelector('#openAgain').addEventListener('click', e => { if (IAB()) { e.preventDefault(); openVy(link, picture); } });
-  dlg.querySelector('#dlTicket')?.addEventListener('click', () => {
-    const a = Object.assign(document.createElement('a'), { href: picture, download: 'billett.jpg' });
-    a.click();
-  });
+
   fillCase();
   dlg.onclose = () => {
     if (dlg.returnValue !== 'sent') return;
