@@ -18,3 +18,6 @@ web/data/
 # Android app (Capacitor): dependencies and the web copy are generated
 app/node_modules/
 app/www/
+
+# Personal files kept next to the project (data exports etc.) - never commit
+local/
