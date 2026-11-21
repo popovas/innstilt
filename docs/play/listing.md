@@ -34,6 +34,7 @@ Innstilt gjør jobben for deg:
 • Du sjekker og trykker «Send inn» selv. Saksnummeret lagres automatisk.
 • Holder oversikt over kravene dine: sendt, utbetalt, avslått – og hvor mye du har fått tilbake.
 • «Nå»-tavle: dine avganger akkurat nå, med spor, forsinkelser og innstillinger.
+• Varsel (hvis du vil) når et av de vanlige togene dine er innstilt eller over 30 min forsinket.
 • Støtter billetter fra Vy, og fra Ruter-appen og Entur.
 
 Dine opplysninger blir på telefonen
@@ -54,6 +55,7 @@ Innstilt does the work for you:
 • You check it and press "Send inn" yourself. The case number is saved automatically.
 • Keeps track of your claims: sent, paid, rejected – and how much you got back.
 • "Now" board: your departures right now, with platforms, delays and cancellations.
+• A notification (if you like) when one of your usual trains is cancelled or more than 30 min late.
 • Works with tickets from Vy, and from the Ruter app and Entur.
 
 Your details stay on your phone
@@ -107,6 +109,7 @@ deletes it on the phone; turning statistics off deletes what was shared.
 and presses "Send inn" there). Data is not processed ephemerally and is stored encrypted on the device.
 
 Not collected: location, contacts, device IDs, crash logs, purchase history, messages, web browsing.
+(The optional train notifications send only station ids and times to Entur's public timetable service.)
 
 ## Release notes (first test)
 

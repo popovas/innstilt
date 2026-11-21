@@ -36,7 +36,9 @@ form on a computer, and hands the case number back to Innstilt after sending.
 **Android app** ([`app/`](app/), Capacitor) – runs on a Pixel 8
 - Vy's form opens inside the app and is **filled in automatically** (time, train, optionally the ticket picture);
   the **case number is caught** and saved with the claim.
-- Data **encrypted** with a key in the Android Keystore. Permissions: internet only.
+- **Notifications** (opt-in) when one of your usual trains is cancelled or more than 30 min late – a small native
+  background check around your usual departure times.
+- Data **encrypted** with a key in the Android Keystore. Permissions: internet, and notifications if you turn them on.
 
 **Command-line tool** ([`cli/`](cli/)) – the original macOS/Linux version: scan, claim, status.
 
@@ -49,7 +51,6 @@ form on a computer, and hands the case number back to Innstilt after sending.
 
 ### 💡 Planned / ideas
 
-- Notification when one of your usual trains is cancelled.
 - Learn the payout amounts from paid claims.
 - iPhone app.
 - Other companies than Vy (Ruter, SJ, Go-Ahead, Flytoget …) – each has its own refund form.
