@@ -61,7 +61,9 @@ export function isReady() {
 /* ---------- import (a file from "Download my data", possibly from another device) ----------
    The file is untrusted: every field is type-checked and trimmed, unknown fields are dropped.
    Profile, tickets and regular trips are replaced by the file's; claims are merged (same trip = kept once).
-   Settings that belong to this device (sharing id, bookmark, welcome) are not imported. */
+   If the file's device shared anonymous statistics, its sharing id comes along: both devices then report
+   under one id, and the server replaces (never adds) an id's numbers, so nothing is counted twice.
+   Settings that belong to this device (bookmark, welcome) are not imported. */
 
 const STATION = /^NSR:StopPlace:\d+$/;
 const REF = /^[A-Z0-9]{3}-[A-Z0-9]{3}-[A-Z0-9]{3}$/;
@@ -86,7 +88,8 @@ function cleanClaim(c) {
   };
 }
 
-/** Returns {claims: new claims added, tickets, routes}; throws Error('bad') for a file that isn't ours. */
+/** Returns {claims, tickets, routes, sharing, dropId}: counts, whether sharing came along, and this device's
+    old sharing id to delete on the server (or null). Throws Error('bad') for a file that isn't ours. */
 export function importJson(text) {
   let d;
   try { d = JSON.parse(text); } catch { throw new Error('bad'); }
@@ -108,6 +111,12 @@ export function importJson(text) {
   state.tickets = tickets.sort((a, b) => (a.validFrom || 0) - (b.validFrom || 0));
   state.claims.push(...added);
   state.welcomed = true;
+  const sid = d.stats?.share === true && /^[0-9a-f]{32}$/.test(d.stats.id) ? d.stats.id : null;
+  let dropId = null;
+  if (sid) {
+    if (state.stats?.share && state.stats.id && state.stats.id !== sid) dropId = state.stats.id;
+    state.stats = { share: true, id: sid, lastSent: '' };
+  }
   save();
-  return { claims: added.length, tickets: tickets.length, routes: routes.length };
+  return { claims: added.length, tickets: tickets.length, routes: routes.length, sharing: Boolean(sid), dropId };
 }

@@ -393,10 +393,11 @@ function wireImport() {
     try { res = store.importJson(await f.text()); } catch {
       msg.textContent = t('importBad'); msg.className = 'error'; msg.hidden = false; return;
     }
+    if (res.dropId && stats.enabled()) stats.send({ id: res.dropId, months: {} }).catch(() => {});  /* old id: deleted */
     render();
     const after = $('#importMsg');
     if (after) {
-      after.textContent = `✓ ${t('importDone', res)}`;
+      after.textContent = `✓ ${t('importDone', res)}${res.sharing ? ` ${t('importSharing')}` : ''}`;
       after.className = 'ok';
       after.hidden = false;
     }
@@ -811,10 +812,11 @@ async function fillJab() {
 
 async function fillCounter() {
   const total = await stats.fetchTotal();
-  if (!total || total.kr < 1) return;
+  if (!total || !(total.kr >= 1)) return;
+  const paid = Number(total.paid) || 0;
   const fmt = n => n.toLocaleString(getLang() === 'no' ? 'nb-NO' : 'en-GB');
   document.querySelectorAll('[data-counter]').forEach(el => {
-    el.innerHTML = `💸 ${esc(t('counter', { kr: fmt(total.kr) }))}<small>${esc(t(total.paid === 1 ? 'counterNote1' : 'counterNote', { n: fmt(total.paid) }))}</small>`;
+    el.innerHTML = `💸 ${esc(t('counter', { kr: fmt(total.kr) }))}<small>${esc(t(paid === 1 ? 'counterNote1' : 'counterNote', { n: fmt(paid) }))}</small>`;
     el.hidden = false;
   });
 }
