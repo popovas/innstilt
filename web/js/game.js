@@ -1,23 +1,25 @@
 /* "Forsinket?" – a small snake-style game for the platform. The ghost train picks up as many passengers as it can
-   while the delay clock runs: +1 min every 3 s, faster with every passenger; at 31 minutes it's over (you'd be
-   entitled to compensation).
+   while the delay clock runs: +1 min every 3 s; at 31 minutes it's over (you'd be entitled to compensation).
+   Signals blink up now and then: green takes 3 minutes off, red adds 3.
    Leaves and ice pop up for a few seconds; the edge and your own wagons cost a train set (3 lives).
    Loaded only when opened (dynamic import), no network, high score in this browser only. */
 
 const N = 15;                      /* board: N × N cells */
 const LIMIT = 31;                  /* minutes late = game over */
-const minuteMs = score => Math.max(1500, 3000 - score * 60);   /* real time per delay minute: 3 s, down to 1.5 s */
+const minuteMs = () => 3000;       /* real time per delay minute (steady; the train itself speeds up) */
+const SIGNAL_MIN = 3;              /* minutes a green signal takes off / a red one adds */
 const BEST_KEY = 'innstilt.game.best';
 const DIRS = { up: [0, -1], down: [0, 1], left: [-1, 0], right: [1, 0] };
 const OPPOSITE = { up: 'down', down: 'up', left: 'right', right: 'left' };
 const KEYS = { ArrowUp: 'up', ArrowDown: 'down', ArrowLeft: 'left', ArrowRight: 'right', w: 'up', s: 'down', a: 'left', d: 'right' };
 const C = { bg1: '#0e3a30', bg2: '#113f35', mint: '#f2faf5', mint2: '#cfeadb', stripe: '#2fa36b', ink: '#0b0b0c', win: '#0e3a30',
-  yellow: '#f5c400', leaf: '#d9822b', leaf2: '#8a4512', ice: '#bfe6ff', red: '#ff6b57' };
+  yellow: '#f5c400', leaf: '#d9822b', leaf2: '#8a4512', ice: '#bfe6ff', red: '#ff6b57', go: '#3fe08a', stop: '#ff3b2f' };
 
 const TXT = {
   no: {
-    title: 'Forsinket?', intro: 'Plukk opp så mange passasjerer du rekker med spøkelsestoget. Forsinkelsen tikker hele tiden – ved 31 minutter er det slutt. Pass deg for løv og is, kanten og dine egne vogner.',
+    title: 'Forsinket?', intro: 'Plukk opp så mange passasjerer du rekker med spøkelsestoget. Forsinkelsen tikker hele tiden – ved 31 minutter er det slutt. Grønt signal hjelper, rødt signal koster. Pass deg for løv og is, kanten og dine egne vogner.',
     start: 'Start', resume: 'Fortsett', again: 'Spill igjen', back: 'Tilbake til turene', claim: 'Krev erstatning 😉',
+    green: 'Grønt signal! −3 min', redSig: 'Venter på signal… +3 min',
     paused: 'Pause', leaf: 'Løv på skinnene!', ice: 'Is i kontaktledningen!', self: 'Materiellmangel!', edge: 'Signalfeil!',
     lateTitle: '31 minutter forsinket!', lateText: 'Gratulerer – du har krav på erstatning.',
     livesTitle: 'Toget er innstilt', livesText: 'Ingen flere togsett i dag.',
@@ -25,13 +27,15 @@ const TXT = {
     keys: 'Piltaster eller WASD · P eller mellomrom = pause', pad: { up: 'Opp', down: 'Ned', left: 'Venstre', right: 'Høyre', pause: 'Pause' },
     score: 'Passasjerer', late: 'Forsinkelse', lives: 'Togsett igjen', help: 'Hvordan spiller jeg?',
     rules: ['👤 Kjør inn i passasjerene for å plukke dem opp – toget blir én vogn lengre.',
-      '⏱ Forsinkelsen tikker hele tiden: +1 minutt hvert 3. sekund, og fortere jo flere passasjerer du har (streken viser neste minutt). Ved 31 minutter er spillet over.',
+      '⏱ Forsinkelsen tikker hele tiden: +1 minutt hvert 3. sekund (streken viser neste minutt). Ved 31 minutter er spillet over.',
+      '🟢 Grønt signal tar 3 minutter av forsinkelsen. 🔴 Rødt signal legger til 3 – kjør rundt det.',
       '🍂 ❄️ Løv og is dukker opp noen sekunder. Kjør inn i dem, i kanten eller i dine egne vogner, og du mister et togsett (3 i alt).',
       '🕹 Styr med pilene, eller sveip på brettet. ⏸ nede til venstre tar pause.'],
   },
   en: {
-    title: 'Forsinket?', intro: 'Pick up as many passengers as you can with the ghost train. The delay keeps ticking – at 31 minutes it\'s over. Watch out for leaves and ice, the edge and your own wagons.',
+    title: 'Forsinket?', intro: 'Pick up as many passengers as you can with the ghost train. The delay keeps ticking – at 31 minutes it\'s over. Green signals help, red ones cost. Watch out for leaves and ice, the edge and your own wagons.',
     start: 'Start', resume: 'Resume', again: 'Play again', back: 'Back to trips', claim: 'Claim compensation 😉',
+    green: 'Green signal! −3 min', redSig: 'Waiting for a signal… +3 min',
     paused: 'Paused', leaf: 'Leaves on the line!', ice: 'Ice on the overhead wire!', self: 'Rolling stock shortage!', edge: 'Signal failure!',
     lateTitle: '31 minutes late!', lateText: 'Congratulations – you are entitled to compensation.',
     livesTitle: 'Train cancelled', livesText: 'No more train sets today.',
@@ -39,7 +43,8 @@ const TXT = {
     keys: 'Arrow keys or WASD · P or Space = pause', pad: { up: 'Up', down: 'Down', left: 'Left', right: 'Right', pause: 'Pause' },
     score: 'Passengers', late: 'Delay', lives: 'Train sets left', help: 'How do I play?',
     rules: ['👤 Drive into passengers to pick them up – the train gets one wagon longer.',
-      '⏱ The delay keeps ticking: +1 minute every 3 seconds, faster the more passengers you have (the bar shows the next minute). At 31 minutes the game is over.',
+      '⏱ The delay keeps ticking: +1 minute every 3 seconds (the bar shows the next minute). At 31 minutes the game is over.',
+      '🟢 A green signal takes 3 minutes off the delay. 🔴 A red signal adds 3 – drive around it.',
       '🍂 ❄️ Leaves and ice show up for a few seconds. Hit them, the edge or your own wagons and you lose a train set (3 in all).',
       '🕹 Steer with the arrows, or swipe on the board. ⏸ bottom left pauses.'],
   },
@@ -86,9 +91,10 @@ export function start(root, { lang = 'no', back = () => {} } = {}) {
 
   const spawnSnake = () => { const y = Math.floor(N / 2); return [{ x: 4, y }, { x: 3, y }, { x: 2, y }]; };
   const fresh = () => ({ score: 0, lives: 3, delay: 0, slow: 0, snake: spawnSnake(), dir: 'right', queue: [], grow: 0,
-    pax: null, hazards: [], nextHazard: 7000 });
+    pax: null, hazards: [], nextHazard: 7000, signals: [], nextSignal: 4000 });
   const on = (cells, x, y) => cells.some(c => c.x === x && c.y === y);
-  const taken = (x, y) => on(st.snake, x, y) || (st.pax && st.pax.x === x && st.pax.y === y) || st.hazards.some(h => on(h.cells, x, y));
+  const taken = (x, y) => on(st.snake, x, y) || (st.pax && st.pax.x === x && st.pax.y === y) || st.hazards.some(h => on(h.cells, x, y))
+    || st.signals.some(g => g.x === x && g.y === y);
 
   function freeCell(minDist = 0) {
     const h = st.snake[0];
@@ -144,6 +150,14 @@ export function start(root, { lang = 'no', back = () => {} } = {}) {
       st.pax = freeCell(3);
       hud();
     }
+    const sig = st.signals.find(g => g.x === x && g.y === y);
+    if (sig) {
+      st.signals = st.signals.filter(g => g !== sig);
+      st.delay = Math.max(0, st.delay + (sig.kind === 'go' ? -SIGNAL_MIN : SIGNAL_MIN));
+      toast(sig.kind === 'go' ? T.green : T.redSig);
+      hud();
+      if (st.delay >= LIMIT) over('late');
+    }
   }
 
   function crash(kind) {
@@ -157,7 +171,7 @@ export function start(root, { lang = 'no', back = () => {} } = {}) {
 
   function afterCrash() {
     if (st.lives <= 0) return over('lives');
-    st.snake = spawnSnake(); st.dir = 'right'; st.queue = []; st.grow = 0; st.hazards = [];
+    st.snake = spawnSnake(); st.dir = 'right'; st.queue = []; st.grow = 0; st.hazards = []; st.signals = [];
     if (!st.pax || on(st.snake, st.pax.x, st.pax.y)) st.pax = freeCell(3);
     st.nextHazard = 5000;
     setMode('run');
@@ -185,6 +199,15 @@ export function start(root, { lang = 'no', back = () => {} } = {}) {
     }
     st.nextHazard -= dt;
     if (st.nextHazard <= 0) { spawnHazard(); st.nextHazard = 5000 + Math.random() * 5000; }
+    st.nextSignal -= dt;
+    if (st.nextSignal <= 0) {
+      const at = freeCell(3);
+      /* red a bit more often than green, as on a real commute */
+      if (at) st.signals.push({ ...at, kind: Math.random() < 0.45 ? 'go' : 'stop', age: 0, life: 3500 + Math.random() * 2500 });
+      st.nextSignal = 4000 + Math.random() * 5000;
+    }
+    st.signals.forEach(g => { g.age += dt; });
+    st.signals = st.signals.filter(g => g.age < g.life);
     st.hazards.forEach(z => { z.age += dt; });
     st.hazards = st.hazards.filter(z => z.age < z.life);
     const stepMs = Math.max(90, 170 - st.score * 3);
@@ -264,6 +287,10 @@ export function start(root, { lang = 'no', back = () => {} } = {}) {
       z.cells.forEach(p => (z.kind === 'leaf' ? leaf : flake)((p.x + 0.5) * c, (p.y + 0.5) * c, c, p.x * 7 + p.y));
       ctx.globalAlpha = 1;
     }
+    for (const g of st.signals) {
+      const fading = g.life - g.age < 900;
+      signal((g.x + 0.5) * c, (g.y + 0.5) * c, c, g.kind, fading ? Math.floor(now / 150) % 2 === 0 : Math.floor(now / 400) % 2 === 0);
+    }
     if (st.pax) passenger((st.pax.x + 0.5) * c, (st.pax.y + 0.5) * c + Math.sin(now / 180) * c * 0.04, c);
     for (let i = st.snake.length - 1; i > 0; i--) wagon(st.snake[i].x * c, st.snake[i].y * c, c);
     head(st.snake[0], c);
@@ -294,6 +321,16 @@ export function start(root, { lang = 'no', back = () => {} } = {}) {
       if (sleepy) { ctx.fillStyle = C.win; ctx.fillRect((ex - 0.09) * c, -0.24 * c, 0.18 * c, 0.09 * c); }
     }
     ctx.restore();
+  }
+
+  /** A small light signal: dark head on a post, one lamp that blinks. */
+  function signal(x, y, c, kind, lit) {
+    const col = kind === 'go' ? C.go : C.stop;
+    ctx.fillStyle = '#7d8f88'; ctx.fillRect(x - 0.04 * c, y + 0.05 * c, 0.08 * c, 0.4 * c);
+    ctx.fillStyle = C.ink; rr(x - 0.2 * c, y - 0.42 * c, 0.4 * c, 0.52 * c, 0.12 * c); ctx.fill();
+    if (lit) { ctx.fillStyle = col; ctx.globalAlpha = 0.3; ctx.beginPath(); ctx.arc(x, y - 0.16 * c, 0.3 * c, 0, Math.PI * 2); ctx.fill(); ctx.globalAlpha = 1; }
+    ctx.fillStyle = lit ? col : '#33413c';
+    ctx.beginPath(); ctx.arc(x, y - 0.16 * c, 0.13 * c, 0, Math.PI * 2); ctx.fill();
   }
 
   function passenger(x, y, c) {
