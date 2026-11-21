@@ -10,7 +10,8 @@ const EMPTY = {
   tickets: [],   /* {code, validFrom: ms|null, validTo: ms|null} */
   claims: [],    /* {key, fromId, toId, fromName, toName, date, dep, line, depMs, case, status, amount, sentAt} */
   homeDone: false,
-  testerDone: false,  /* Android test invitation dismissed */  /* "add to home screen" card dismissed for good */
+  testerDone: false,  /* Android test invitation dismissed */
+  notifyOn: false,    /* Android app: notify when a usual train is cancelled or badly late */  /* "add to home screen" card dismissed for good */
   stats: { share: null, id: '', lastSent: '' },
   pendingCases: {},  /* claimKey -> case number caught by the bookmarklet before the claim was marked sent */  /* opt-in anonymous statistics; share: null = not asked yet */
 };

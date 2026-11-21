@@ -187,6 +187,20 @@ const validCase = d => d && /^\d{4,12}$/.test(d.n) && /^NSR:StopPlace:\d+$/.test
    sends it back here. Vy's page gets no access to the app's data: only that one message comes back, and it is
    validated like any link. */
 const IAB = () => (data.NATIVE ? globalThis.Capacitor?.Plugins?.InAppBrowser : null);
+
+/* Android app: the background train check (TrainWatch, native). It gets only the regular trips' stations and usual
+   times, never the ticket, name or account. */
+const TW = () => (data.NATIVE ? globalThis.Capacitor?.Plugins?.TrainWatch : null);
+function syncTrainWatch() {
+  const tw = TW();
+  if (!tw) return;
+  const s = store.get();
+  const short = n => n.replace(/ stasjon$/, '');
+  const legs = s.profile.routes.flatMap(r => [
+    { from: r.a.id, to: r.b.id, fromName: short(r.a.name), toName: short(r.b.name), times: r.timesOut },
+    { from: r.b.id, to: r.a.id, fromName: short(r.b.name), toName: short(r.a.name), times: r.timesBack }]);
+  tw.configure({ enabled: Boolean(s.notifyOn), config: { lang: getLang(), legs } }).catch(() => {});
+}
 let iabWired = false;
 let attachImage = null;  /* data URL of the ticket picture for the claim being opened (Ruter/Entur tickets) */
 
@@ -632,6 +646,7 @@ function saveSetup(first) {
     Object.assign(s.profile, { name, email, account, routes });
   });
   $('#err').textContent = '';
+  syncTrainWatch();  /* the background check follows the regular trips */
   if (first && f.share?.checked) setShare(true);  /* unticked: the Claims page asks once later, with real numbers */
   if (first) { go('trips'); return true; }
   render();
@@ -651,7 +666,7 @@ function settingsExtrasHtml() {
       <p>${esc(t('bookmarkBody'))}</p>
       <p class="center"><a class="bookmarklet" href="${esc(BOOKMARKLET)}" id="bm"><img src="icons/ghost-32.png" width="22" height="22" alt=""><span class="vh">👻 </span>Innstilt: fyll ut</a></p>
       <label class="check"><input type="checkbox" id="bmHave" ${store.get().bookmarkDone ? 'checked' : ''}> ${esc(t('bmHave'))}</label>
-    </section>
+    </section>`}
     <section class="card">
       <h2>${esc(t('yourData'))}</h2>
       <p class="muted">${esc(t('privacyBody'))}</p>
@@ -1342,6 +1357,7 @@ async function fillCounter() {
 
 await store.init();  /* Android app: read the encrypted store first */
 render();
+syncTrainWatch();
 /* Android app: the back button steps back through the app's pages; at the start page it leaves the app. */
 const AppPlugin = globalThis.Capacitor?.Plugins?.App;
 AppPlugin?.addListener?.('backButton', ({ canGoBack }) => {

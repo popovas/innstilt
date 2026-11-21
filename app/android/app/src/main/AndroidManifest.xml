@@ -39,6 +39,10 @@
     <!-- Permissions -->
 
     <uses-permission android:name="android.permission.INTERNET" />
+    <!-- Only if the user turns on "notify me when my train is cancelled" (asked at that moment, Android 13+). -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <!-- WorkManager adds this for long-running foreground work; the train check never uses it. -->
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" tools:node="remove" />
     <!-- The in-app browser plugin asks for the camera (for web pages that use it); Vy's form doesn't, and an app
          that wants the camera without reason looks untrustworthy. Removed from the merged manifest. -->
     <uses-permission android:name="android.permission.CAMERA" tools:node="remove" />
