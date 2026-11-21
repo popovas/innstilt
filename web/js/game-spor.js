@@ -38,7 +38,7 @@ const TXT = {
       '⏱ Toget går når nedtellingen er ute. Er du klar før, trykk «Kjør nå!»: hvert sekund du sparer gir et poeng, og hver rute toget kjører gir ett til.',
       '🚆 Ruter toget ikke har kommet til ennå, kan du fortsatt vri.',
       '🚌 Tar sporet slutt, blir det buss for tog – og spillet er over.',
-      '📈 Hvert nivå: større brett, kortere tid og raskere tog. Steiner kan ikke flyttes, og kryss står fast.',
+      '📈 Hvert nivå: større brett, kortere tid og raskere tog. Steiner kan ikke flyttes, og kryss står fast – toget kan kjøre over et kryss to ganger.',
       '🔀 Fra nivå 11: sporveksler. Trykk for å legge om – toget følger grenen som er tegnet tydelig (den gule spaken står på den siden).'],
   },
   en: {
@@ -56,7 +56,7 @@ const TXT = {
       '⏱ The train leaves when the countdown runs out. Ready earlier? Press "Go now!": every second saved is a point, and every tile the train runs is one more.',
       '🚆 Tiles the train hasn\'t reached yet can still be turned.',
       '🚌 If the track runs out, it\'s a bus for train – and the game is over.',
-      '📈 Every level: a bigger board, less time and a faster train. Rocks can\'t be moved, and crossings are fixed.',
+      '📈 Every level: a bigger board, less time and a faster train. Rocks can\'t be moved, and crossings are fixed – the train can run over a crossing twice.',
       '🔀 From level 11: switches. Tap to change them – the train follows the branch drawn bold (the yellow lever is on that side).'],
   },
 };
@@ -98,23 +98,40 @@ function exitOf(tile, entry) {
   return a === entry ? b : b === entry ? a : null;
 }
 
-/** A random winding route from the left edge to the right edge (cells and the side each is entered from). */
-function makeRoute(N) {
+/** A random winding route from the left edge to the right edge. With `crossings`, it may cross its own track
+   (up to twice): straight over a cell it passed straight before, at right angles – that cell becomes a crossing. */
+function makeRoute(N, crossings = false) {
   const minLen = Math.round(N * 1.6), maxLen = Math.round(N * N * 0.55);
   for (let tries = 0; tries < 400; tries++) {
-    const y0 = rnd(N), path = [{ x: 0, y: y0 }], seen = new Set([`0,${y0}`]);
+    const y0 = rnd(N), path = [{ x: 0, y: y0 }], seen = new Map([[`0,${y0}`, 0]]);
+    let crossed = 0;
+    /* was the earlier pass through path[j] a straight one, and along which axis? */
+    const pass = j => {
+      const prev = j === 0 ? { x: -1, y: path[0].y } : path[j - 1], next = path[j + 1], t = path[j];
+      if (!next) return null;
+      if (prev.x === t.x && next.x === t.x) return 'v';
+      if (prev.y === t.y && next.y === t.y) return 'h';
+      return null;
+    };
     while (path.length < maxLen) {
       const p = path[path.length - 1];
       if (p.x === N - 1 && path.length >= minLen && Math.random() < 0.6) return path;
       const opts = [];
       for (const [side, w] of [['e', 2], ['n', 1.6], ['s', 1.6], ['w', 0.6]]) {
         const [dx, dy] = SIDES[side], x = p.x + dx, y = p.y + dy;
-        if (x >= 0 && y >= 0 && x < N && y < N && !seen.has(`${x},${y}`)) opts.push([{ x, y }, w]);
+        if (x < 0 || y < 0 || x >= N || y >= N) continue;
+        const key = `${x},${y}`;
+        if (!seen.has(key)) { opts.push([[{ x, y }], w]); continue; }
+        /* cross over our own track: the cell was passed straight the other way, and the cell beyond is free */
+        const bx = x + dx, by = y + dy, j = seen.get(key);
+        if (crossings && crossed < 2 && j !== -1 && pass(j) === (dx === 0 ? 'h' : 'v')
+          && bx >= 0 && by >= 0 && bx < N && by < N && !seen.has(`${bx},${by}`)) opts.push([[{ x, y }, { x: bx, y: by }], w * 1.5]);
       }
       if (!opts.length) break;
       let r = Math.random() * opts.reduce((a, o) => a + o[1], 0), pick = opts[0][0];
       for (const [c, w] of opts) { if ((r -= w) <= 0) { pick = c; break; } }
-      path.push(pick); seen.add(`${pick.x},${pick.y}`);
+      if (pick.length === 2) { crossed++; seen.set(`${pick[0].x},${pick[0].y}`, -1); }   /* -1: already a crossing */
+      for (const c of pick) { if (!seen.has(`${c.x},${c.y}`)) seen.set(`${c.x},${c.y}`, path.length); path.push(c); }
     }
   }
   return Array.from({ length: N }, (_, x) => ({ x, y: Math.floor(N / 2) }));   /* fallback: straight across */
@@ -125,12 +142,13 @@ function sideTo(a, b) { return b.x > a.x ? 'e' : b.x < a.x ? 'w' : b.y > a.y ? '
 /** Builds a level: the route's pieces with scrambled rotations, the rest random, rocks and crossings later on. */
 function makeLevel(level) {
   const N = Math.min(8, 5 + Math.floor((level - 1) / 2));
-  const route = makeRoute(N);
+  const route = makeRoute(N, level >= 6);   /* from level 6 the route may cross itself */
   const grid = Array.from({ length: N }, () => Array.from({ length: N }, () => null));
   route.forEach((p, i) => {
     const entry = i === 0 ? 'w' : OPP[sideTo(route[i - 1], p)];
     const exit = i === route.length - 1 ? 'e' : sideTo(p, route[i + 1]);
     const kind = OPP[entry] === exit ? 'straight' : 'curve';
+    if (grid[p.y][p.x]) { grid[p.y][p.x] = { kind: 'cross', rot: 0, route: true }; return; }   /* second pass: a crossing */
     grid[p.y][p.x] = level >= SWITCH_FROM && Math.random() < 0.22 ? { ...switchFor(entry, exit), route: true } : { kind, rot: rnd(4), route: true };
   });
   const rocks = Math.min(0.14, Math.max(0, level - 2) * 0.03), crosses = level >= 4 ? 0.08 : 0;
@@ -146,7 +164,7 @@ function makeLevel(level) {
   const theme = THEMES[(level - 1) % THEMES.length];
   const specks = Array.from({ length: 70 }, () => ({ x: Math.random(), y: Math.random(), r: 0.5 + Math.random(), a: Math.random() * Math.PI,
     col: theme.specks[rnd(theme.specks.length)] }));
-  return { N, grid, start, goal, theme, specks, /* time to build: depends on how long the route is, a little less each level (never under 70 %) */
+  return { N, grid, route, start, goal, theme, specks, /* time to build: depends on how long the route is, a little less each level (never under 70 %) */
     countdown: (8 + route.length * 2.2) * Math.max(0.7, 1 - (level - 1) * 0.03) * 1000,
     cellMs: Math.max(550, 1100 - level * 50) };
 }
