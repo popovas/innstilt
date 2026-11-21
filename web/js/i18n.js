@@ -2,7 +2,7 @@
 
 const STRINGS = {
   no: {
-    tagline: 'Prisavslag og erstatning når toget er forsinket eller innstilt – det du har rett på etter Vy sine egne vilkår.',
+    tagline: 'Erstatning når toget er forsinket eller innstilt – det du har rett på etter Vy sine egne vilkår.',
     why: 'Vy sitt skjema er tungvint: du må huske hvilket tog det var, finne billettkoden og fylle ut alt på nytt for hver tur. Innstilt finner turene du har krav på og fyller ut skjemaet for deg – du trykker bare «Send inn».',
     privacyTitle: 'Dine data blir hos deg',
     privacyBody: 'Billettkode, navn, e-post og kontonummer lagres bare i denne nettleseren på denne enheten, og brukes bare til å fylle ut Vy sitt refusjonsskjema. Ingenting av dette sendes til oss eller andre. Vil du, kan du dele anonym statistikk – bare antall krav og kroner.',
@@ -138,7 +138,7 @@ const STRINGS = {
     bmDone: 'Ferdig, den ligger der', bmLater: 'Senere', bmHave: 'Jeg har lagt bokmerket i bokmerkelinjen',
   },
   en: {
-    tagline: 'Price reductions and compensation when your train is late or cancelled – what you\'re entitled to under Vy\'s own terms.',
+    tagline: 'Compensation when your train is late or cancelled – what you\'re entitled to under Vy\'s own terms.',
     why: 'Vy\'s form is a hassle: you have to remember which train it was, find your ticket code and fill everything in again for every trip. Innstilt finds the trips you can claim for and fills in the form for you – you just press "Send inn".',
     privacyTitle: 'Your data stays with you',
     privacyBody: 'Ticket code, name, e-mail and account number are stored only in this browser on this device, and used only to fill in Vy\'s refund form. None of it is sent to us or anyone else. If you like, you can share anonymous statistics – just numbers of claims and kroner.',

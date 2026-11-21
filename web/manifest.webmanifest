@@ -1,7 +1,7 @@
 {
   "name": "Innstilt",
   "short_name": "Innstilt",
-  "description": "Prisavslag og erstatning for forsinkede og innstilte tog – uten bryet med Vy sitt skjema. Ikke tilknyttet Vy.",
+  "description": "Erstatning for forsinkede og innstilte tog – uten bryet med Vy sitt skjema. Ikke tilknyttet Vy.",
   "lang": "nb",
   "start_url": "./#/trips",
   "scope": "./",

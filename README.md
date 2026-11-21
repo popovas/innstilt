@@ -2,7 +2,7 @@
 
 # Innstilt
 
-**Prisavslag og erstatning når toget er forsinket eller innstilt – uten bryet med Vy sitt skjema.** Innstilt finds your delayed and
+**Erstatning når toget er forsinket eller innstilt – uten bryet med Vy sitt skjema.** Innstilt finds your delayed and
 cancelled trips in Entur's open data and opens Vy's own claim form already filled in. You check it and
 press *Send inn*.
 
