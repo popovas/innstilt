@@ -374,15 +374,16 @@ let otherQuery = null;  /* the last search, so the panel survives the re-render 
 
 function otherTripHtml() {
   const q = otherQuery;
-  const [d, tm] = q ? [q.dateText, q.time || ''] : ['', ''];
+  const [d, tm] = q ? [q.rawDate, q.rawTime] : ['', ''];
+  const [today, now] = core.formatEu(Date.now());  /* grey placeholders = what a blank box means */
   return `<details class="card other" id="other" ${q ? 'open' : ''}>
     <summary>${esc(t('otherTrip'))}</summary>
     <form id="otherForm" novalidate>
       <p class="help">${esc(t('otherHelp'))}</p>
       <div class="row">${stationField('from', q?.from)}${stationField('to', q?.to)}</div>
       <div class="row">
-        <label>${esc(t('date'))}<input name="date" value="${esc(d)}" placeholder="${esc(t('datePh'))}" inputmode="numeric" autocomplete="off"></label>
-        <label>${esc(t('approxTime'))}<input name="time" value="${esc(tm)}" placeholder="${esc(t('timePh'))}" inputmode="numeric" autocomplete="off"></label>
+        <label>${esc(t('date'))}<input name="date" value="${esc(d)}" placeholder="${esc(today)}" inputmode="numeric" autocomplete="off"></label>
+        <label>${esc(t('approxTime'))}<input name="time" value="${esc(tm)}" placeholder="${esc(now)}" inputmode="numeric" autocomplete="off"></label>
       </div>
       <p class="error" id="otherErr" role="alert"></p>
       <button class="primary" type="submit">${esc(t('findTrains'))}</button>
@@ -400,12 +401,14 @@ function wireOtherTrip() {
     const from = pickedStation(f.from), to = pickedStation(f.to);
     if (!from || !to) return err(t('errStation'));
     if (from.id === to.id) return err(t('errSame'));
-    const ms = core.parseEuDateTime(f.date.value, '12:00');
+    /* a blank box means the grey suggestion in it (today / now) */
+    const rawDate = f.date.value.trim(), rawTime = f.time.value.trim();
+    const ms = core.parseEuDateTime(rawDate || f.date.placeholder, '12:00');
     if (!ms) return err(t('errDate'));
-    const times = core.parseTimes(f.time.value);
-    if (!times || times.length > 1) return err(t('errTimes'));
+    const times = core.parseTimes(rawTime || f.time.placeholder);
+    if (!times || times.length !== 1) return err(t('errTimes'));
     err('');
-    otherQuery = { from, to, date: core.todayOslo(ms), dateText: f.date.value.trim(), time: times[0] || null };
+    otherQuery = { from, to, date: core.todayOslo(ms), rawDate, rawTime, time: times[0] };
     findOther(otherQuery);
   });
   if (otherQuery) findOther(otherQuery);

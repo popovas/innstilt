@@ -25,7 +25,7 @@ const STRINGS = {
     errSame: '«Fra» og «Til» må være forskjellige stasjoner.',
     /* another trip */
     otherTrip: 'En annen tur', otherHelp: 'For en tur utenom de faste reisene dine.',
-    date: 'Dato', approxTime: 'Omtrent når (valgfritt, ±2 t)', findTrains: 'Finn tog',
+    date: 'Dato', approxTime: 'Omtrent når (±2 t)', findTrains: 'Finn tog',
     otherToday: 'Togdata for en dag kommer natten etter – prøv igjen i morgen.',
     otherTooOld: 'Vy tar bare imot krav for de siste {days} dagene.',
     otherNoData: 'Vi har ikke data for denne dagen.', otherNone: 'Fant ingen tog mellom disse stasjonene da.',
@@ -94,7 +94,7 @@ const STRINGS = {
     timesHelp: 'E.g. 07:15, 08:15. Only trains ±2 hours around these are shown. Empty = all times.',
     errSame: '"From" and "To" must be different stations.',
     otherTrip: 'Another trip', otherHelp: 'For a journey outside your regular trips.',
-    date: 'Date', approxTime: 'Around when (optional, ±2 h)', findTrains: 'Find trains',
+    date: 'Date', approxTime: 'Around when (±2 h)', findTrains: 'Find trains',
     otherToday: 'A day\'s train data arrives the night after – try again tomorrow.',
     otherTooOld: 'Vy only accepts claims for the last {days} days.',
     otherNoData: 'We don\'t have data for that day.', otherNone: 'No trains found between these stations then.',

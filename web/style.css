@@ -131,3 +131,4 @@ footer a { color: var(--stripe); }
 .vh { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
 
 [hidden] { display: none !important; }
+input::placeholder { color: #8aa79b; opacity: 1; }

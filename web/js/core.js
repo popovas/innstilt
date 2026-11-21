@@ -33,9 +33,10 @@ export function validEmail(text) {
 export function parseTimes(text) {
   const out = new Set();
   for (const tok of (text || '').split(/[\s,;]+/).filter(Boolean)) {
-    const m = tok.match(/^(\d{1,2})[:.]?(\d{2})$/);
-    if (!m || Number(m[1]) > 23 || Number(m[2]) > 59) return null;
-    out.add(`${m[1].padStart(2, '0')}:${m[2]}`);
+    const m = tok.match(/^(\d{1,2})(?:[:.]?(\d{2}))?$/);  /* 7:15, 0715, 715, or a bare hour: 9 */
+    const mi = m?.[2] ?? '00';
+    if (!m || Number(m[1]) > 23 || Number(mi) > 59) return null;
+    out.add(`${m[1].padStart(2, '0')}:${mi}`);
   }
   return [...out].sort();
 }
