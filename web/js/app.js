@@ -652,20 +652,18 @@ async function syncStats() {
   } catch { /* offline or server down: try again next time */ } finally { syncing = false; }
 }
 
-/** "Most cancelled line of the month", from public data. */
+/** "Most cancelled lines of the month" podium, from public data. */
 async function fillJab() {
-  const w = core.worstLine(await data.loadStats());
+  const w = core.worstLines(await data.loadStats());
   if (!w) return;
   const loc = getLang() === 'no' ? 'nb-NO' : 'en-GB';
-  const ends = w.ends.length ? ` (${w.ends.join(' – ')})` : '';
-  const text = t(w.current ? 'jabMonth' : 'jabLastMonth', {
-    line: w.line + ends, n: w.cancelled.toLocaleString(loc), trips: w.trips.toLocaleString(loc),
-    pct: w.pct.toLocaleString(loc, { maximumFractionDigits: w.pct < 10 ? 1 : 0 }) });
-  const more = w.partly ? t('jabPartly', { n: w.partly.toLocaleString(loc) }) : '';
-  document.querySelectorAll('[data-jab]').forEach(el => {
-    el.innerHTML = `🏆 ${esc(text)}${more ? ` <span class="muted">${esc(more)}</span>` : ''}`;
-    el.hidden = false;
-  });
+  const pct = x => x.toLocaleString(loc, { maximumFractionDigits: x < 10 ? 1 : 0 });
+  const items = w.lines.map((l, i) => `<li><span class="medal">${['🥇', '🥈', '🥉'][i]}</span>
+      <strong>${esc(l.line)}</strong> <span class="muted">${esc(l.ends.join(' – '))}</span>
+      <span class="pct">${esc(pct(l.pct))} %</span></li>`).join('');
+  const html = `<strong>${esc(t(w.current ? 'jabMonth' : 'jabLastMonth'))}</strong><ol class="podium">${items}</ol>
+    <small>${esc(t('jabNote', { from: fmtDate(core.osloToMs(w.first, '12:00')), to: fmtDate(core.osloToMs(w.last, '12:00')) }))}</small>`;
+  document.querySelectorAll('[data-jab]').forEach(el => { el.innerHTML = html; el.hidden = false; });
 }
 
 async function fillCounter() {

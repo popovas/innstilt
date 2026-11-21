@@ -19,7 +19,11 @@ self.addEventListener('activate', e => {
 self.addEventListener('fetch', e => {
   const url = new URL(e.request.url);
   if (e.request.method !== 'GET' || url.origin !== location.origin) return;
-  e.respondWith(fetch(e.request).then(r => {
+  /* cache: 'no-cache' = always ask the server whether the file changed, so after an update the browser
+     never mixes old and new app files from its HTTP cache */
+  /* (a page navigation can't be copied with new options, so it is fetched by its address instead) */
+  const fresh = e.request.mode === 'navigate' ? fetch(e.request.url, { cache: 'no-cache' }) : fetch(e.request, { cache: 'no-cache' });
+  e.respondWith(fresh.then(r => {
     if (r.ok) { const copy = r.clone(); caches.open(CACHE).then(c => c.put(e.request, copy)); }
     return r;
   }).catch(() => caches.match(e.request, { ignoreSearch: true })));

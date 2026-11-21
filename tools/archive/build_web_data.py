@@ -109,7 +109,8 @@ def _min(hhmm: str) -> int:
 
 def write_stats() -> None:
     """Per month and line, from the day files: departures, cancelled (all stops), partly cancelled (some
-    stops), and more than 30 min late at the last stop. Replacement buses are left out. Public data only."""
+    stops), planned stops and how many of them were cancelled (the ranking), and more than 30 min late at the
+    last stop. Replacement buses are left out. Public data only."""
     months: dict[str, dict] = {}
     for f in sorted(OUT.glob("????-??-??.json")):
         day = json.loads(f.read_text())
@@ -119,10 +120,13 @@ def write_stats() -> None:
         for j in day["journeys"]:
             if j["extra"]:
                 continue
-            ln = m["lines"].setdefault(j["line"], {"trips": 0, "cancelled": 0, "partly": 0, "late": 0, "dests": {}})
+            ln = m["lines"].setdefault(j["line"], {"trips": 0, "cancelled": 0, "partly": 0, "late": 0,
+                                                   "stops": 0, "stopsCancelled": 0, "dests": {}})
             ln["trips"] += 1
             ln["dests"][j["dest"]] = ln["dests"].get(j["dest"], 0) + 1
             stops_cancelled = [c[4] for c in j["calls"]]
+            ln["stops"] += len(stops_cancelled)
+            ln["stopsCancelled"] += sum(stops_cancelled)
             if j["cancelled"] or all(stops_cancelled):  # the archive marks a cancelled train stop by stop
                 ln["cancelled"] += 1
                 continue
