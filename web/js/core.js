@@ -140,6 +140,19 @@ const minutes = hhmm => Number(hhmm.slice(0, 2)) * 60 + Number(hhmm.slice(3, 5))
 
 /* ---------- tickets ---------- */
 
+/** Ticket validity periods for when only one date is known. Day-based ones keep the Oslo clock time across
+    summer/winter time (3 Nov 08:12 + 30 days = 3 Dec 08:12). */
+export const TICKET_PERIODS = { single: { hours: 3 }, day: { hours: 24 }, week: { days: 7 }, month: { days: 30 }, year: { days: 365 } };
+
+/** `ms` moved by a ticket period, forwards (sign 1) or backwards (-1). */
+export function shiftByPeriod(ms, period, sign = 1) {
+  const p = TICKET_PERIODS[period];
+  if (!p) return null;
+  if (p.hours) return ms + sign * p.hours * 3600000;
+  const [date, time] = formatEu(ms).map((x, i) => (i === 0 ? x.split('/').reverse().join('-') : x));
+  return osloToMs(addDays(date, sign * p.days), time);
+}
+
 /** All tickets valid at `ms`, latest start first. Tickets without dates count as always valid. */
 export function ticketsFor(tickets, ms) {
   const ok = (tickets || []).filter(t =>

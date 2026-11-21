@@ -332,7 +332,11 @@ function ticketFieldsHtml(tk) {
       </div>
     </fieldset>` : ''}
     <label data-kind="other" ${other ? '' : 'hidden'}>${esc(t('ticketNumber'))}<input name="number" value="${esc(tk.number || '')}" inputmode="numeric" maxlength="20" autocomplete="off" placeholder="1234567890"><small>${esc(t('ticketNumberHelp'))}</small></label>
-    <div class="row">${dateFields('validFrom', tk.validFrom)}${dateFields('validTo', tk.validTo)}</div>`;
+    <div class="row">${dateFields('validFrom', tk.validFrom)}${dateFields('validTo', tk.validTo)}</div>
+    <label class="tkperiod" hidden>${esc(t('ticketPeriod'))}<select name="period">
+      <option value="">${esc(t('periodPick'))}</option>
+      ${['single', 'day', 'week', 'month', 'year'].map(k => `<option value="${k}">${esc(t(`period_${k}`))}</option>`).join('')}
+    </select><small>${esc(t('ticketPeriodHelp'))}</small></label>`;
 }
 
 /** Reads and checks the ticket fields: {ticket} or {error}. Tickets from Ruter/Entur need their dates, so each
@@ -340,9 +344,16 @@ function ticketFieldsHtml(tk) {
 function readTicket(root, requireDates) {
   const val = n => root.querySelector(`[name=${n}]`)?.value || '';
   const kind = root.querySelector('[name=kind]:checked')?.value === 'other' ? 'other' : 'vy';
-  const validFrom = core.parseEuDateTime(val('validFromDate'), val('validFromTime'));
-  const validTo = core.parseEuDateTime(val('validToDate'), val('validToTime'));
+  let validFrom = core.parseEuDateTime(val('validFromDate'), val('validFromTime'));
+  let validTo = core.parseEuDateTime(val('validToDate'), val('validToTime'));
   if (Number.isNaN(validFrom) || Number.isNaN(validTo)) return { error: t('errDate') };
+  /* only one date known (a receipt shows either the purchase or the expiry): the chosen period gives the other */
+  if (Boolean(validFrom) !== Boolean(validTo)) {
+    const period = val('period');
+    if (!period) return { error: t('errPeriod') };
+    if (validFrom) validTo = core.shiftByPeriod(validFrom, period, 1);
+    else validFrom = core.shiftByPeriod(validTo, period, -1);
+  }
   if ((requireDates || kind === 'other') && (!validFrom || !validTo)) return { error: t('errTicketDates') };
   if (validFrom && validTo && validTo <= validFrom) return { error: t('errDates') };
   if (kind === 'vy') {
@@ -374,6 +385,14 @@ const ticketImages = new WeakMap();
 
 function wireTicketFields(root, existing = null) {
   ticketImages.set(root, existing?.image || null);
+  /* show "how long is the ticket valid?" when exactly one of the two dates is filled in */
+  const periodBox = root.querySelector('.tkperiod');
+  const syncPeriod = () => {
+    const from = root.querySelector('[name=validFromDate]').value.trim(), to = root.querySelector('[name=validToDate]').value.trim();
+    periodBox.hidden = Boolean(from) === Boolean(to);
+  };
+  ['validFromDate', 'validToDate'].forEach(n => root.querySelector(`[name=${n}]`).addEventListener('input', syncPeriod));
+  syncPeriod();
   const preview = root.querySelector('.tkimg-preview');
   root.querySelectorAll('[name=imgMode]').forEach(r => r.addEventListener('change', () => {
     root.querySelector('[data-img-store]').hidden = root.querySelector('[name=imgMode]:checked').value !== 'store';
