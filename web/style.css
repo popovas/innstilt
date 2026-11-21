@@ -284,3 +284,9 @@ dialog.helpdlg .intro h1 { font-size: 20px; }
 .g-toast { white-space: normal; width: max-content; max-width: 90%; text-align: center; }
 .g-toast { background: rgba(11, 11, 12, .55); pointer-events: none; transition: top .15s, bottom .15s; }
 .g-toast.low { top: auto; bottom: 10px; }
+/* centred while it fits; when the rules are taller than the board, they start at the top and scroll */
+.g-msg { justify-content: flex-start; padding: 14px 16px; }
+.g-msg > :first-child { margin-top: auto; }
+.g-msg > :last-child { margin-bottom: auto; }
+.g-rules { font-size: 13px; line-height: 1.35; }
+.g-rules li { margin: 5px 0; }

@@ -376,7 +376,8 @@ export function start(root, { lang = 'no', back = () => {}, testScore = 0 } = {}
       `<button type="button" data-b="${i}" class="${buttons[i][2] ? 'primary' : ''}">${label}</button>`).join('')}</div>`;
     msg.querySelectorAll('[data-b]').forEach(b => b.addEventListener('click', () => buttons[Number(b.dataset.b)][1]()));
     msg.hidden = false;
-    msg.querySelector('.primary')?.focus();
+    msg.scrollTop = 0;
+    msg.querySelector('.primary')?.focus({ preventScroll: true });   /* Enter/Space works, but the text starts at the top */
   }
 
   function setMode(m, hideMsg = true) {
