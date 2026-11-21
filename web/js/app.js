@@ -348,7 +348,7 @@ async function viewTrips() {
       <p class="center"><a class="bookmarklet" href="${esc(BOOKMARKLET)}" id="bm"><img src="icons/ghost-32.png" width="22" height="22" alt=""><span class="vh">👻 </span>Innstilt: fyll ut</a></p>
       <div class="actions"><button type="button" id="bmLater">${esc(t('bmLater'))}</button>
         <button type="button" class="primary" id="bmDone">${esc(t('bmDone'))}</button></div></section>` : ''}
-    <p class="jab" data-jab hidden></p>
+    <details class="card fold jabfold" data-jab-fold hidden><summary></summary><div class="jab-body"></div></details>
     ${otherTripHtml()}
     <p class="muted">${esc(t('tripsIntro', { min: core.DEFAULT_THRESHOLD, days: core.CLAIM_DEADLINE_DAYS }))}</p>
     <div id="trips"></div>
@@ -443,7 +443,7 @@ function otherTripHtml() {
   const q = otherQuery;
   const [d, tm] = q ? [q.rawDate, q.rawTime] : ['', ''];
   const [today, now] = core.formatEu(Date.now());  /* grey placeholders = what a blank box means */
-  return `<details class="card other" id="other" ${q ? 'open' : ''}>
+  return `<details class="card fold other" id="other" ${q ? 'open' : ''}>
     <summary>${esc(t('otherTrip'))}</summary>
     <form id="otherForm" novalidate>
       <p class="help">${esc(t('otherHelp'))}</p>
@@ -661,9 +661,21 @@ async function fillJab() {
   const items = w.lines.map((l, i) => `<li><span class="medal">${['🥇', '🥈', '🥉'][i]}</span>
       <strong>${esc(l.line)}</strong> <span class="muted">${esc(l.ends.join(' – '))}</span>
       <span class="pct">${esc(pct(l.pct))} %</span></li>`).join('');
-  const html = `<strong>${esc(t(w.current ? 'jabMonth' : 'jabLastMonth'))}</strong><ol class="podium">${items}</ol>
+  const podium = `<ol class="podium">${items}</ol>
     <small>${esc(t('jabNote', { from: fmtDate(core.osloToMs(w.first, '12:00')), to: fmtDate(core.osloToMs(w.last, '12:00')) }))}</small>`;
-  document.querySelectorAll('[data-jab]').forEach(el => { el.innerHTML = html; el.hidden = false; });
+  /* welcome page: the whole podium */
+  document.querySelectorAll('[data-jab]').forEach(el => {
+    el.innerHTML = `<strong>${esc(t(w.current ? 'jabMonth' : 'jabLastMonth'))}</strong>${podium}`;
+    el.hidden = false;
+  });
+  /* Trips: one line with the winner, the podium folded away so the claimable trips stay near the top */
+  const top = w.lines[0];
+  document.querySelectorAll('[data-jab-fold]').forEach(el => {
+    el.querySelector('summary').innerHTML = `<span>🏆 ${esc(t(w.current ? 'jabShort' : 'jabShortLast'))}
+      <strong>${esc(top.line)}</strong> <span class="pct">${esc(pct(top.pct))} %</span></span>`;
+    el.querySelector('.jab-body').innerHTML = podium;
+    el.hidden = false;
+  });
 }
 
 async function fillCounter() {
