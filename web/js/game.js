@@ -7,9 +7,11 @@
 const N = 15;                      /* board: N × N cells */
 const LIMIT = 31;                  /* minutes late = game over */
 const minuteMs = () => 3000;       /* real time per delay minute (steady; the train itself speeds up) */
-const SIGNAL_MIN = 3;
-const PER_LEVEL = 8;               /* passengers per level; 5 levels, each adds one thing */
-const TREES = [3, 11].flatMap(y => [4, 5, 6, 7, 8, 9, 10].map(x => ({ x, y })));   /* level 4: two rows of trees */              /* minutes a green signal takes off / a red one adds */
+const SIGNAL_MIN = 3;              /* minutes a green signal takes off / a red one adds */
+const AHEAD_MAX = 9;               /* green signals can put you up to 9 min ahead of schedule */
+const PER_LEVEL = 4;               /* passengers per level; 5 levels, each adds one thing */
+const MAX_LIVES = 5, STREAK = 10;  /* extra train sets: the spare pickup, or 10 passengers without a mishap */
+const TREES = [3, 11].flatMap(y => [4, 5, 6, 7, 8, 9, 10].map(x => ({ x, y })));   /* level 4: two rows of trees */
 const BEST_KEY = 'innstilt.game.best';
 const DIRS = { up: [0, -1], down: [0, 1], left: [-1, 0], right: [1, 0] };
 const OPPOSITE = { up: 'down', down: 'up', left: 'right', right: 'left' };
@@ -22,6 +24,7 @@ const TXT = {
   no: {
     title: 'Forsinket?', intro: 'Plukk opp så mange passasjerer du rekker med spøkelsestoget. Forsinkelsen tikker hele tiden – ved 31 minutter er det slutt. Grønt signal hjelper, rødt signal koster. Pass deg for kanten og dine egne vogner – og for mer etter hvert.',
     start: 'Start', resume: 'Fortsett', again: 'Spill igjen', back: 'Tilbake til turene', claim: 'Krev erstatning 😉',
+    ahead: 'Foran rute! 😎', spare: 'Ekstra togsett! 🚆', streak: '10 på rad uten uhell – ekstra togsett!',
     green: 'Grønt signal! −3 min', redSig: 'Venter på signal… +3 min', lvl: 'Nivå {n}',
     levels: { 2: 'Nivå 2: løv og is!', 3: 'Nivå 3: tunneler!', 4: 'Nivå 4: trær over sporet!', 5: 'Nivå 5: elg!' },
     tunnelX: 'Tunnel åpen ⟷', tunnelY: 'Tunnel åpen ↕', tree: 'Trær over sporet!', moose: 'Elg på sporet!',
@@ -33,14 +36,16 @@ const TXT = {
     score: 'Passasjerer', late: 'Forsinkelse', lives: 'Togsett igjen', help: 'Hvordan spiller jeg?',
     rules: ['👤 Kjør inn i passasjerene for å plukke dem opp – toget blir én vogn lengre.',
       '⏱ Forsinkelsen tikker hele tiden: +1 minutt hvert 3. sekund (streken viser neste minutt). Ved 31 minutter er spillet over.',
-      '🟢 Grønt signal tar 3 minutter av forsinkelsen. 🔴 Rødt signal legger til 3 – kjør rundt det.',
-      '📈 Nytt nivå hver 8. passasjer. 2: løv og is 🍂❄️ dukker opp noen sekunder. 3: tunneler – to motsatte kanter åpnes en stund, og du kjører ut på den ene siden og inn på den andre. 4: trær over sporet 🌲. 5: elg som rusler over brettet.',
+      '🟢 Grønt signal tar 3 minutter av forsinkelsen – under null er du foran rute. 🔴 Rødt signal legger til 3 – kjør rundt det.',
+      '🚆 Ekstra togsett: plukk opp reservetoget med + når det dukker opp, eller ta 10 passasjerer på rad uten uhell (opptil 5 togsett).',
+      '📈 Nytt nivå hver 4. passasjer. 2: løv og is 🍂❄️ dukker opp noen sekunder. 3: tunneler – to motsatte kanter åpnes en stund, og du kjører ut på den ene siden og inn på den andre. 4: trær over sporet 🌲. 5: elg som rusler over brettet.',
       '💥 Kjører du inn i løv, is, trær, elg, en lukket kant eller dine egne vogner, mister du et togsett (3 i alt), og farten starter rolig igjen.',
       '🕹 Styr med pilene, eller sveip på brettet. ⏸ nede til venstre tar pause.'],
   },
   en: {
     title: 'Forsinket?', intro: 'Pick up as many passengers as you can with the ghost train. The delay keeps ticking – at 31 minutes it\'s over. Green signals help, red ones cost. Watch out for the edge and your own wagons – and for more as you go.',
     start: 'Start', resume: 'Resume', again: 'Play again', back: 'Back to trips', claim: 'Claim compensation 😉',
+    ahead: 'Ahead of schedule! 😎', spare: 'Spare train set! 🚆', streak: '10 in a row without a mishap – extra train set!',
     green: 'Green signal! −3 min', redSig: 'Waiting for a signal… +3 min', lvl: 'Level {n}',
     levels: { 2: 'Level 2: leaves and ice!', 3: 'Level 3: tunnels!', 4: 'Level 4: trees on the line!', 5: 'Level 5: moose!' },
     tunnelX: 'Tunnel open ⟷', tunnelY: 'Tunnel open ↕', tree: 'Trees on the line!', moose: 'Moose on the line!',
@@ -52,8 +57,9 @@ const TXT = {
     score: 'Passengers', late: 'Delay', lives: 'Train sets left', help: 'How do I play?',
     rules: ['👤 Drive into passengers to pick them up – the train gets one wagon longer.',
       '⏱ The delay keeps ticking: +1 minute every 3 seconds (the bar shows the next minute). At 31 minutes the game is over.',
-      '🟢 A green signal takes 3 minutes off the delay. 🔴 A red signal adds 3 – drive around it.',
-      '📈 A new level every 8 passengers. 2: leaves and ice 🍂❄️ show up for a few seconds. 3: tunnels – two opposite edges open for a while, and you drive out one side and in the other. 4: trees on the line 🌲. 5: a moose wandering across.',
+      '🟢 A green signal takes 3 minutes off the delay – below zero you are ahead of schedule. 🔴 A red signal adds 3 – drive around it.',
+      '🚆 Extra train sets: pick up the spare train with + when it shows up, or take 10 passengers in a row without a mishap (up to 5 train sets).',
+      '📈 A new level every 4 passengers. 2: leaves and ice 🍂❄️ show up for a few seconds. 3: tunnels – two opposite edges open for a while, and you drive out one side and in the other. 4: trees on the line 🌲. 5: a moose wandering across.',
       '💥 Hit leaves, ice, trees, a moose, a closed edge or your own wagons and you lose a train set (3 in all), and the speed starts calm again.',
       '🕹 Steer with the arrows, or swipe on the board. ⏸ bottom left pauses.'],
   },
@@ -72,7 +78,7 @@ export function start(root, { lang = 'no', back = () => {}, testScore = 0 } = {}
       <div class="g-top">
         <span class="g-score" title="${T.score}">👤 <b>0</b> <small class="g-lvl"></small></span>
         <span class="g-clock" title="${T.late}">⏱ <b>+0 min</b><i class="g-bar"><i></i></i></span>
-        <span class="g-lives" title="${T.lives}">${'<img src="icons/ghost-32.png" width="24" height="24" alt="">'.repeat(3)}</span>
+        <span class="g-lives" title="${T.lives}"></span>
       </div>
       <div class="g-board">
         <canvas aria-label="${T.title}"></canvas>
@@ -90,7 +96,7 @@ export function start(root, { lang = 'no', back = () => {}, testScore = 0 } = {}
     </div>`;
   const q = s => root.querySelector(s);
   const cv = q('canvas'), ctx = cv.getContext('2d'), board = q('.g-board'), msg = q('.g-msg'), toastEl = q('.g-toast');
-  const lvlEl = q('.g-lvl'), scoreEl = q('.g-score b'), clockEl = q('.g-clock'), clockB = q('.g-clock b'), barEl = q('.g-bar i'), lifeImgs = [...root.querySelectorAll('.g-lives img')];
+  const lvlEl = q('.g-lvl'), scoreEl = q('.g-score b'), clockEl = q('.g-clock'), clockB = q('.g-clock b'), barEl = q('.g-bar i'), livesEl = q('.g-lives');
   const ppBtn = q('[data-act="pause"]');
 
   let best = readBest();
@@ -101,11 +107,11 @@ export function start(root, { lang = 'no', back = () => {}, testScore = 0 } = {}
   const spawnSnake = () => { const y = Math.floor(N / 2); return [{ x: 4, y }, { x: 3, y }, { x: 2, y }]; };
   const fresh = () => ({ score: 0, run: 0, lives: 3, delay: 0, slow: 0, snake: spawnSnake(), dir: 'right', queue: [], grow: 0,
     pax: null, hazards: [], nextHazard: 3000, signals: [], nextSignal: 4000,
-    trees: [], tunnel: null, nextTunnel: 4000, moose: null, nextMoose: 3000 });
+    trees: [], tunnel: null, nextTunnel: 4000, moose: null, nextMoose: 3000, spare: null, nextSpare: 15000 });
   const level = () => Math.min(5, 1 + Math.floor(st.score / PER_LEVEL));
   const on = (cells, x, y) => cells.some(c => c.x === x && c.y === y);
   const taken = (x, y) => on(st.snake, x, y) || (st.pax && st.pax.x === x && st.pax.y === y) || st.hazards.some(h => on(h.cells, x, y))
-    || st.signals.some(g => g.x === x && g.y === y) || on(st.trees, x, y);
+    || st.signals.some(g => g.x === x && g.y === y) || on(st.trees, x, y) || (st.spare && st.spare.x === x && st.spare.y === y);
 
   function freeCell(minDist = 0) {
     const h = st.snake[0];
@@ -167,17 +173,27 @@ export function start(root, { lang = 'no', back = () => {}, testScore = 0 } = {}
       const before = level();
       st.score++; st.run++; st.grow++;
       st.pax = freeCell(3);
+      if (st.run % STREAK === 0) extraLife(T.streak);
       if (level() > before) levelUp(level());
       hud();
     }
     const sig = st.signals.find(g => g.x === x && g.y === y);
     if (sig) {
       st.signals = st.signals.filter(g => g !== sig);
-      st.delay = Math.max(0, st.delay + (sig.kind === 'go' ? -SIGNAL_MIN : SIGNAL_MIN));
-      toast(sig.kind === 'go' ? T.green : T.redSig);
+      const was = st.delay;
+      st.delay = Math.max(-AHEAD_MAX, st.delay + (sig.kind === 'go' ? -SIGNAL_MIN : SIGNAL_MIN));
+      toast(sig.kind === 'go' ? (st.delay < 0 && was >= 0 ? T.ahead : T.green) : T.redSig);
       hud();
       if (st.delay >= LIMIT) over('late');
     }
+    if (st.spare && st.spare.x === x && st.spare.y === y) { st.spare = null; extraLife(T.spare); }
+  }
+
+  function extraLife(text) {
+    if (st.lives >= MAX_LIVES) return;
+    st.lives++;
+    toast(text);
+    hud();
   }
 
   function levelUp(n) {
@@ -264,6 +280,14 @@ export function start(root, { lang = 'no', back = () => {}, testScore = 0 } = {}
         toast(st.tunnel.axis === 'x' ? T.tunnelX : T.tunnelY);
       }
     }
+    if (st.spare) {
+      st.spare.age += dt;
+      if (st.spare.age >= st.spare.life) st.spare = null;
+    } else if (st.lives < 3 && (st.nextSpare -= dt) <= 0) {   /* rare, and only after losing a train set */
+      const at = freeCell(4);
+      if (at) st.spare = { ...at, age: 0, life: 6000 };
+      st.nextSpare = 20000 + Math.random() * 10000;
+    }
     if (L >= 5) {
       if (st.moose) moveMoose(dt);
       else if ((st.nextMoose -= dt) <= 0) { spawnMoose(); st.nextMoose = 6000 + Math.random() * 6000; }
@@ -291,13 +315,18 @@ export function start(root, { lang = 'no', back = () => {}, testScore = 0 } = {}
     if (!st) return;
     scoreEl.textContent = st.score;
     lvlEl.textContent = fill(T.lvl, { n: level() });
-    clockB.textContent = `+${st.delay} min`;
+    clockB.textContent = `${st.delay < 0 ? '−' : '+'}${Math.abs(st.delay)} min`;
+    clockEl.classList.toggle('ahead', st.delay < 0);
     clockEl.classList.toggle('warn', st.delay >= 20);
-    lifeImgs.forEach((im, i) => im.classList.toggle('lost', i >= st.lives));
+    livesEl.innerHTML = Array.from({ length: Math.max(3, st.lives) }, (_, i) =>
+      `<img src="icons/ghost-32.png" width="24" height="24" alt=""${i >= st.lives ? ' class="lost"' : ''}>`).join('');
   }
 
+  let toastAt = 0;
   function toast(text) {
-    toastEl.textContent = text; toastEl.hidden = false;
+    const now = performance.now();   /* two things at the same moment (new level + bonus): show both */
+    toastEl.textContent = !toastEl.hidden && now - toastAt < 300 ? `${toastEl.textContent} · ${text}` : text;
+    toastAt = now; toastEl.hidden = false;
     clearTimeout(toastTimer);
     toastTimer = setTimeout(() => { toastEl.hidden = true; }, 1500);
   }
@@ -364,6 +393,12 @@ export function start(root, { lang = 'no', back = () => {}, testScore = 0 } = {}
     for (const g of st.signals) {
       const fading = g.life - g.age < 900;
       signal((g.x + 0.5) * c, (g.y + 0.5) * c, c, g.kind, fading ? Math.floor(now / 150) % 2 === 0 : Math.floor(now / 400) % 2 === 0);
+    }
+    if (st.spare && !(st.spare.life - st.spare.age < 1500 && Math.floor(now / 150) % 2)) {
+      const sx = st.spare.x * c, sy = st.spare.y * c;
+      wagon(sx, sy, c);
+      ctx.fillStyle = C.yellow; ctx.beginPath(); ctx.arc(sx + 0.8 * c, sy + 0.2 * c, 0.2 * c, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = C.ink; ctx.fillRect(sx + 0.72 * c, sy + 0.18 * c, 0.16 * c, 0.04 * c); ctx.fillRect(sx + 0.78 * c, sy + 0.12 * c, 0.04 * c, 0.16 * c);
     }
     if (st.pax) passenger((st.pax.x + 0.5) * c, (st.pax.y + 0.5) * c + Math.sin(now / 180) * c * 0.04, c);
     for (let i = st.snake.length - 1; i > 0; i--) wagon(st.snake[i].x * c, st.snake[i].y * c, c);
