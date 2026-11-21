@@ -48,7 +48,18 @@ addEventListener('storage', e => {
   listeners.forEach(fn => fn());
 });
 
+/* Every change starts from what is stored right now, not from this tab's copy in memory. Otherwise a tab
+   opened earlier (or running an older version of the app) would write its older copy back over changes made
+   in another tab, e.g. a claim marked as sent. If storage is unavailable, the copy in memory is used. */
+function stored() {
+  try {
+    const raw = localStorage.getItem(KEY);
+    return raw ? migrate({ ...structuredClone(EMPTY), ...JSON.parse(raw) }) : null;
+  } catch { return null; }
+}
+
 export function update(fn) {
+  state = stored() || state;
   fn(state);
   return save();
 }
