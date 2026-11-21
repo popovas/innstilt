@@ -677,6 +677,7 @@ async function fillNextTrainsDay({ sec, day, items }, run) {
 }
 
 function statusHtml(j) {
+  if (j.notRun) return `<span class="badge bad">${esc(t('notRun'))}</span><small class="notrun">${esc(t('notRunHelp'))}</small>`;
   if (j.cancelled) return `<span class="badge bad">${esc(t('cancelled'))}</span>`;
   if (j.delayMin === null && j.expectedMin != null) {
     const cls = j.expectedMin > core.DEFAULT_THRESHOLD ? 'warn' : 'quiet';

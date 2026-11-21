@@ -177,7 +177,8 @@ export function journeysForRoute(day, fromId, toId) {
     const b = j.calls.findIndex((c, k) => k > a && c[0] === ti && c[1]);
     if (b < 0) continue;
     const f = j.calls[a], t = j.calls[b];
-    const cancelled = j.cancelled || f[4] === 1 || t[4] === 1;
+    /* notRun: planned, but Entur's data shows no trace of it running (standstill or data gap) */
+    const cancelled = j.cancelled || f[4] === 1 || t[4] === 1 || Boolean(j.notRun);
     const aimedArrMs = osloToMs(day.date, t[1]) + (t[1] < f[2] ? 86400000 : 0);
     let realArrMs = null;
     if (t[3]) {
@@ -185,7 +186,7 @@ export function journeysForRoute(day, fromId, toId) {
       if (realArrMs < aimedArrMs - 12 * 3600000) realArrMs += 86400000;  /* after midnight */
     }
     out.push({
-      id: j.id, line: j.line, dest: j.dest, extra: j.extra, date: day.date,
+      id: j.id, line: j.line, dest: j.dest, extra: j.extra, date: day.date, notRun: Boolean(j.notRun),
       dep: f[2], arr: t[1],
       depMs: osloToMs(day.date, f[2]), aimedArrMs, realArrMs,
       recorded: realArrMs !== null, cancelled,

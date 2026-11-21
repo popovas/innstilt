@@ -7,6 +7,9 @@ web/data/; later a nightly job runs the same script. Public timetable data only,
   .venv/bin/python tools/archive/build_web_data.py --since 2026-11-03 --until 2026-11-20
   .venv/bin/python tools/archive/build_web_data.py --prune-before 2026-08-22   (nightly job)
 
+Trains that were planned but left no trace (not cancelled, nothing recorded; or missing from the archive
+but in the saved planned timetable) get "notRun": true; they are claimable in the app, not counted in stats.
+
 Output: web/data/vyg/YYYY-MM-DD.json, index.json, stats.json (per month and line: departures, cancelled,
 >30 min late; for "the most cancelled line of the month") and claims.json (only the trains that could be
 claimable, for a fast Trips list). Day file format:
@@ -24,6 +27,8 @@ import json
 import sys
 from pathlib import Path
 
+import gzip
+
 import httpx
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -32,6 +37,37 @@ import innstilt  # noqa: E402  (archive download/export + Entur constants)
 
 OUT = ROOT / "web" / "data" / "vyg"
 QUAY_MAP = Path(__file__).parent / "quay_stations.json"   # public NSR data, cached between runs
+# Planned timetables (Entur Journey Planner only has yesterday's): saved nightly next to the archive cache,
+# plus any committed in tools/archive/planned/ (e.g. 2026-11-20, a day the archive is missing half the trains).
+PLANNED_DIRS = [innstilt.HOME / "cache" / "planned", Path(__file__).parent / "planned"]
+PLANNED_Q = """query($d:[Date!]){ serviceJourneys(authorities:["VYG:Authority:VY","VYG:Authority:VYT"], activeDates:$d){
+  id line{publicCode transportMode} passingTimes{ quay{ id stopPlace{ id name parent{id name} } } arrival{time} departure{time} } } }"""
+
+
+def save_planned(day: dt.date) -> None:
+    """Store the planned Vy timetable for `day` (works for yesterday and today only)."""
+    target = PLANNED_DIRS[0] / f"{day}.json.gz"
+    r = httpx.post(innstilt.ENTUR_JP, json={"query": PLANNED_Q, "variables": {"d": [str(day)]}},
+                   headers=innstilt.HEADERS, timeout=120)
+    r.raise_for_status()
+    journeys = (r.json().get("data") or {}).get("serviceJourneys") or []
+    if not journeys:
+        print(f"{day}: no planned timetable from Entur (too old?)", file=sys.stderr)
+        return
+    target.parent.mkdir(parents=True, exist_ok=True)
+    with gzip.open(target, "wt") as f:
+        json.dump({"date": str(day), "source": "Entur Journey Planner v3 serviceJourneys (planned), NLOD",
+                   "journeys": journeys}, f, separators=(",", ":"))
+    print(f"{day}: planned timetable saved ({len(journeys)} journeys)")
+
+
+def load_planned(day: dt.date) -> list[dict]:
+    for d in PLANNED_DIRS:
+        p = d / f"{day}.json.gz"
+        if p.exists():
+            with gzip.open(p, "rt") as f:
+                return [j for j in json.load(f)["journeys"] if j["line"]["transportMode"] == "rail"]
+    return []
 
 
 def station_for_quays(quays: set[str]) -> dict[str, list[str]]:
@@ -99,6 +135,42 @@ def build_day(day: dt.date) -> dict | None:
             "cancelled": first["journeyCancellation"] == "True",
             "calls": out_calls,
         })
+    # A train in the archive that is neither cancelled nor has any recorded arrival never left a trace.
+    for j in journeys:
+        if not j["extra"] and not j["cancelled"] and not any(c[4] for c in j["calls"]) and not any(c[3] for c in j["calls"]):
+            j["notRun"] = True
+    # Planned trains missing from the archive altogether (e.g. a standstill or a feed outage) are added too.
+    added = 0
+    planned = load_planned(day)
+    if planned:
+        def sid(pt):
+            sp = pt["quay"]["stopPlace"]
+            return (sp.get("parent") or sp)["id"], ((sp.get("parent") or sp)["name"])
+        # A planned train counts as present if the archive has the same line leaving any of its stations at
+        # the same planned time (the archive and the timetable don't always agree on the first stop).
+        have = {(j["line"], names[c[0]][0], c[2]) for j in journeys for c in j["calls"] if c[2]}
+        for pj in planned:
+            pts = pj["passingTimes"]
+            if len(pts) < 2:
+                continue
+            line = pj["line"]["publicCode"]
+            if any((line, sid(pt)[0], (pt["departure"] or {}).get("time", "")[:5]) in have for pt in pts):
+                continue
+            calls = []
+            for pt in pts:
+                st_id, st_name = sid(pt)
+                if st_id not in stops:
+                    stops[st_id] = len(stops)
+                    names[stops[st_id]] = [st_id, st_name]
+                calls.append([stops[st_id], (pt["arrival"] or {}).get("time", "")[:5] or None,
+                              (pt["departure"] or {}).get("time", "")[:5] or None, None, 0])
+            calls[0][1], calls[-1][2] = None, None
+            journeys.append({"id": pj["id"], "line": line, "dest": sid(pts[-1])[1].removesuffix(" stasjon"),
+                             "extra": False, "cancelled": False, "notRun": True, "calls": calls})
+            added += 1
+    if added or planned:
+        print(f"  {day}: {sum(1 for j in journeys if j.get('notRun'))} trains with no trace of running "
+              f"({added} added from the planned timetable)")
     journeys.sort(key=lambda j: next((c[2] or c[1] or "") for c in j["calls"]))
     return {"date": day.isoformat(), "source": "Entur SIRI-ET archive (Vy-group), NLOD",
             "stops": {str(i): names[i] for i in sorted(names)}, "journeys": journeys}
@@ -119,7 +191,7 @@ def write_stats() -> None:
         m["days"] += 1
         m["last"] = day["date"]
         for j in day["journeys"]:
-            if j["extra"]:
+            if j["extra"] or j.get("notRun"):  # only what Vy itself marked: a data gap is not a jab
                 continue
             ln = m["lines"].setdefault(j["line"], {"trips": 0, "cancelled": 0, "partly": 0, "late": 0,
                                                    "stops": 0, "stopsCancelled": 0, "dests": {}})
@@ -168,7 +240,7 @@ def write_claims_index() -> None:
         local = {int(k): v for k, v in day["stops"].items()}
         keep = []
         for j in day["journeys"]:
-            if j["extra"] or not (j["cancelled"] or any(c[4] for c in j["calls"]) or any(_late(c) for c in j["calls"])):
+            if j["extra"] or not (j["cancelled"] or j.get("notRun") or any(c[4] for c in j["calls"]) or any(_late(c) for c in j["calls"])):
                 continue
             calls = []
             for c in j["calls"]:
@@ -192,8 +264,20 @@ def main() -> None:
     ap.add_argument("--until", default=str(today - dt.timedelta(days=1)))
     ap.add_argument("--force", action="store_true", help="rebuild days that already exist")
     ap.add_argument("--prune-before", help="delete day files older than this date (YYYY-MM-DD)")
+    ap.add_argument("--refresh-days", type=int, default=0,
+                    help="re-download and rebuild the last N days (Entur's archive can fill in late)")
+    ap.add_argument("--save-planned", action="store_true", help="save yesterday's planned timetable first")
     args = ap.parse_args()
     OUT.mkdir(parents=True, exist_ok=True)
+    if args.save_planned:
+        try:
+            save_planned(today - dt.timedelta(days=1))
+        except Exception as e:  # noqa: BLE001  (the rest of the build still runs)
+            print(f"planned timetable: FAILED {e}", file=sys.stderr)
+    for n in range(1, args.refresh_days + 1):
+        d = today - dt.timedelta(days=n)
+        for stale in (OUT / f"{d}.json", innstilt.HOME / "cache" / f"VYG-{d}.csv.gz"):
+            stale.unlink(missing_ok=True)
     day, until = dt.date.fromisoformat(args.since), dt.date.fromisoformat(args.until)
     while day <= until:
         target = OUT / f"{day}.json"

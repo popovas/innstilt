@@ -44,11 +44,13 @@ jobs:
           key: train-data-${{ github.run_id }}
           restore-keys: train-data-
 
-      - name: Build train data (last 90 days, only new days)
+      - name: Build train data (last 90 days; new days plus the last 3 again)
         run: |
           SINCE=$(date -u -d "90 days ago" +%F)
-          python tools/archive/build_web_data.py --since "$SINCE" --prune-before "$SINCE"
-          find .innstilt/cache -name '*.csv.gz' ! -newermt "$SINCE" -delete 2>/dev/null || true
+          # --save-planned: keep yesterday's timetable (Entur only has it for a day) to spot trains that never ran
+          # --refresh-days 3: rebuild the last 3 days, in case Entur's archive filled in late
+          python tools/archive/build_web_data.py --since "$SINCE" --prune-before "$SINCE" --save-planned --refresh-days 3
+          find .innstilt/cache -name '*.gz' ! -newermt "$SINCE" -delete 2>/dev/null || true
           du -sh web/data
 
       - uses: actions/upload-pages-artifact@v3
