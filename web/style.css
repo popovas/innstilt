@@ -213,3 +213,6 @@ main.legal hr { border: none; border-top: 1px solid var(--mint-2); margin: 32px 
 .testercard { border: 2px dashed var(--yellow); }
 .testercard h2 { margin-top: 0; }
 .hero .why { max-width: 520px; margin: 6px auto 0; color: var(--muted); font-size: 15px; }
+fieldset.tkkind { border: none; padding: 0; margin: 6px 0; }
+fieldset.tkkind legend { font-weight: 600; font-size: 14px; margin-bottom: 4px; }
+fieldset.tkkind label.check { margin: 4px 0; }

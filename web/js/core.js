@@ -266,11 +266,16 @@ export function vyDepartureId(j) {
   return `${j.line}-${iso.slice(0, 16)}Z-${j.dest}`;
 }
 
+/** A ticket bought outside Vy (Ruter app, Entur, ...): Vy's form takes it on its "manual" path, with a
+    picture of the ticket instead of a reference code. */
+export const isOtherTicket = tk => tk?.kind === 'other';
+/** Stable id for a ticket (Vy reference code, or the other ticket's number and start). */
+export const ticketId = tk => (isOtherTicket(tk) ? `other:${tk.number || ''}:${tk.validFrom || ''}` : tk.code);
+
 export function claimLink(profile, ticket, from, to, j) {
   const p = new URLSearchParams({
     step: '4',
-    ticketInputType: 'REFERENCE_CODE',
-    referenceCode: ticket.code,
+    ...(isOtherTicket(ticket) ? { ticketInputType: 'MANUAL' } : { ticketInputType: 'REFERENCE_CODE', referenceCode: ticket.code }),
     'manualJourneyInfo.departureStation.stationName': from.name,
     'manualJourneyInfo.departureStation.nsrCode': from.id,
     'manualJourneyInfo.arrivalStation.stationName': to.name,

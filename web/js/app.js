@@ -287,11 +287,42 @@ function wireFormat(input, format) {
 }
 
 function ticketFieldsHtml(tk) {
-  return `<label>${esc(t('refCode'))}<input name="code" value="${esc(tk.code)}" placeholder="${esc(t('refCodePh'))}" autocapitalize="characters" autocomplete="off" spellcheck="false" maxlength="11"></label>
+  const other = core.isOtherTicket(tk);
+  return `<fieldset class="tkkind"><legend>${esc(t('ticketFrom'))}</legend>
+      <label class="check"><input type="radio" name="kind" value="vy" ${other ? '' : 'checked'}> ${esc(t('kindVy'))}</label>
+      <label class="check"><input type="radio" name="kind" value="other" ${other ? 'checked' : ''}> ${esc(t('kindOther'))}</label>
+    </fieldset>
+    <label data-kind="vy" ${other ? 'hidden' : ''}>${esc(t('refCode'))}<input name="code" value="${esc(tk.code || '')}" placeholder="${esc(t('refCodePh'))}" autocapitalize="characters" autocomplete="off" spellcheck="false" maxlength="11"></label>
+    <label data-kind="other" ${other ? '' : 'hidden'}>${esc(t('ticketNumber'))}<input name="number" value="${esc(tk.number || '')}" inputmode="numeric" maxlength="20" autocomplete="off" placeholder="1234567890"><small>${esc(t('ticketNumberHelp'))}</small></label>
     <div class="row">${dateFields('validFrom', tk.validFrom)}${dateFields('validTo', tk.validTo)}</div>`;
 }
 
+/** Reads and checks the ticket fields: {ticket} or {error}. Tickets from Ruter/Entur need their dates, so each
+    trip uses the right one. */
+function readTicket(root, requireDates) {
+  const val = n => root.querySelector(`[name=${n}]`)?.value || '';
+  const kind = root.querySelector('[name=kind]:checked')?.value === 'other' ? 'other' : 'vy';
+  const validFrom = core.parseEuDateTime(val('validFromDate'), val('validFromTime'));
+  const validTo = core.parseEuDateTime(val('validToDate'), val('validToTime'));
+  if (Number.isNaN(validFrom) || Number.isNaN(validTo)) return { error: t('errDate') };
+  if ((requireDates || kind === 'other') && (!validFrom || !validTo)) return { error: t('errTicketDates') };
+  if (validFrom && validTo && validTo <= validFrom) return { error: t('errDates') };
+  if (kind === 'vy') {
+    const code = core.validRef(val('code'));
+    return code ? { ticket: { kind, code, validFrom, validTo } } : { error: t('errRef') };
+  }
+  const number = val('number').replace(/\D/g, '');
+  if (number && !/^\d{4,20}$/.test(number)) return { error: t('errTicketNumber') };
+  return { ticket: { kind, code: '', number, validFrom, validTo } };
+}
+
+const ticketLabel = tk => (core.isOtherTicket(tk) ? `${t('kindOtherShort')}${tk.number ? ` ${tk.number}` : ''}` : tk.code);
+
 function wireTicketFields(root) {
+  root.querySelectorAll('[name=kind]').forEach(r => r.addEventListener('change', () => {
+    const kind = root.querySelector('[name=kind]:checked').value;
+    root.querySelectorAll('[data-kind]').forEach(el => { el.hidden = el.dataset.kind !== kind; });
+  }));
   wireFormat(root.querySelector('[name=code]'), core.formatRef);
   for (const n of ['validFrom', 'validTo']) {
     wireFormat(root.querySelector(`[name=${n}Date]`), core.formatDateInput);
@@ -305,10 +336,10 @@ function renderTickets(mode = null, saved = false) {
   const box = $('#tickets');
   const tickets = store.get().tickets;
   const now = Date.now();
-  const editing = mode === 'new' ? { code: '', validFrom: null, validTo: null } : mode ? tickets[mode.idx] : null;
+  const editing = mode === 'new' ? { kind: 'vy', code: '', validFrom: null, validTo: null } : mode ? tickets[mode.idx] : null;
   box.innerHTML = `
     ${tickets.length ? `<ul class="tickets">${tickets.map((tk, i) => `
-      <li><div><code>${esc(tk.code)}</code> ${core.ticketFor([tk], now) ? `<span class="pill">${esc(t('validNow'))}</span>` : ''}
+      <li><div><code>${esc(ticketLabel(tk))}</code> ${core.ticketFor([tk], now) ? `<span class="pill">${esc(t('validNow'))}</span>` : ''}
         <small>${tk.validFrom ? esc(fmtDate(tk.validFrom, true)) : '?'} – ${tk.validTo ? esc(fmtDate(tk.validTo, true)) : '?'}</small></div>
         <span class="tk-acts"><button type="button" class="link" data-edit-ticket="${i}">${esc(t('editTicket'))}</button>
         <button type="button" class="link danger-link" data-remove-ticket="${i}">${esc(t('remove'))}</button></span></li>`).join('')}</ul>`
@@ -335,19 +366,13 @@ function renderTickets(mode = null, saved = false) {
   wireTicketFields(form);
   $('#tkCancel').onclick = () => renderTickets();
   $('#tkSave').onclick = () => {
-    const field = n => form.querySelector(`[name=${n}]`).value;
-    const err = msg => { $('#tkErr').textContent = msg; };
-    const code = core.validRef(field('code'));
-    if (!code) return err(t('errRef'));
-    const from = core.parseEuDateTime(field('validFromDate'), field('validFromTime'));
-    const to = core.parseEuDateTime(field('validToDate'), field('validToTime'));
-    if (Number.isNaN(from) || Number.isNaN(to)) return err(t('errDate'));
-    if (!from || !to) return err(t('errTicketDates'));  /* a dated ticket is only used for its own trips */
-    if (to <= from) return err(t('errDates'));
+    const res = readTicket(form, true);  /* a dated ticket is only used for its own trips */
+    if (res.error) { $('#tkErr').textContent = res.error; return; }
+    const tk = res.ticket;
     store.update(st => {
       if (mode !== 'new') st.tickets.splice(mode.idx, 1);
-      st.tickets = st.tickets.filter(x => x.code !== code);  /* same code entered again: replaces it */
-      st.tickets.push({ code, validFrom: from, validTo: to });
+      st.tickets = st.tickets.filter(x => core.ticketId(x) !== core.ticketId(tk));  /* same ticket again: replaces it */
+      st.tickets.push(tk);
       st.tickets.sort((a, b) => (a.validFrom || 0) - (b.validFrom || 0));
     });
     renderTickets(null, true);
@@ -428,13 +453,9 @@ function saveSetup(first) {
   const err = msg => { $('#err').textContent = msg; return false; };
   let ticket = null;  /* only the first-time setup has ticket fields; Settings saves tickets on their own */
   if (first) {
-    const code = core.validRef(f.code.value);
-    if (!code) return err(t('errRef'));
-    const validFrom = core.parseEuDateTime(f.validFromDate.value, f.validFromTime.value);
-    const validTo = core.parseEuDateTime(f.validToDate.value, f.validToTime.value);
-    if (Number.isNaN(validFrom) || Number.isNaN(validTo)) return err(t('errDate'));
-    if (validFrom && validTo && validTo <= validFrom) return err(t('errDates'));
-    ticket = { code, validFrom, validTo };
+    const res = readTicket(f, false);
+    if (res.error) return err(res.error);
+    ticket = res.ticket;
   }
   const name = f.name.value.trim();
   if (!name) return err(t('errName'));
@@ -456,7 +477,7 @@ function saveSetup(first) {
   if (!routes.length) return err(t('errStation'));
   store.update(s => {
     if (ticket) {
-      s.tickets = s.tickets.filter(x => x.code !== ticket.code);
+      s.tickets = s.tickets.filter(x => core.ticketId(x) !== core.ticketId(ticket));
       s.tickets.push(ticket);
       s.tickets.sort((a, b) => (a.validFrom || 0) - (b.validFrom || 0));
     }
@@ -761,8 +782,8 @@ function tripHtml({ from, to, j, next }, id, action = null) {
   const valid = action === null && all.length > 1 ? core.ticketsFor(all, j.depMs) : [];
   const tk = valid.length > 1
     ? `<label class="tk-pick">🎫 <select data-ticket="${esc(id)}" aria-label="${esc(t('whichTicket'))}">${valid.map(v =>
-        `<option value="${esc(v.code)}">${esc(v.code)}</option>`).join('')}</select></label>`
-    : valid.length ? `<small class="tk">🎫 ${esc(valid[0].code)}</small>` : '';
+        `<option value="${esc(core.ticketId(v))}">${esc(ticketLabel(v))}</option>`).join('')}</select></label>`
+    : valid.length ? `<small class="tk">🎫 ${esc(ticketLabel(valid[0]))}</small>` : '';
   return `<article class="trip">
     <div class="when"><strong>${esc(j.dep)}</strong><span>${esc(j.line)}</span></div>
     <div class="what">${esc(from.name.replace(/ stasjon$/, ''))} → ${esc(to.name.replace(/ stasjon$/, ''))} ${statusHtml(j)}${nx}${tk}</div>
@@ -902,7 +923,7 @@ async function findOther(q) {
 
 function startClaim({ from, to, j, ticketCode }) {
   const s = store.get();
-  const ticket = (ticketCode && s.tickets.find(x => x.code === ticketCode)) || core.ticketFor(s.tickets, j.depMs);
+  const ticket = (ticketCode && s.tickets.find(x => core.ticketId(x) === ticketCode)) || core.ticketFor(s.tickets, j.depMs);
   const link = core.claimLink(s.profile, ticket, from, to, j);
   openVy(link);  /* in the click handler, so pop-up blockers allow it */
   const dlg = $('#dlg');
@@ -918,6 +939,7 @@ function startClaim({ from, to, j, ticketCode }) {
         <li>${esc(t('claimStep3'))}</li>
       </ol>
       ${isTouch() ? '' : `<p class="muted small">${esc(t('claimTip'))}</p>`}`}
+      ${core.isOtherTicket(ticket) ? `<p class="notice">📎 ${esc(t('uploadTicket'))}</p>` : ''}
       <p><a href="${esc(link)}" target="_blank" rel="noopener" id="openAgain">${esc(t('openAgain'))}</a></p>
       <label>${esc(t('caseNo'))}<input name="case" inputmode="numeric" autocomplete="off"></label>
       <div class="actions">

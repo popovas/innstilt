@@ -124,9 +124,10 @@ export function importJson(text) {
   const routes = list(p.routes).map(r => ({
     a: station(r?.a), b: station(r?.b), timesOut: hhmmList(r?.timesOut), timesBack: hhmmList(r?.timesBack),
   })).filter(r => r.a && r.b && r.a.id !== r.b.id).slice(0, 20);
-  const tickets = list(d.tickets).map(t => ({
-    code: str(t?.code, 11).toUpperCase(), validFrom: num(t?.validFrom), validTo: num(t?.validTo),
-  })).filter(t => REF.test(t.code)).slice(0, 60);
+  const tickets = list(d.tickets).map(t => (t?.kind === 'other'
+    ? { kind: 'other', code: '', number: str(String(t.number ?? ''), 20).replace(/\D/g, ''), validFrom: num(t?.validFrom), validTo: num(t?.validTo) }
+    : { kind: 'vy', code: str(t?.code, 11).toUpperCase(), validFrom: num(t?.validFrom), validTo: num(t?.validTo) }))
+    .filter(t => (t.kind === 'other' ? t.validFrom && t.validTo : REF.test(t.code))).slice(0, 60);
   const incoming = list(d.claims).map(cleanClaim).filter(Boolean).slice(0, 5000);
   const have = new Set(state.claims.map(c => c.key));
   const added = incoming.filter(c => !have.has(c.key) && have.add(c.key));
