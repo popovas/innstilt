@@ -125,7 +125,8 @@ export function importJson(text) {
     a: station(r?.a), b: station(r?.b), timesOut: hhmmList(r?.timesOut), timesBack: hhmmList(r?.timesBack),
   })).filter(r => r.a && r.b && r.a.id !== r.b.id).slice(0, 20);
   const tickets = list(d.tickets).map(t => (t?.kind === 'other'
-    ? { kind: 'other', code: '', number: str(String(t.number ?? ''), 20).replace(/\D/g, ''), validFrom: num(t?.validFrom), validTo: num(t?.validTo) }
+    ? { kind: 'other', code: '', number: str(String(t.number ?? ''), 20).replace(/\D/g, ''), validFrom: num(t?.validFrom), validTo: num(t?.validTo),
+        ...(typeof t.image === 'string' && /^data:image\/(jpeg|png|webp);base64,[A-Za-z0-9+/=]+$/.test(t.image) && t.image.length < 3_000_000 ? { image: t.image } : {}) }
     : { kind: 'vy', code: str(t?.code, 11).toUpperCase(), validFrom: num(t?.validFrom), validTo: num(t?.validTo) }))
     .filter(t => (t.kind === 'other' ? t.validFrom && t.validTo : REF.test(t.code))).slice(0, 60);
   const incoming = list(d.claims).map(cleanClaim).filter(Boolean).slice(0, 5000);

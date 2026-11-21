@@ -134,7 +134,34 @@ const validCase = d => d && /^\d{4,12}$/.test(d.n) && /^NSR:StopPlace:\d+$/.test
    validated like any link. */
 const IAB = () => (data.NATIVE ? globalThis.Capacitor?.Plugins?.InAppBrowser : null);
 let iabWired = false;
-async function openVy(link) {
+let attachImage = null;  /* data URL of the ticket picture for the claim being opened (Ruter/Entur tickets) */
+
+/* Runs in Vy's page: waits for the form's upload field and gives it the ticket picture, as if chosen by hand.
+   Once per page; touches nothing else. */
+const attachCode = img => `if (!window.__innstiltAttached) { window.__innstiltAttached = true; (async () => {
+  const pic = ${JSON.stringify(img)};
+  /* Vy's page doesn't allow fetch() of a data: URL, so decode it by hand. Vy's upload widget listens on its hidden
+     drop-zone input (the one with an accept list), which then stores the file in the form. */
+  const [head, b64] = pic.split(',');
+  const bin = atob(b64), bytes = new Uint8Array(bin.length);
+  for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+  const file = new File([bytes], 'billett.jpg', { type: head.slice(5, head.indexOf(';')) || 'image/jpeg' });
+  for (let i = 0; i < 80; i++) {
+    const inputs = [...document.querySelectorAll('main input[type=file]')];
+    const zone = inputs.find(x => x.accept) || inputs[0];
+    if (zone) {
+      const dt = new DataTransfer();
+      dt.items.add(file);
+      zone.files = dt.files;
+      zone.dispatchEvent(new Event('change', { bubbles: true }));
+      return;
+    }
+    await new Promise(r => setTimeout(r, 250));
+  }
+})(); }`;
+
+async function openVy(link, image = null) {
+  attachImage = image;
   const iab = IAB();
   if (!iab) { window.open(link, '_blank', 'noopener'); return; }
   if (!iabWired) {
@@ -143,7 +170,10 @@ async function openVy(link) {
        filling code only once per real page (a reload clears the flag), or it keeps re-reading the time it
        just changed and drifts. */
     const code = `if (!window.__innstiltFilled) { window.__innstiltFilled = true; ${decodeURIComponent(BOOKMARKLET.slice('javascript:'.length))} }`;
-    iab.addListener('browserPageLoaded', () => { iab.executeScript({ code }).catch(() => {}); });
+    iab.addListener('browserPageLoaded', () => {
+      iab.executeScript({ code }).catch(() => {});
+      if (attachImage) iab.executeScript({ code: attachCode(attachImage) }).catch(() => {});
+    });
     iab.addListener('messageFromWebview', e => {
       const d = e?.detail;
       if (d?.innstilt === 'case' && validCase(d)) applyCase(d);
@@ -250,7 +280,7 @@ function viewSetup(first) {
     </form>
     ${first ? '' : settingsExtrasHtml()}`;
   wireStations($('#setup'));
-  if (first) wireTicketFields($('#setup')); else renderTickets();
+  if (first) wireTicketFields($('#setup'), tk); else renderTickets();
   wireRoutes();
   $('#setup').addEventListener('submit', e => { e.preventDefault(); saveSetup(first); });
   wireImport();
@@ -293,6 +323,10 @@ function ticketFieldsHtml(tk) {
       <label class="check"><input type="radio" name="kind" value="other" ${other ? 'checked' : ''}> ${esc(t('kindOther'))}</label>
     </fieldset>
     <label data-kind="vy" ${other ? 'hidden' : ''}>${esc(t('refCode'))}<input name="code" value="${esc(tk.code || '')}" placeholder="${esc(t('refCodePh'))}" autocapitalize="characters" autocomplete="off" spellcheck="false" maxlength="11"></label>
+    <div data-kind="other" class="tkimg" ${other ? '' : 'hidden'}>
+      <label>${esc(t('ticketImage'))}<input type="file" name="ticketImage" accept="image/*"><small>${esc(t('ticketImageHelp'))}</small></label>
+      <div class="tkimg-preview">${tk.image ? `<img src="${esc(tk.image)}" alt="${esc(t('ticketImage'))}"> <button type="button" class="link danger-link" data-drop-image>${esc(t('remove'))}</button>` : ''}</div>
+    </div>
     <label data-kind="other" ${other ? '' : 'hidden'}>${esc(t('ticketNumber'))}<input name="number" value="${esc(tk.number || '')}" inputmode="numeric" maxlength="20" autocomplete="off" placeholder="1234567890"><small>${esc(t('ticketNumberHelp'))}</small></label>
     <div class="row">${dateFields('validFrom', tk.validFrom)}${dateFields('validTo', tk.validTo)}</div>`;
 }
@@ -313,12 +347,40 @@ function readTicket(root, requireDates) {
   }
   const number = val('number').replace(/\D/g, '');
   if (number && !/^\d{4,20}$/.test(number)) return { error: t('errTicketNumber') };
-  return { ticket: { kind, code: '', number, validFrom, validTo } };
+  const image = ticketImages.get(root) || null;  /* set by wireTicketFields */
+  return { ticket: { kind, code: '', number, validFrom, validTo, ...(image ? { image } : {}) } };
 }
 
 const ticketLabel = tk => (core.isOtherTicket(tk) ? `${t('kindOtherShort')}${tk.number ? ` ${tk.number}` : ''}` : tk.code);
 
-function wireTicketFields(root) {
+/* Shrinks a photo/screenshot of the ticket to at most 1600 px (JPEG) so it fits in the device's storage. */
+async function ticketImageData(file) {
+  const bmp = await createImageBitmap(file);
+  const k = Math.min(1, 1600 / Math.max(bmp.width, bmp.height));
+  const c = Object.assign(document.createElement('canvas'), { width: Math.round(bmp.width * k), height: Math.round(bmp.height * k) });
+  c.getContext('2d').drawImage(bmp, 0, 0, c.width, c.height);
+  return c.toDataURL('image/jpeg', 0.85);
+}
+
+/* The chosen ticket picture per ticket form (kept beside the element: a <form> can't take extra properties named
+   like its own fields). */
+const ticketImages = new WeakMap();
+
+function wireTicketFields(root, existing = null) {
+  ticketImages.set(root, existing?.image || null);
+  const preview = root.querySelector('.tkimg-preview');
+  const showPreview = () => {
+    const img = ticketImages.get(root);
+    preview.innerHTML = img ? `<img src="${esc(img)}" alt=""> <button type="button" class="link danger-link" data-drop-image>${esc(t('remove'))}</button>` : '';
+    preview.querySelector('[data-drop-image]')?.addEventListener('click', () => { ticketImages.set(root, null); showPreview(); });
+  };
+  showPreview();
+  root.querySelector('[name=ticketImage]')?.addEventListener('change', async e => {
+    const f = e.target.files[0];
+    if (!f) return;
+    try { ticketImages.set(root, await ticketImageData(f)); showPreview(); } catch { alert(t('ticketImageBad')); }
+    e.target.value = '';
+  });
   root.querySelectorAll('[name=kind]').forEach(r => r.addEventListener('change', () => {
     const kind = root.querySelector('[name=kind]:checked').value;
     root.querySelectorAll('[data-kind]').forEach(el => { el.hidden = el.dataset.kind !== kind; });
@@ -363,18 +425,19 @@ function renderTickets(mode = null, saved = false) {
   }));
   if (!editing) return;
   const form = box.querySelector('.ticketform');
-  wireTicketFields(form);
+  wireTicketFields(form, editing);
   $('#tkCancel').onclick = () => renderTickets();
   $('#tkSave').onclick = () => {
     const res = readTicket(form, true);  /* a dated ticket is only used for its own trips */
     if (res.error) { $('#tkErr').textContent = res.error; return; }
     const tk = res.ticket;
-    store.update(st => {
+    const ok = store.update(st => {
       if (mode !== 'new') st.tickets.splice(mode.idx, 1);
       st.tickets = st.tickets.filter(x => core.ticketId(x) !== core.ticketId(tk));  /* same ticket again: replaces it */
       st.tickets.push(tk);
       st.tickets.sort((a, b) => (a.validFrom || 0) - (b.validFrom || 0));
     });
+    if (!ok) { $('#tkErr').textContent = t('storageFull'); return; }
     renderTickets(null, true);
   };
 }
@@ -925,7 +988,8 @@ function startClaim({ from, to, j, ticketCode }) {
   const s = store.get();
   const ticket = (ticketCode && s.tickets.find(x => core.ticketId(x) === ticketCode)) || core.ticketFor(s.tickets, j.depMs);
   const link = core.claimLink(s.profile, ticket, from, to, j);
-  openVy(link);  /* in the click handler, so pop-up blockers allow it */
+  const picture = core.isOtherTicket(ticket) ? ticket.image || null : null;
+  openVy(link, picture);  /* in the click handler, so pop-up blockers allow it */
   const dlg = $('#dlg');
   const train = `${j.line} ${j.dep}`;
   dlg.innerHTML = `<form method="dialog">
@@ -939,7 +1003,10 @@ function startClaim({ from, to, j, ticketCode }) {
         <li>${esc(t('claimStep3'))}</li>
       </ol>
       ${isTouch() ? '' : `<p class="muted small">${esc(t('claimTip'))}</p>`}`}
-      ${core.isOtherTicket(ticket) ? `<p class="notice">📎 ${esc(t('uploadTicket'))}</p>` : ''}
+      ${core.isOtherTicket(ticket) ? (ticket.image
+        ? `<p class="notice">📎 ${esc(t(IAB() ? 'uploadAuto' : 'uploadDownload'))}
+            ${IAB() ? '' : `<br><button type="button" class="link" id="dlTicket">⬇ ${esc(t('downloadTicket'))}</button>`}</p>`
+        : `<p class="notice">📎 ${esc(t('uploadTicket'))}</p>`) : ''}
       <p><a href="${esc(link)}" target="_blank" rel="noopener" id="openAgain">${esc(t('openAgain'))}</a></p>
       <label>${esc(t('caseNo'))}<input name="case" inputmode="numeric" autocomplete="off"></label>
       <div class="actions">
@@ -955,7 +1022,11 @@ function startClaim({ from, to, j, ticketCode }) {
   };
   store.onExternalChange(() => { if (dlg.open) fillCase(); });
   addEventListener('innstilt-case', () => { if (dlg.open) fillCase(); });
-  dlg.querySelector('#openAgain').addEventListener('click', e => { if (IAB()) { e.preventDefault(); openVy(link); } });
+  dlg.querySelector('#openAgain').addEventListener('click', e => { if (IAB()) { e.preventDefault(); openVy(link, picture); } });
+  dlg.querySelector('#dlTicket')?.addEventListener('click', () => {
+    const a = Object.assign(document.createElement('a'), { href: picture, download: 'billett.jpg' });
+    a.click();
+  });
   fillCase();
   dlg.onclose = () => {
     if (dlg.returnValue !== 'sent') return;
