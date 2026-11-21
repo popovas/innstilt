@@ -20,6 +20,33 @@ export function formatRef(text) {
   return c.match(/.{1,3}/g)?.join('-') ?? '';
 }
 
+/** As-you-type mask for digit fields split into fixed-size parts, e.g. dates [2,2,4] '/' and times [2,2] ':'.
+    `firstMax[k]`: the largest first digit part k can have and still take a second one (day 3, month 1, hour 2);
+    a bigger first digit gets a leading zero (4 -> 04). Separators the user types close a part (3/ -> 03/).
+    A separator is shown as soon as the part before it is complete. */
+function mask(text, sizes, sep, firstMax = []) {
+  const parts = sizes.map(() => '');
+  let i = 0;
+  for (const ch of text || '') {
+    if (i >= sizes.length) break;
+    if (/\d/.test(ch)) {
+      parts[i] = parts[i] === '' && firstMax[i] && ch > firstMax[i] ? `0${ch}` : parts[i] + ch;
+      if (parts[i].length === sizes[i]) i += 1;
+    } else if (parts[i] !== '' && i < sizes.length - 1) {
+      parts[i] = parts[i].padStart(sizes[i], '0');
+      i += 1;
+    }
+  }
+  let out = parts[0];
+  for (let k = 1; k < sizes.length && parts[k - 1].length === sizes[k - 1]; k += 1) out += sep + parts[k];
+  return out;
+}
+
+/** dd/mm/yyyy while typing. */
+export const formatDateInput = text => mask(text, [2, 2, 4], '/', ['3', '1']);
+/** hh:mm while typing. */
+export const formatTimeInput = text => mask(text, [2, 2], ':', ['2']);
+
 /** Norwegian account number: 11 digits with a MOD11 check digit. Returns digits or null. */
 export function validAccount(text) {
   const d = (text || '').replace(/\D/g, '');
@@ -38,7 +65,7 @@ export function validEmail(text) {
 
 export function parseTimes(text) {
   const out = new Set();
-  for (const tok of (text || '').split(/[\s,;]+/).filter(Boolean)) {
+  for (const tok of (text || '').split(/[\s,;]+/).filter(Boolean).map(x => x.replace(/[:.]$/, ''))) {
     const m = tok.match(/^(\d{1,2})(?:[:.]?(\d{2}))?$/);  /* 7:15, 0715, 715, or a bare hour: 9 */
     const mi = m?.[2] ?? '00';
     if (!m || Number(m[1]) > 23 || Number(mi) > 59) return null;
@@ -74,9 +101,9 @@ export function parseEuDateTime(dateText, timeText) {
   const d = (dateText || '').trim();
   if (!d) return null;
   const m = d.match(/^(\d{1,2})[./-](\d{1,2})[./-](\d{4})$/);
-  const tm = (timeText || '00:00').trim().match(/^(\d{1,2})[:.]?(\d{2})$/);
+  const tm = (timeText || '00:00').trim().match(/^(\d{1,2})(?:[:.]?(\d{2}))?[:.]?$/);  /* 07:15, 0715, 9, 09: */
   if (!m || !tm) return NaN;
-  const [day, mon, year, h, mi] = [+m[1], +m[2], +m[3], +tm[1], +tm[2]];
+  const [day, mon, year, h, mi] = [+m[1], +m[2], +m[3], +tm[1], +(tm[2] ?? 0)];
   const check = new Date(Date.UTC(year, mon - 1, day));
   if (check.getUTCDate() !== day || check.getUTCMonth() !== mon - 1 || h > 23 || mi > 59) return NaN;
   const iso = `${year}-${String(mon).padStart(2, '0')}-${String(day).padStart(2, '0')}`;

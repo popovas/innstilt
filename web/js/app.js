@@ -134,8 +134,8 @@ async function viewAbout() {
 function dateFields(name, ms) {
   const [d, tm] = core.formatEu(ms);
   return `<label>${esc(t(name))}<span class="dt">
-      <input name="${name}Date" value="${esc(d)}" placeholder="${esc(t('datePh'))}" inputmode="numeric" autocomplete="off" aria-label="${esc(t(name))} – ${esc(t('datePh'))}">
-      <input name="${name}Time" value="${esc(tm)}" placeholder="${esc(t('timePh'))}" inputmode="numeric" autocomplete="off" aria-label="${esc(t(name))} – ${esc(t('timePh'))}">
+      <input name="${name}Date" value="${esc(d)}" placeholder="${esc(t('datePh'))}" inputmode="numeric" maxlength="10" autocomplete="off" aria-label="${esc(t(name))} – ${esc(t('datePh'))}">
+      <input name="${name}Time" value="${esc(tm)}" placeholder="${esc(t('timePh'))}" inputmode="numeric" maxlength="5" autocomplete="off" aria-label="${esc(t(name))} – ${esc(t('timePh'))}">
     </span></label>`;
 }
 
@@ -175,7 +175,12 @@ function viewSetup(first) {
     </form>
     ${first ? '' : settingsExtrasHtml()}`;
   wireStations($('#setup'));
-  wireRefFormat($('#setup').code);
+  const sf = $('#setup');
+  wireFormat(sf.code, core.formatRef);
+  for (const n of ['validFrom', 'validTo']) {
+    wireFormat(sf[`${n}Date`], core.formatDateInput);
+    wireFormat(sf[`${n}Time`], core.formatTimeInput);
+  }
   wireRoutes();
   $('#newTicket')?.addEventListener('click', () => {
     const f = $('#setup');
@@ -193,16 +198,31 @@ function viewSetup(first) {
   if (!first) wireSettingsExtras();
 }
 
-/* Formats the reference code while typing (XXX-XXX-XXX); keeps the cursor after the same character. */
-function wireRefFormat(input) {
-  input.addEventListener('input', () => {
-    const pos = input.selectionStart ?? input.value.length;
-    const before = input.value.slice(0, pos).replace(/[^A-Za-z0-9]/g, '').length;  /* characters left of the cursor */
-    const v = core.formatRef(input.value);
-    if (v === input.value) return;
-    input.value = v;
-    let p = 0, seen = 0;
-    while (p < v.length && seen < before) { if (v[p] !== '-') seen += 1; p += 1; }
+/* Formats a field while typing (reference code XXX-XXX-XXX, dd/mm/yyyy, hh:mm) and keeps the cursor next to
+   the same character. Backspace right after a separator also removes the character before it; otherwise the
+   formatter would put the separator straight back and Backspace would seem stuck. */
+const isSig = ch => /[A-Za-z0-9]/.test(ch);
+function wireFormat(input, format) {
+  if (!input) return;
+  let prev = null;
+  input.addEventListener('beforeinput', () => {
+    prev = { v: input.value, s: input.selectionStart, e: input.selectionEnd };
+  });
+  input.addEventListener('input', e => {
+    let raw = input.value, pos = input.selectionStart ?? raw.length;
+    if (e.inputType === 'deleteContentBackward' && prev && prev.s === prev.e && prev.s > 1 && !isSig(prev.v[prev.s - 1])) {
+      raw = prev.v.slice(0, prev.s - 2) + prev.v.slice(prev.s);
+      pos = prev.s - 2;
+    }
+    const atEnd = pos >= raw.length;
+    const sig = [...raw.slice(0, pos)].filter(isSig).length;
+    const v = format(raw);
+    if (v !== input.value) input.value = v;
+    let p = v.length;
+    if (!atEnd) {
+      p = 0;
+      for (let seen = 0; p < v.length && seen < sig; p += 1) if (isSig(v[p])) seen += 1;
+    }
     input.setSelectionRange(p, p);
   });
 }
@@ -221,8 +241,8 @@ function routeHtml(r) {
       <legend>${esc(t('route'))}</legend>
       <div class="row">${stationField('from', r?.a)}${stationField('to', r?.b)}</div>
       <div class="row">
-        <label>${esc(t('timesOut'))}<input name="timesOut" value="${esc((r?.timesOut || []).join(', '))}" inputmode="numeric" placeholder="07:15"></label>
-        <label>${esc(t('timesBack'))}<input name="timesBack" value="${esc((r?.timesBack || []).join(', '))}" inputmode="numeric" placeholder="16:30"></label>
+        <label>${esc(t('timesOut'))}<input name="timesOut" value="${esc((r?.timesOut || []).join(', '))}" placeholder="07:15, 08:15" autocomplete="off"></label>
+        <label>${esc(t('timesBack'))}<input name="timesBack" value="${esc((r?.timesBack || []).join(', '))}" placeholder="16:30" autocomplete="off"></label>
       </div>
       <small>${esc(t('timesHelp'))}</small>
       <button type="button" class="link danger-link" data-remove-route>${esc(t('removeRoute'))}</button>
@@ -594,8 +614,8 @@ function otherTripHtml() {
       <p class="help">${esc(t('otherHelp'))}</p>
       <div class="row">${stationField('from', q?.from)}${stationField('to', q?.to)}</div>
       <div class="row">
-        <label>${esc(t('date'))}<input name="date" value="${esc(d)}" placeholder="${esc(today)}" inputmode="numeric" autocomplete="off"></label>
-        <label>${esc(t('approxTime'))}<input name="time" value="${esc(tm)}" placeholder="${esc(now)}" inputmode="numeric" autocomplete="off"></label>
+        <label>${esc(t('date'))}<input name="date" value="${esc(d)}" placeholder="${esc(today)}" inputmode="numeric" maxlength="10" autocomplete="off"></label>
+        <label>${esc(t('approxTime'))}<input name="time" value="${esc(tm)}" placeholder="${esc(now)}" inputmode="numeric" maxlength="5" autocomplete="off"></label>
       </div>
       <p class="error" id="otherErr" role="alert"></p>
       <button class="primary" type="submit">${esc(t('findTrains'))}</button>
@@ -607,6 +627,8 @@ function otherTripHtml() {
 function wireOtherTrip() {
   const f = $('#otherForm');
   wireStations(f);
+  wireFormat(f.date, core.formatDateInput);
+  wireFormat(f.time, core.formatTimeInput);
   f.addEventListener('submit', e => {
     e.preventDefault();
     const err = msg => { $('#otherErr').textContent = msg; };
