@@ -6,7 +6,7 @@
 
 /* The Worker's address. Empty = the feature is off and nothing is ever sent or fetched.
    When set, its origin must also be added to connect-src in index.html's Content-Security-Policy. */
-export const STATS_URL = '';
+export const STATS_URL = 'https://innstilt-stats.innstilt.workers.dev';
 
 export const enabled = () => Boolean(STATS_URL);
 
@@ -33,13 +33,15 @@ export async function send(body) {
     credentials: 'omit', referrerPolicy: 'no-referrer',
   });
   if (!r.ok) throw new Error(`stats ${r.status}`);
+  totalPromise = null;  /* the total just changed: fetch it again next time */
 }
 
 let totalPromise = null;
-/** {kr, paid, sent, rejected, people} or null; fetched once per page load. */
+/** {kr, paid, sent, rejected, people} or null; fetched once per page load (and again after sending), never
+    from the browser's cache, so someone who just shared sees the counter include them. */
 export function fetchTotal() {
   if (!enabled()) return Promise.resolve(null);
-  totalPromise ??= fetch(`${STATS_URL}/total`, { credentials: 'omit', referrerPolicy: 'no-referrer' })
+  totalPromise ??= fetch(`${STATS_URL}/total`, { cache: 'no-cache', credentials: 'omit', referrerPolicy: 'no-referrer' })
     .then(r => (r.ok ? r.json() : null)).catch(() => null);
   return totalPromise;
 }

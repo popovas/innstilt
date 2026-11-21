@@ -3,8 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<!-- Only our own files may run or load; the only outside service is Entur's open API. -->
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src 'self' https://api.entur.io; manifest-src 'self'; worker-src 'self'; base-uri 'none'; form-action 'none'">
+<!-- Only our own files may run or load; the outside services are Entur's open API and our opt-in stats counter. -->
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src 'self' https://api.entur.io https://innstilt-stats.innstilt.workers.dev; manifest-src 'self'; worker-src 'self'; base-uri 'none'; form-action 'none'">
 <meta name="referrer" content="no-referrer">
 <!-- Testing phase: keep search engines away. Remove this line when Innstilt launches. -->
 <meta name="robots" content="noindex, nofollow">
