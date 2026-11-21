@@ -51,6 +51,52 @@ class Quiet(http.server.SimpleHTTPRequestHandler):
         pass
 
 
+PLAY = ROOT / "docs" / "play" / "screenshots"
+# Inside the Android app, Vy's form opens in Innstilt's own window; this stand-in shows the app's wording.
+FAKE_APP = """window.Capacitor = { isNativePlatform: () => true, Plugins: { InAppBrowser: { addListener: () => Promise.resolve(),
+  openWebView: () => Promise.resolve({ id: '1' }), executeScript: () => Promise.resolve(), close: () => Promise.resolve() } } };"""
+
+
+def play_screens(b, lang: str) -> None:
+    """Full phone screens for Google Play: 1080 x 2160 (Play allows at most 2:1)."""
+    PLAY.mkdir(parents=True, exist_ok=True)
+    ctx = b.new_context(viewport={"width": 411, "height": 822}, device_scale_factor=1080 / 411, has_touch=True, is_mobile=True,
+                        locale="nb-NO" if lang == "no" else "en-GB", color_scheme="light")
+    ctx.route("https://api.entur.io/journey-planner/**", lambda r: r.fulfill(status=200, content_type="application/json",
+              body='{"data":{"stopPlace":{"estimatedCalls":[]}}}'))
+    ctx.route("**/*.workers.dev/**", lambda r: r.abort())
+    # app mode: the train data is fetched from innstilt.app there; serve it from the local copy instead
+    ctx.route("https://innstilt.app/data/**", lambda r: r.fulfill(path=str(WEB / r.request.url.split("innstilt.app/", 1)[1])))
+    ctx.add_init_script(FAKE_APP)
+    pg = ctx.new_page()
+    pg.clock.set_fixed_time(NOW)
+    pg.goto("http://127.0.0.1:8840/")
+    pg.evaluate("([s, l]) => { localStorage.setItem('innstilt.v1', JSON.stringify(s)); localStorage.setItem('innstilt.lang', l); }", [DEMO, lang])
+    n = 0
+    def snap(name):
+        nonlocal n
+        n += 1
+        time.sleep(0.6)
+        pg.screenshot(path=str(PLAY / f"{n}-{name}-{lang}.png"))
+    pg.goto("http://127.0.0.1:8840/#/trips"); pg.reload(); pg.wait_for_selector("#trips .trip")
+    for _ in range(40):
+        if "…" not in pg.inner_text("#progress"):
+            break
+        time.sleep(0.3)
+    snap("trips")
+    pg.locator("#trips [data-claim]").first.click()   # opens the claim dialog (the new window is closed below)
+    for extra in ctx.pages[1:]:
+        extra.close()
+    snap("claim")
+    pg.click("#dlg button[value=cancel]")
+    pg.goto("http://127.0.0.1:8840/#/claims"); pg.wait_for_selector(".claim"); snap("claims")
+    pg.goto("http://127.0.0.1:8840/#/settings"); pg.wait_for_selector("#tickets .tickets"); snap("settings")
+    pg.evaluate("() => { const s = JSON.parse(localStorage.getItem('innstilt.v1')); s.welcomed = false; localStorage.setItem('innstilt.v1', JSON.stringify(s)); }")
+    pg.goto("http://127.0.0.1:8840/#/trips"); pg.reload(); pg.wait_for_selector(".intro")
+    pg.click("#next"); pg.click("#next"); snap("how")
+    ctx.close()
+
+
 def main() -> None:
     ap = argparse.ArgumentParser()
     ap.add_argument("--play", action="store_true")
@@ -101,10 +147,7 @@ def main() -> None:
                 shot("settings", "#setup", 330)
                 shot("routes", "#routes", 360, above=56)
                 if args.play:
-                    play = ROOT / "build" / "play"; play.mkdir(parents=True, exist_ok=True)
-                    for route in ("trips", "claims", "settings"):
-                        pg.goto(f"http://127.0.0.1:8840/#/{route}"); time.sleep(1.5)
-                        pg.screenshot(path=str(play / f"{route}-{lang}.png"))
+                    play_screens(b, lang)
                 ctx.close()
             b.close()
     finally:
