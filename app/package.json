@@ -9,7 +9,8 @@
     "prepare-web": "node prepare-web.mjs",
     "sync": "node prepare-web.mjs && npx cap sync android",
     "build": "export JAVA_HOME=\"${JAVA_HOME:-/opt/homebrew/opt/openjdk@21/libexec/openjdk.jdk/Contents/Home}\" ANDROID_HOME=\"${ANDROID_HOME:-$HOME/Library/Android/sdk}\" && npm run sync && cd android && ./gradlew assembleDebug -q",
-    "phone": "export JAVA_HOME=\"${JAVA_HOME:-/opt/homebrew/opt/openjdk@21/libexec/openjdk.jdk/Contents/Home}\" ANDROID_HOME=\"${ANDROID_HOME:-$HOME/Library/Android/sdk}\" && npm run build && $ANDROID_HOME/platform-tools/adb install -r android/app/build/outputs/apk/debug/app-debug.apk && $ANDROID_HOME/platform-tools/adb shell monkey -p app.innstilt -c android.intent.category.LAUNCHER 1 >/dev/null"
+    "phone": "export JAVA_HOME=\"${JAVA_HOME:-/opt/homebrew/opt/openjdk@21/libexec/openjdk.jdk/Contents/Home}\" ANDROID_HOME=\"${ANDROID_HOME:-$HOME/Library/Android/sdk}\" && npm run build && $ANDROID_HOME/platform-tools/adb install -r android/app/build/outputs/apk/debug/app-debug.apk && $ANDROID_HOME/platform-tools/adb shell monkey -p app.innstilt -c android.intent.category.LAUNCHER 1 >/dev/null",
+    "bundle": "export JAVA_HOME=\"${JAVA_HOME:-/opt/homebrew/opt/openjdk@21/libexec/openjdk.jdk/Contents/Home}\" ANDROID_HOME=\"${ANDROID_HOME:-$HOME/Library/Android/sdk}\" && npm run sync && cd android && ./gradlew bundleRelease -q && ls -la app/build/outputs/bundle/release/"
   },
   "dependencies": {
     "@capacitor/android": "^8.6.2",
