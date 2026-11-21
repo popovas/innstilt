@@ -151,17 +151,11 @@ function viewSetup(first) {
   $('#main').innerHTML = `
     <h1>${esc(first ? t('setupTitle') : t('settingsTitle'))}</h1>
     ${first ? `<p class="help">${esc(t('importFirst'))} ${importHtml()}</p>` : ''}
-    ${noticeHtml()}
+    <div id="noticeBox">${noticeHtml()}</div>
     <form id="setup" class="card" novalidate>
       <h2>${esc(t('secTicket'))}</h2>
       <p class="help">${esc(t('ticketHelp'))}</p>
-      ${s.tickets.length > 1 ? ticketListHtml() : ''}
-      <label>${esc(t('refCode'))}<input name="code" value="${esc(tk.code)}" placeholder="${esc(t('refCodePh'))}" autocapitalize="characters" autocomplete="off" spellcheck="false" maxlength="11"></label>
-      <div class="row">
-        ${dateFields('validFrom', tk.validFrom)}
-        ${dateFields('validTo', tk.validTo)}
-      </div>
-      ${s.tickets.length ? `<button type="button" class="link" id="newTicket">＋ ${esc(t('addTicket'))}</button>` : ''}
+      ${first ? ticketFieldsHtml(tk) : '<div id="tickets"></div>'}
 
       <h2>${esc(t('secYou'))}</h2>
       <p class="reassure">🔒 ${esc(t('youWhy'))}</p>
@@ -182,24 +176,8 @@ function viewSetup(first) {
     </form>
     ${first ? '' : settingsExtrasHtml()}`;
   wireStations($('#setup'));
-  const sf = $('#setup');
-  wireFormat(sf.code, core.formatRef);
-  for (const n of ['validFrom', 'validTo']) {
-    wireFormat(sf[`${n}Date`], core.formatDateInput);
-    wireFormat(sf[`${n}Time`], core.formatTimeInput);
-  }
+  if (first) wireTicketFields($('#setup')); else renderTickets();
   wireRoutes();
-  $('#newTicket')?.addEventListener('click', () => {
-    const f = $('#setup');
-    f.code.value = '';
-    for (const n of ['validFromDate', 'validFromTime', 'validToDate', 'validToTime']) f[n].value = '';
-    f.code.dataset.isNew = '1';
-    f.code.focus();
-  });
-  document.querySelectorAll('[data-remove-ticket]').forEach(b => b.addEventListener('click', () => {
-    store.update(st => { st.tickets.splice(Number(b.dataset.removeTicket), 1); });
-    render();
-  }));
   $('#setup').addEventListener('submit', e => { e.preventDefault(); saveSetup(first); });
   wireImport();
   if (!first) wireSettingsExtras();
@@ -234,12 +212,72 @@ function wireFormat(input, format) {
   });
 }
 
-function ticketListHtml() {
+function ticketFieldsHtml(tk) {
+  return `<label>${esc(t('refCode'))}<input name="code" value="${esc(tk.code)}" placeholder="${esc(t('refCodePh'))}" autocapitalize="characters" autocomplete="off" spellcheck="false" maxlength="11"></label>
+    <div class="row">${dateFields('validFrom', tk.validFrom)}${dateFields('validTo', tk.validTo)}</div>`;
+}
+
+function wireTicketFields(root) {
+  wireFormat(root.querySelector('[name=code]'), core.formatRef);
+  for (const n of ['validFrom', 'validTo']) {
+    wireFormat(root.querySelector(`[name=${n}Date]`), core.formatDateInput);
+    wireFormat(root.querySelector(`[name=${n}Time]`), core.formatTimeInput);
+  }
+}
+
+/* Settings: the tickets as a list (edit / remove), and a small form with its own Save for adding or editing one.
+   Tickets are saved on their own, never by the page's main Save. mode: null | 'new' | {idx}. */
+function renderTickets(mode = null, saved = false) {
+  const box = $('#tickets');
+  const tickets = store.get().tickets;
   const now = Date.now();
-  return `<ul class="tickets">${store.get().tickets.map((tk, i) => `
-    <li><code>${esc(tk.code)}</code> ${tk.validFrom ? esc(fmtDate(tk.validFrom)) : '?'} – ${tk.validTo ? esc(fmtDate(tk.validTo)) : '?'}
-      ${core.ticketFor([tk], now) ? `<span class="pill">${esc(t('validNow'))}</span>` : ''}
-      <button type="button" class="link" data-remove-ticket="${i}">${esc(t('remove'))}</button></li>`).join('')}</ul>`;
+  const editing = mode === 'new' ? { code: '', validFrom: null, validTo: null } : mode ? tickets[mode.idx] : null;
+  box.innerHTML = `
+    ${tickets.length ? `<ul class="tickets">${tickets.map((tk, i) => `
+      <li><div><code>${esc(tk.code)}</code> ${core.ticketFor([tk], now) ? `<span class="pill">${esc(t('validNow'))}</span>` : ''}
+        <small>${tk.validFrom ? esc(fmtDate(tk.validFrom, true)) : '?'} – ${tk.validTo ? esc(fmtDate(tk.validTo, true)) : '?'}</small></div>
+        <span class="tk-acts"><button type="button" class="link" data-edit-ticket="${i}">${esc(t('editTicket'))}</button>
+        <button type="button" class="link danger-link" data-remove-ticket="${i}">${esc(t('remove'))}</button></span></li>`).join('')}</ul>`
+    : `<p class="muted">${esc(t('noticeNone'))}</p>`}
+    ${editing ? `<div class="ticketform">
+        <h3>${esc(mode === 'new' ? t('addTicket') : t('editTicket'))}</h3>
+        ${ticketFieldsHtml(editing)}
+        <p class="error" id="tkErr" role="alert"></p>
+        <div class="actions"><button type="button" id="tkCancel">${esc(t('cancel'))}</button>
+          <button type="button" class="primary" id="tkSave">${esc(t('saveTicket'))}</button></div>
+      </div>`
+    : `<button type="button" class="link" id="newTicket">＋ ${esc(t('addTicket'))}</button>`}
+    ${saved ? `<p class="ok">✓ ${esc(t('ticketSaved'))}</p>` : ''}`;
+  $('#noticeBox').innerHTML = noticeHtml();
+  $('#newTicket')?.addEventListener('click', () => { renderTickets('new'); box.querySelector('[name=code]').focus(); });
+  box.querySelectorAll('[data-edit-ticket]').forEach(b => b.addEventListener('click', () => renderTickets({ idx: Number(b.dataset.editTicket) })));
+  box.querySelectorAll('[data-remove-ticket]').forEach(b => b.addEventListener('click', () => {
+    if (!confirm(t('removeTicketConfirm'))) return;
+    store.update(st => { st.tickets.splice(Number(b.dataset.removeTicket), 1); });
+    if (store.get().tickets.length) renderTickets(); else render();  /* no ticket left: back to setup */
+  }));
+  if (!editing) return;
+  const form = box.querySelector('.ticketform');
+  wireTicketFields(form);
+  $('#tkCancel').onclick = () => renderTickets();
+  $('#tkSave').onclick = () => {
+    const field = n => form.querySelector(`[name=${n}]`).value;
+    const err = msg => { $('#tkErr').textContent = msg; };
+    const code = core.validRef(field('code'));
+    if (!code) return err(t('errRef'));
+    const from = core.parseEuDateTime(field('validFromDate'), field('validFromTime'));
+    const to = core.parseEuDateTime(field('validToDate'), field('validToTime'));
+    if (Number.isNaN(from) || Number.isNaN(to)) return err(t('errDate'));
+    if (!from || !to) return err(t('errTicketDates'));  /* a dated ticket is only used for its own trips */
+    if (to <= from) return err(t('errDates'));
+    store.update(st => {
+      if (mode !== 'new') st.tickets.splice(mode.idx, 1);
+      st.tickets = st.tickets.filter(x => x.code !== code);  /* same code entered again: replaces it */
+      st.tickets.push({ code, validFrom: from, validTo: to });
+      st.tickets.sort((a, b) => (a.validFrom || 0) - (b.validFrom || 0));
+    });
+    renderTickets(null, true);
+  };
 }
 
 /** One regular trip: two stations and the usual departure times each way. */
@@ -314,12 +352,16 @@ function wireStations(root) {
 function saveSetup(first) {
   const f = $('#setup');
   const err = msg => { $('#err').textContent = msg; return false; };
-  const code = core.validRef(f.code.value);
-  if (!code) return err(t('errRef'));
-  const validFrom = core.parseEuDateTime(f.validFromDate.value, f.validFromTime.value);
-  const validTo = core.parseEuDateTime(f.validToDate.value, f.validToTime.value);
-  if (Number.isNaN(validFrom) || Number.isNaN(validTo)) return err(t('errDate'));
-  if (validFrom && validTo && validTo <= validFrom) return err(t('errDates'));
+  let ticket = null;  /* only the first-time setup has ticket fields; Settings saves tickets on their own */
+  if (first) {
+    const code = core.validRef(f.code.value);
+    if (!code) return err(t('errRef'));
+    const validFrom = core.parseEuDateTime(f.validFromDate.value, f.validFromTime.value);
+    const validTo = core.parseEuDateTime(f.validToDate.value, f.validToTime.value);
+    if (Number.isNaN(validFrom) || Number.isNaN(validTo)) return err(t('errDate'));
+    if (validFrom && validTo && validTo <= validFrom) return err(t('errDates'));
+    ticket = { code, validFrom, validTo };
+  }
   const name = f.name.value.trim();
   if (!name) return err(t('errName'));
   const email = core.validEmail(f.email.value);
@@ -339,15 +381,11 @@ function saveSetup(first) {
   }
   if (!routes.length) return err(t('errStation'));
   store.update(s => {
-    const ticket = { code, validFrom, validTo };
-    const isNew = f.code.dataset.isNew === '1';
-    s.tickets = s.tickets.filter(x => x.code !== code);
-    if (!isNew && s.tickets.length && !s.tickets.some(x => x.code === code)) {
-      /* editing the last ticket in place (its code may have been corrected) */
-      s.tickets.pop();
+    if (ticket) {
+      s.tickets = s.tickets.filter(x => x.code !== ticket.code);
+      s.tickets.push(ticket);
+      s.tickets.sort((a, b) => (a.validFrom || 0) - (b.validFrom || 0));
     }
-    s.tickets.push(ticket);
-    s.tickets.sort((a, b) => (a.validFrom || 0) - (b.validFrom || 0));
     Object.assign(s.profile, { name, email, account, routes });
   });
   $('#err').textContent = '';
