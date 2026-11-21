@@ -133,3 +133,6 @@ footer a { color: var(--stripe); }
 [hidden] { display: none !important; }
 input::placeholder { color: #8aa79b; opacity: 1; }
 .pill.live { background: var(--stripe); color: #fff; text-transform: uppercase; letter-spacing: .04em; vertical-align: 2px; }
+.small-hero { padding-top: 8px; }
+.small-hero h1 { font-size: 26px; }
+.about p { margin: 0 0 12px; }

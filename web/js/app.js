@@ -3,6 +3,7 @@ import * as store from './store.js';
 import * as data from './data.js';
 import { t, getLang, setLang, fmtDate, fmtDay } from './i18n.js';
 import { BOOKMARKLET } from './bookmarklet-href.js';
+import { VERSION, ABOUT, contactAddress } from './about.js';
 
 const DONATE_URL = '';  /* e.g. a Vipps or Buy Me a Coffee link; the footer button stays hidden while empty */
 const $ = sel => document.querySelector(sel);
@@ -19,7 +20,7 @@ function shell() {
   $('#nav').innerHTML = [['trips', t('navTrips')], ['claims', t('navClaims')], ['settings', t('navSettings')]]
     .map(([r, label]) => `<a href="#/${r}" ${r === route ? 'aria-current="page"' : ''}>${esc(label)}</a>`).join('');
   $('#nav').hidden = !store.get().welcomed;
-  $('#foot').innerHTML = `${esc(t('notVy'))} ${esc(t('dataFrom'))}`
+  $('#foot').innerHTML = `<a href="#/about">${esc(t('about'))}</a> · ${esc(t('notVy'))} ${esc(t('dataFrom'))}`
     + (DONATE_URL ? ` · <a href="${esc(DONATE_URL)}" target="_blank" rel="noopener">${esc(t('coffee'))}</a>` : '');
 }
 
@@ -27,6 +28,7 @@ function render() {
   shell();
   const s = store.get();
   const route = location.hash.slice(2) || 'trips';
+  if (route === 'about') return viewAbout();  /* readable before setup too */
   if (!s.welcomed) return viewWelcome();
   if (!store.isReady()) return viewSetup(true);  /* first-run setup until profile + ticket are complete */
   ({ trips: viewTrips, claims: viewClaims, settings: () => viewSetup(false) }[route] || viewTrips)();
@@ -60,6 +62,33 @@ function viewWelcome() {
     </section>
     <button class="primary big" id="start">${esc(t('start'))}</button>`;
   $('#start').onclick = () => { store.update(s => { s.welcomed = true; }); go('trips'); };
+}
+
+/* ------------------------------------------------------------------ about */
+
+function viewAbout() {
+  const paras = ABOUT[getLang()] || ABOUT.no;
+  $('#main').innerHTML = `
+    <section class="hero small-hero">
+      <img src="icons/ghost-192.png" width="88" height="88" alt="">
+      <h1>${esc(t('about'))}</h1>
+      <p class="muted">${esc(t('version', { v: VERSION }))}</p>
+    </section>
+    <section class="card about">
+      <p class="lead"><strong>${esc(paras[0])}</strong></p>
+      ${paras.slice(1).map(x => `<p>${esc(x)}</p>`).join('')}
+    </section>
+    ${contactAddress() ? `<section class="card center">
+      <p>${esc(t('contactBody'))}</p>
+      <button type="button" class="primary" id="contact">✉️ ${esc(t('contact'))}</button>
+    </section>` : ''}
+    <p class="center"><button type="button" class="link" id="back">← ${esc(t('back'))}</button></p>`;
+  $('#back').onclick = () => (history.length > 1 ? history.back() : go('trips'));
+  $('#contact')?.addEventListener('click', () => {
+    /* Opens the visitor's own mail app; only the version and language are filled in, nothing personal. */
+    const q = new URLSearchParams({ subject: `Innstilt ${VERSION}`, body: `\n\n— Innstilt ${VERSION} (${getLang()})` });
+    location.href = `mailto:${contactAddress()}?${q.toString().replace(/\+/g, '%20')}`;
+  });
 }
 
 /* ------------------------------------------------------------------ setup / settings */
