@@ -50,6 +50,7 @@ let stopGame = null;  /* the game, while it is open */
 
 function render() {
   stopGame?.(); stopGame = null;
+  tripsRun++;  /* any screen change stops the Trips screen's background loading from writing into a screen that's gone */
   /* Never run inside another site's frame (GitHub Pages can't send the header that forbids it), so nobody
      can overlay Innstilt with invisible buttons (clickjacking). */
   if (window.top !== window.self) {
