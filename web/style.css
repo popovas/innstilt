@@ -244,3 +244,36 @@ dialog.helpdlg .intro h1 { font-size: 20px; }
   nav a { padding: 6px 7px; font-size: 15px; }
   .lang button { padding: 3px 6px; }
 }
+
+/* ---------------------------------------------------------------- game "Forsinket?" */
+.game { max-width: 480px; margin: 0 auto; }
+.g-top { display: flex; justify-content: space-between; align-items: center; gap: 8px; margin: 4px 0 8px; font-weight: 700; }
+.g-clock { display: flex; flex-direction: column; align-items: center; }
+.g-clock.warn b { color: var(--red); }
+.g-bar { display: block; width: 70px; height: 4px; border-radius: 2px; background: var(--mint-2); overflow: hidden; margin-top: 3px; }
+.g-bar i { display: block; height: 100%; width: 0; background: var(--yellow); }
+.g-lives img { margin-left: 2px; vertical-align: middle; }
+.g-lives img.lost { opacity: .2; filter: grayscale(1); }
+.g-board { position: relative; width: 100%; aspect-ratio: 1; border-radius: 14px; overflow: hidden; background: var(--green-2);
+  touch-action: none; user-select: none; -webkit-user-select: none; }
+.g-board canvas { display: block; width: 100%; height: 100%; }
+.g-msg { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center;
+  text-align: center; padding: 18px; background: rgba(11, 42, 35, .9); color: #fff; overflow: auto; }
+.g-msg h2 { margin: 0 0 8px; color: var(--yellow); font-size: 24px; }
+.g-msg p { margin: 0 0 12px; line-height: 1.4; }
+.g-rules { text-align: left; margin: 0 0 12px; padding-left: 4px; list-style: none; font-size: 14px; line-height: 1.4; }
+.g-rules li { margin: 6px 0; }
+.g-btns { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; }
+.g-toast { position: absolute; top: 10px; left: 50%; transform: translateX(-50%); white-space: nowrap; background: var(--ink);
+  color: var(--yellow); font-weight: 800; padding: 6px 14px; border-radius: 99px; }
+.g-msg[hidden], .g-toast[hidden] { display: none; }
+.g-pad { display: grid; grid-template-columns: repeat(3, 76px); grid-template-rows: repeat(3, 58px); gap: 8px;
+  justify-content: center; margin: 12px auto 0; touch-action: manipulation; user-select: none; -webkit-user-select: none; }
+.g-pad button { font-size: 24px; border-radius: 16px; background: var(--card); color: var(--ink); border: 2px solid var(--mint-2); padding: 0; }
+.g-pad .g-up { grid-column: 2; grid-row: 1; } .g-pad .g-left { grid-column: 1; grid-row: 2; }
+.g-pad .g-pp { grid-column: 2; grid-row: 2; background: var(--yellow); border-color: var(--yellow); color: #0b0b0c; }
+.g-pad .g-right { grid-column: 3; grid-row: 2; } .g-pad .g-down { grid-column: 2; grid-row: 3; }
+.g-pad .g-help { grid-column: 3; grid-row: 3; justify-self: end; align-self: end; width: 40px; height: 40px; font-size: 20px; }
+.g-keys { display: flex; justify-content: space-between; align-items: center; gap: 8px; margin-top: 10px; }
+.g-pad .helpbtn, .g-keys .helpbtn { position: static; flex: none; }
+.g-msg button.primary { background: var(--yellow); border-color: var(--yellow); color: #0b0b0c; }

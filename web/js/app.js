@@ -40,13 +40,16 @@ function shell() {
     .map(([r, label]) => `<a href="#/${r}" ${r === route ? 'aria-current="page"' : ''}>${esc(label)}</a>`).join('');
   $('#nav').hidden = !store.get().welcomed;
   const help = $('#helpBtn');
-  help.hidden = !store.get().welcomed || route === 'intro';
+  help.hidden = !store.get().welcomed || route === 'intro' || route === 'game';  /* the game has its own "?" */
   help.setAttribute('aria-label', t('help')); help.title = t('help');
   $('#foot').innerHTML = `<a href="#/about">${esc(t('about'))}</a> · <a href="${data.NATIVE ? 'https://innstilt.app/' : ''}personvern.html${getLang() === 'en' ? '#en' : ''}">${esc(t('privacy'))}</a> · ${esc(t('notVy'))} ${esc(t('dataFrom'))}`
     + (DONATE_URL ? ` · <a href="${esc(DONATE_URL)}" target="_blank" rel="noopener">${esc(t('coffee'))}</a>` : '');
 }
 
+let stopGame = null;  /* the game, while it is open */
+
 function render() {
+  stopGame?.(); stopGame = null;
   /* Never run inside another site's frame (GitHub Pages can't send the header that forbids it), so nobody
      can overlay Innstilt with invisible buttons (clickjacking). */
   if (window.top !== window.self) {
@@ -63,7 +66,7 @@ function render() {
   if (route.startsWith('case?')) return viewCase(new URLSearchParams(route.slice(5)));
   if (!s.welcomed) return viewWelcome();
   if (!store.isReady()) return viewSetup(true);  /* first-run setup until profile + ticket are complete */
-  ({ trips: viewTrips, claims: viewClaims, settings: () => viewSetup(false) }[route] || viewTrips)();
+  ({ trips: viewTrips, claims: viewClaims, settings: () => viewSetup(false), game: viewGame }[route] || viewTrips)();
 }
 
 /** Navigate: changing the hash renders via 'hashchange'; same hash -> render directly (never both). */
@@ -73,6 +76,7 @@ function go(route) {
 }
 
 document.addEventListener('click', e => {
+  if (e.target.closest('.brand img') && store.isReady()) { e.preventDefault(); go('game'); return; }
   const b = e.target.closest('[data-lang]');
   if (b) { setLang(b.dataset.lang); render(); }
 });
@@ -807,6 +811,14 @@ const LIVE_LOOKBACK = 3 * HOUR;
 async function liveForRoute(from, to, startMs, endMs) {
   const calls = await data.liveCalls(from.id, startMs, endMs);
   return calls.map(c => core.liveJourney(c, from.id, to.id)).filter(Boolean).sort((a, b) => a.depMs - b.depMs);
+}
+
+/* "Forsinket?" – hidden behind the logo in the header; loaded only when opened. */
+async function viewGame() {
+  $('#main').innerHTML = '<div id="game"></div>';
+  const { start } = await import('./game.js');
+  if (location.hash !== '#/game' || !$('#game')) return;  /* the user moved on while it loaded */
+  stopGame = start($('#game'), { lang: getLang(), back: () => go('trips') });
 }
 
 async function viewTrips() {
