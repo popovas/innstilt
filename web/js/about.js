@@ -4,22 +4,10 @@
 
 export const VERSION = '0.3.0';
 
-/* Contact address for the "Contact us" button, split so it isn't sitting in the page as plain text
-   for spam bots. Empty = button hidden. */
-const CONTACT = ['', ''];  /* the public one, e.g. ['post', 'innstilt.app'] */
-
-/* While developing, a private address can live in js/contact.local.js (never committed, see
-   .git/info/exclude): export const CONTACT = ['name', 'example.com']; only tried on localhost. */
-let contact = null;
-export async function contactAddress() {
-  if (contact === null) {
-    contact = CONTACT[0] && CONTACT[1] ? CONTACT.join('@') : '';
-    if (!contact && ['localhost', '127.0.0.1'].includes(location.hostname)) {
-      contact = await import('./contact.local.js').then(m => m.CONTACT.join('@')).catch(() => '');
-    }
-  }
-  return contact;
-}
+/* Contact address for the "Contact us" button (Cloudflare Email Routing forwards it). Split, so it isn't sitting
+   in the page as plain text for spam bots; it is put together only when someone taps the button. */
+const CONTACT = ['perrong', 'innstilt.app'];
+export const contactAddress = async () => CONTACT.join('@');
 
 export const ABOUT = {
   no: [
