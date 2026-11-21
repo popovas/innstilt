@@ -1340,6 +1340,7 @@ async function fillCounter() {
 
 /* ------------------------------------------------------------------ start */
 
+await store.init();  /* Android app: read the encrypted store first */
 render();
 /* Android app: the back button steps back through the app's pages; at the start page it leaves the app. */
 const AppPlugin = globalThis.Capacitor?.Plugins?.App;

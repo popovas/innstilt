@@ -1,4 +1,6 @@
-/* Everything personal lives here, in this browser's localStorage, and nowhere else. */
+/* Everything personal lives here and nowhere else: in the Android app in encrypted storage (AES-GCM with a key in
+   the phone's Android Keystore, via @aparajita/capacitor-secure-storage); on the website in the browser's
+   localStorage. */
 
 const KEY = 'innstilt.v1';
 
@@ -33,8 +35,37 @@ function migrate(s) {
   return s;
 }
 
+/* Android app: the encrypted store. Reads happen once at start (init); writes go out in order. */
+const SECURE = globalThis.Capacitor?.isNativePlatform?.() ? globalThis.Capacitor.Plugins?.SecureStorage : null;
+let writes = Promise.resolve();
+
 function save() {
+  if (SECURE) {
+    const data = JSON.stringify(state);
+    writes = writes.then(() => SECURE.internalSetItem({ prefixedKey: KEY, data })).catch(() => {});
+    return true;
+  }
   try { localStorage.setItem(KEY, JSON.stringify(state)); return true; } catch { return false; }
+}
+
+/** Call once before the first render. In the app: read the encrypted store; on the first start after an update,
+    move the old unencrypted data over and delete it. */
+export async function init() {
+  if (!SECURE) return;
+  let raw = null;
+  try { raw = (await SECURE.internalGetItem({ prefixedKey: KEY }))?.data || null; } catch { /* keep in-memory state */ }
+  if (raw) {
+    try { state = migrate({ ...structuredClone(EMPTY), ...JSON.parse(raw) }); } catch { /* corrupt: keep what we have */ }
+    return;
+  }
+  let legacy = null;
+  try { legacy = localStorage.getItem(KEY); } catch { /* none */ }
+  if (legacy) {
+    state = load();
+    await SECURE.internalSetItem({ prefixedKey: KEY, data: JSON.stringify(state) });
+    const check = (await SECURE.internalGetItem({ prefixedKey: KEY }))?.data;
+    if (check === JSON.stringify(state)) localStorage.removeItem(KEY);  /* only once safely in the encrypted store */
+  }
 }
 
 export const get = () => state;
@@ -60,7 +91,7 @@ function stored() {
 }
 
 export function update(fn) {
-  state = stored() || state;
+  if (!SECURE) state = stored() || state;  /* the app has one window, and reads its store at start */
   fn(state);
   return save();
 }
@@ -71,6 +102,7 @@ export function exportJson() {
 
 export function wipe() {
   state = structuredClone(EMPTY);
+  if (SECURE) writes = writes.then(() => SECURE.internalRemoveItem({ prefixedKey: KEY })).catch(() => {});
   try { localStorage.removeItem(KEY); } catch { /* ignore */ }
 }
 

@@ -32,7 +32,8 @@ Version 0.4.0, 21 November 2026 (innstilt.app live on GitHub Pages; anonymous co
 
 ## Known limits (accepted for now)
 
-- Data on the device is not encrypted; it is protected by the device lock and the browser. Planned for the phone apps: Keychain / Keystore.
+- On the website, data on the device is not encrypted; it is protected by the device lock and the browser. In the Android app it is
+  encrypted (AES-GCM, key in the Android Keystore, @aparajita/capacitor-secure-storage); existing data is moved there on first start.
 - Vy's form takes the details in its address, so they appear in browser history and are visible to whatever Vy's page itself loads.
 - The counter can be fed fake numbers by someone who forges requests outside a browser; caps limit the effect, and the app labels it as user-reported.
 - `localStorage` is per browser: two devices sharing statistics separately are counted twice unless data is moved with the export file.
