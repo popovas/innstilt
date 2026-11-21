@@ -392,6 +392,16 @@ function wireSettingsExtras() {
   };
 }
 
+/** "Support us" at the bottom of Trips (hidden while DONATE_URL is empty). */
+function supportHtml() {
+  if (!DONATE_URL) return '';
+  return `<aside class="support">
+    <p><strong>${esc(t('supportTitle'))}</strong> ${esc(t('supportBody'))}</p>
+    <a class="support-btn" href="${esc(DONATE_URL)}" target="_blank" rel="noopener noreferrer">
+      <img src="icons/ghost-32.png" width="22" height="22" alt=""> ${esc(t('supportBtn'))}</a>
+  </aside>`;
+}
+
 /** How to put Innstilt on the home screen; `beforeSetup` adds the iPhone note about separate storage. */
 function homeHtml(beforeSetup) {
   return `<h2>📲 ${esc(t('homeTitle'))}</h2>
@@ -480,7 +490,8 @@ async function viewTrips() {
     ${otherTripHtml()}
     <p class="muted">${esc(t('tripsIntro', { min: core.DEFAULT_THRESHOLD, days: core.CLAIM_DEADLINE_DAYS }))}</p>
     <div id="trips"></div>
-    <p class="muted" id="progress"></p>`;
+    <p class="muted" id="progress"></p>
+    ${supportHtml()}`;
   $('#bm')?.addEventListener('click', e => { e.preventDefault(); alert(t('bookmarkClick')); });
   $('#bmDone')?.addEventListener('click', () => { store.update(st => { st.bookmarkDone = true; }); $('.bmcard').remove(); });
   $('#bmLater')?.addEventListener('click', () => $('.bmcard').remove());
