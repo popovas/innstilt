@@ -116,7 +116,9 @@ function makeLevel(level) {
   const theme = THEMES[(level - 1) % THEMES.length];
   const specks = Array.from({ length: 70 }, () => ({ x: Math.random(), y: Math.random(), r: 0.5 + Math.random(), a: Math.random() * Math.PI,
     col: theme.specks[rnd(theme.specks.length)] }));
-  return { N, grid, start, goal, theme, specks, countdown: Math.max(9, 24 - level * 1.5) * 1000, cellMs: Math.max(420, 1000 - level * 60) };
+  return { N, grid, start, goal, theme, specks, /* time to build: depends on how long the route is, a little less each level (never under 70 %) */
+    countdown: (8 + route.length * 2.2) * Math.max(0.7, 1 - (level - 1) * 0.03) * 1000,
+    cellMs: Math.max(550, 1100 - level * 50) };
 }
 
 /** Starts the game inside `root`. Returns a function that stops it and removes every listener. */
