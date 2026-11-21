@@ -11,7 +11,8 @@ const LIVE_Q = `query($id: String!, $t: DateTime!, $range: Int!) {
   stopPlace(id: $id) {
     estimatedCalls(startTime: $t, timeRange: $range, numberOfDepartures: 200,
                    whiteListedModes: [rail], includeCancelledTrips: true) {
-      aimedDepartureTime cancellation realtime
+      aimedDepartureTime expectedDepartureTime actualDepartureTime cancellation realtime
+      quay { publicCode }
       serviceJourney {
         id line { publicCode }
         estimatedCalls {

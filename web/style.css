@@ -189,3 +189,13 @@ details.qa p { margin: 0 0 12px 20px; color: var(--muted); }
 input.caught { outline: 3px solid var(--stripe); background: #e5f7ec; }
 .casecard h1 { font-size: 22px; }
 .trip small.notrun { color: var(--muted); }
+details.now > summary { font-weight: 400; }
+details.now > summary small { display: inline; margin-left: 6px; font-size: 12px; }
+details.now .now-body { padding: 0 16px 8px; }
+details.now.alert { border-left: 4px solid var(--red); }
+.nowlist { list-style: none; margin: 0; padding: 0; }
+.nowlist li { display: grid; grid-template-columns: 64px 1fr auto; gap: 8px; align-items: center; padding: 8px 0; border-top: 1px solid var(--mint-2); font-size: 14px; }
+.nowlist .nt { font-weight: 800; font-size: 16px; }
+.nowlist .nt s { font-weight: 400; color: var(--muted); font-size: 12px; display: block; }
+.nowlist .badge { margin-left: 0; }
+button.small-btn { padding: 6px 10px; font-size: 14px; }

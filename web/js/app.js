@@ -566,6 +566,7 @@ async function viewTrips() {
     ${wantsHomeScreen() && !s.homeDone ? `<section class="card homecard">${homeHtml(false)}
       <div class="actions"><button type="button" id="homeLater">${esc(t('bmLater'))}</button>
         <button type="button" class="primary" id="homeDone">${esc(t('bmDone'))}</button></div></section>` : ''}
+    <details class="card fold now" id="now" hidden><summary></summary><div class="now-body"></div></details>
     <details class="card fold jabfold" data-jab-fold hidden><summary></summary><div class="jab-body"></div></details>
     ${otherTripHtml()}
     <p class="muted">${esc(t('tripsIntro', { min: core.DEFAULT_THRESHOLD, days: core.CLAIM_DEADLINE_DAYS }))}</p>
@@ -580,6 +581,7 @@ async function viewTrips() {
   wireInstall();
   wireOtherTrip();
   fillJab();
+  startNowBoard(run);
   const [index, slim] = await Promise.all([data.loadIndex(), data.loadClaimsIndex()]);
   const today = core.todayOslo();
   const oldest = core.addDays(today, -core.CLAIM_DEADLINE_DAYS);
@@ -986,6 +988,90 @@ async function syncStats() {
     await stats.send(body);
     store.update(st => { st.stats.lastSent = text; });
   } catch { /* offline or server down: try again next time */ } finally { syncing = false; }
+}
+
+/* ------------------------------------------------------------------ "Nå": departures right now */
+
+/* A small departure board for the regular trips (both directions), 20 min back to 90 min ahead, from Entur's
+   live data, the same source as the station screens. Refreshes every minute while Trips is open. Claimable
+   rows get the claim button: cancelled once the planned departure has passed, late once it actually arrived
+   more than 30 min late (Vy pays on the real arrival, not a forecast). */
+const NOW_BACK = 20 * 60000, NOW_AHEAD = 90 * 60000, NOW_MAX = 8;
+
+function startNowBoard(run) {
+  const tick = async () => {
+    if (run !== tripsRun) return;
+    if (document.visibilityState === 'visible') await renderNowBoard(run).catch(() => {});
+    if (run === tripsRun) setTimeout(tick, 60000);
+  };
+  tick();
+}
+
+async function renderNowBoard(run) {
+  const box = $('#now');
+  const s = store.get();
+  if (!box || !s.profile.routes.length) return;
+  const now = Date.now();
+  const pairs = [];
+  const seenPair = new Set();
+  for (const r of s.profile.routes) for (const [a, b] of [[r.a, r.b], [r.b, r.a]]) {
+    if (!seenPair.has(a.id + b.id)) { seenPair.add(a.id + b.id); pairs.push([a, b]); }
+  }
+  let rows = [], failed = false;
+  for (const [from, to] of pairs) {
+    let js;
+    try { js = await liveForRoute(from, to, now - NOW_BACK, now + NOW_AHEAD); } catch { failed = true; continue; }
+    rows.push(...js.filter(j => j.depMs >= now - NOW_BACK && j.depMs <= now + NOW_AHEAD).map(j => ({ from, to, j })));
+  }
+  if (run !== tripsRun) return;
+  /* in the order trains actually leave (a late train moves down), the last few gone ones first */
+  const when = r => r.j.depActualMs ?? r.j.depExpectedMs ?? r.j.depMs;
+  rows.sort((x, y) => when(x) - when(y));
+  const upcoming = rows.filter(r => when(r) >= now && r.j.depActualMs === null);
+  const gone = rows.filter(r => !upcoming.includes(r));
+  rows = [...gone.slice(-3), ...upcoming].slice(0, NOW_MAX);
+  if (!rows.length && !failed) { box.hidden = true; return; }
+  const done = new Set(s.claims.map(c => c.key));
+  const items = [];
+  const html = rows.map(({ from, to, j }) => {
+    const key = store.claimKey(from.id, to.id, j.depMs);
+    const departed = j.depActualMs !== null || (j.depExpectedMs ?? j.depMs) < now;
+    let status;
+    if (j.cancelled) status = `<span class="badge bad">${esc(t('cancelled'))}</span>`;
+    else if (!j.realtime) status = `<span class="badge quiet">${esc(t('planned'))}</span>`;
+    else if (!departed) status = j.depDelayMin > 1
+      ? `<span class="badge ${j.depDelayMin > core.DEFAULT_THRESHOLD ? 'warn' : 'quiet'}">${esc(t('depLate', { min: j.depDelayMin }))}</span>`
+      : `<span class="badge quiet">${esc(t('onTime'))}</span>`;
+    else status = statusHtml(j);
+    let act = '';
+    if (done.has(key)) act = `<span class="muted small">${esc(t('alreadySent'))}</span>`;
+    else if (core.claimable(j, now) && core.ticketFor(s.tickets, j.depMs)) {
+      items.push({ from, to, j });
+      act = `<button class="primary small-btn" data-now="${items.length - 1}">${esc(t('claimBtn'))}</button>`;
+    }
+    const time = j.depActualMs ?? j.depExpectedMs;
+    const shown = time && Math.abs(time - j.depMs) > 60000 ? ` <s>${esc(j.dep)}</s> ${esc(core.formatEu(time)[1])}` : esc(j.dep);
+    return `<li><span class="nt">${shown}</span>
+      <span class="nw"><strong>${esc(j.line)}</strong> ${esc(from.name.replace(/ stasjon$/, ''))} → ${esc(to.name.replace(/ stasjon$/, ''))}
+        ${j.platform ? `<span class="muted"> · ${esc(t('platform', { n: j.platform }))}</span>` : ''}<br>${status}</span>
+      <span class="na">${act}</span></li>`;
+  }).join('');
+  /* folded with a summary; opens by itself only when something is wrong, unless the user chose otherwise */
+  const nCanc = rows.filter(r => r.j.cancelled).length;
+  const nLate = rows.filter(r => !r.j.cancelled && ((r.j.depDelayMin || 0) >= 5 || (r.j.expectedMin || 0) >= 5 || (r.j.delayMin || 0) >= 5)).length;
+  const parts = [t('nowCount', { n: rows.length }), nCanc ? t('nowCancelled', { n: nCanc }) : '', nLate ? t('nowLate', { n: nLate }) : ''].filter(Boolean);
+  box.querySelector('summary').innerHTML = `<span>🚉 <strong>${esc(t('nowTitle'))}:</strong> ${esc(parts.join(' · '))}
+    <small>${esc(t('nowUpdated', { time: core.formatEu(now)[1] }))}</small></span>`;
+  box.querySelector('.now-body').innerHTML = `${rows.length ? `<ul class="nowlist">${html}</ul>` : ''}
+    ${failed ? `<p class="muted small">${esc(t('liveFailedShort'))}</p>` : ''}`;
+  if (!box.dataset.userSet) box.open = Boolean(nCanc || nLate || items.length);
+  if (!box.dataset.wired) {
+    box.dataset.wired = '1';
+    box.querySelector('summary').addEventListener('click', () => { box.dataset.userSet = '1'; });
+  }
+  box.classList.toggle('alert', Boolean(nCanc || items.length));
+  box.hidden = false;
+  box.querySelectorAll('[data-now]').forEach(b => b.addEventListener('click', () => startClaim(items[Number(b.dataset.now)])));
 }
 
 /** "Most cancelled lines of the month" podium, from public data. */

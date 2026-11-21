@@ -216,7 +216,13 @@ export function liveJourney(c, fromId, toId) {
   const realArrMs = t.actualArrivalTime ? Date.parse(t.actualArrivalTime) : null;
   const expMs = realArrMs === null && t.realtime && t.expectedArrivalTime ? Date.parse(t.expectedArrivalTime) : null;
   const last = calls[calls.length - 1].quay?.stopPlace || {};
+  /* at the departure station: when it actually left, or is expected to; and the platform */
+  const depActualMs = c.actualDepartureTime ? Date.parse(c.actualDepartureTime) : null;
+  const depExpectedMs = c.realtime && c.expectedDepartureTime ? Date.parse(c.expectedDepartureTime) : null;
   return {
+    platform: c.quay?.publicCode || '', depActualMs, depExpectedMs, realtime: Boolean(c.realtime),
+    depDelayMin: depActualMs !== null ? Math.round((depActualMs - depMs) / 60000)
+      : depExpectedMs !== null ? Math.round((depExpectedMs - depMs) / 60000) : null,
     id: c.serviceJourney.id, line: c.serviceJourney.line?.publicCode || '', live: true, extra: false,
     dest: (last.parent?.name || last.name || '').replace(/ stasjon$/, ''),
     date: todayOslo(depMs), dep: formatEu(depMs)[1], arr: formatEu(aimedArrMs)[1],
