@@ -7,7 +7,8 @@ const EMPTY = {
   profile: { name: '', email: '', account: '', routes: [] },  /* routes: [{a, b, timesOut, timesBack}], a/b = {id, name} */
   tickets: [],   /* {code, validFrom: ms|null, validTo: ms|null} */
   claims: [],    /* {key, fromId, toId, fromName, toName, date, dep, line, depMs, case, status, amount, sentAt} */
-  homeDone: false,  /* "add to home screen" card dismissed for good */
+  homeDone: false,
+  testerDone: false,  /* Android test invitation dismissed */  /* "add to home screen" card dismissed for good */
   stats: { share: null, id: '', lastSent: '' },
   pendingCases: {},  /* claimKey -> case number caught by the bookmarklet before the claim was marked sent */  /* opt-in anonymous statistics; share: null = not asked yet */
 };

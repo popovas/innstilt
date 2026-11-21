@@ -6,12 +6,17 @@ import { BOOKMARKLET } from './bookmarklet-href.js';
 import { VERSION, ABOUT, ROADMAP, FAQ, contactAddress } from './about.js';
 import * as stats from './stats.js';
 
+/* Android app test (Google Play closed test). Empty group link = the tester card stays hidden. */
+const TESTER_GROUP_URL = '';  /* e.g. 'https://groups.google.com/g/innstilt-testere' */
+const TESTER_PLAY_URL = 'https://play.google.com/apps/testing/app.innstilt';
 const DONATE_URL = 'https://ko-fi.com/innstilt_team';  /* tips via Ko-fi (no phone number exposed, no requests); empty = hidden */
 const $ = sel => document.querySelector(sel);
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
 const isTouch = () => matchMedia('(pointer: coarse)').matches;
 const isStandalone = () => matchMedia('(display-mode: standalone)').matches || navigator.standalone === true;
 const isIos = () => /iPhone|iPad|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+const isAndroid = () => /Android/i.test(navigator.userAgent);
+const wantsTester = () => Boolean(TESTER_GROUP_URL) && isAndroid() && !data.NATIVE;
 const wantsHomeScreen = () => isTouch() && !isStandalone() && !data.NATIVE;  /* not inside the Android app */
 
 /* Android/Chrome offers a real install dialog; keep its event so our own "Install" button can open it. */
@@ -93,7 +98,7 @@ function viewWelcome() {
       <p>${esc(t('privacyBody'))}</p>
       <p class="muted">${esc(t('notVy'))}</p>
     </section>
-    ${wantsHomeScreen() ? `<section class="card homecard">${homeHtml(true)}</section>` : ''}
+    ${wantsTester() ? testerHtml() : wantsHomeScreen() ? `<section class="card homecard">${homeHtml(true)}</section>` : ''}
     <button class="primary big" id="start">${esc(t('start'))}</button>`;
   $('#start').onclick = () => { store.update(s => { s.welcomed = true; }); go('trips'); };
   wireInstall();
@@ -513,6 +518,20 @@ function supportHtml() {
   </aside>`;
 }
 
+/** Invitation to the Android app's closed test: join the Google Group, then opt in and install via Play. */
+function testerHtml(dismissable = false) {
+  return `<section class="card testercard">
+    <h2>📱 ${esc(t('testerTitle'))}</h2>
+    <p>${esc(t('testerBody'))}</p>
+    <ol class="steps">
+      <li><a href="${esc(TESTER_GROUP_URL)}" target="_blank" rel="noopener noreferrer">${esc(t('testerStep1'))}</a></li>
+      <li><a href="${esc(TESTER_PLAY_URL)}" target="_blank" rel="noopener noreferrer">${esc(t('testerStep2'))}</a></li>
+    </ol>
+    <p class="muted small">${esc(t('testerNote'))}</p>
+    ${dismissable ? `<div class="actions"><button type="button" id="testerLater">${esc(t('testerNo'))}</button></div>` : ''}
+  </section>`;
+}
+
 /** How to put Innstilt on the home screen; `beforeSetup` adds the iPhone note about separate storage. */
 function homeHtml(beforeSetup) {
   return `<h2>📲 ${esc(t('homeTitle'))}</h2>
@@ -594,7 +613,8 @@ async function viewTrips() {
       <p class="center"><a class="bookmarklet" href="${esc(BOOKMARKLET)}" id="bm"><img src="icons/ghost-32.png" width="22" height="22" alt=""><span class="vh">👻 </span>Innstilt: fyll ut</a></p>
       <div class="actions"><button type="button" id="bmLater">${esc(t('bmLater'))}</button>
         <button type="button" class="primary" id="bmDone">${esc(t('bmDone'))}</button></div></section>` : ''}
-    ${wantsHomeScreen() && !s.homeDone ? `<section class="card homecard">${homeHtml(false)}
+    ${wantsTester() && !s.testerDone ? testerHtml(true) : ''}
+    ${wantsHomeScreen() && !wantsTester() && !s.homeDone ? `<section class="card homecard">${homeHtml(false)}
       <div class="actions"><button type="button" id="homeLater">${esc(t('bmLater'))}</button>
         <button type="button" class="primary" id="homeDone">${esc(t('bmDone'))}</button></div></section>` : ''}
     <details class="card fold now" id="now" hidden><summary></summary><div class="now-body"></div></details>
@@ -608,6 +628,7 @@ async function viewTrips() {
   $('#bmDone')?.addEventListener('click', () => { store.update(st => { st.bookmarkDone = true; }); $('.bmcard').remove(); });
   $('#bmLater')?.addEventListener('click', () => $('.bmcard').remove());
   $('#homeLater')?.addEventListener('click', () => $('.homecard').remove());
+  $('#testerLater')?.addEventListener('click', () => { store.update(st => { st.testerDone = true; }); $('.testercard').remove(); });
   $('#homeDone')?.addEventListener('click', () => { store.update(st => { st.homeDone = true; }); $('.homecard').remove(); });
   wireInstall();
   wireOtherTrip();
