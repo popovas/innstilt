@@ -28,7 +28,8 @@ const TXT = {
     start: 'Start', resume: 'Fortsett', again: 'Spill igjen', back: 'Tilbake til turene', claim: 'Krev erstatning 😉',
     ahead: 'Foran rute! 😎', spare: 'Ekstra togsett! 🚆', streak: '10 på rad uten uhell – ekstra togsett!',
     green: 'Grønt signal! −3 min', redSig: 'Venter på signal… +3 min', lvl: 'Nivå {n}',
-    levels: { 2: 'Nivå 2: løv og is!', 3: 'Nivå 3: tunneler!', 4: 'Nivå 4: trær over sporet!', 5: 'Nivå 5: elg!' },
+    levels: { 2: 'Nivå 2: løv og is!', 3: 'Nivå 3: tunneler!', 4: 'Nivå 4: trær over sporet!', 5: 'Nivå 5: elg!' }, levelMore: 'Nivå {n}: litt mer av alt!',
+    slowSign: 'Saktekjøring i 5 sekunder 🚧',
     tunnel: 'Tunnel: {a} ⟷ {b}', sides: { left: 'venstre', right: 'høyre', top: 'topp', bottom: 'bunn' }, tree: 'Trær over sporet!', moose: 'Elg på sporet!',
     paused: 'Pause', leaf: 'Løv på skinnene!', ice: 'Is i kontaktledningen!', self: 'Materiellmangel!', edge: 'Signalfeil!',
     lateTitle: '31 minutter forsinket!', lateText: 'Gratulerer – du har krav på erstatning.',
@@ -40,7 +41,8 @@ const TXT = {
       '⏱ Forsinkelsen tikker hele tiden: +1 minutt hvert 3. sekund (streken viser neste minutt). Ved 31 minutter er spillet over.',
       '🟢 Grønt signal tar 3 minutter av forsinkelsen – under null er du foran rute. 🔴 Rødt signal legger til 3 – kjør rundt det.',
       '🚆 Ekstra togsett: plukk opp reservetoget med + når det dukker opp, eller ta 10 passasjerer på rad uten uhell (opptil 5 togsett).',
-      '📈 Nytt nivå hver 4. passasjer. 2: løv og is 🍂❄️ dukker opp noen sekunder. 3: tunneler – to kanter (gule og svarte) åpnes en stund: kjør ut på den ene og kom inn fra den andre, også fra siden. 4: trær over sporet 🌲. 5: elg som rusler over brettet.',
+      '📈 Nytt nivå hver 4. passasjer. 2: løv og is 🍂❄️ dukker opp noen sekunder. 3: tunneler – to kanter (gule og svarte) åpnes en stund: kjør ut på den ene og kom inn fra den andre, også fra siden. 4: trær over sporet 🌲 (de blinker først). 5: elg som rusler over brettet. Fra nivå 6 kommer hindringene litt oftere.',
+      '🚧 Saktekjøring (skilt med 40, fra nivå 3): toget kjører halvt så fort i 5 sekunder – lettere å styre, men klokka går.',
       '💥 Kjører du inn i løv, is, trær, elg, en lukket kant eller dine egne vogner, mister du et togsett (3 i alt), og farten starter rolig igjen.',
       '🕹 Styr med pilene, eller sveip på brettet. ⏸ nede til venstre tar pause.'],
   },
@@ -49,7 +51,8 @@ const TXT = {
     start: 'Start', resume: 'Resume', again: 'Play again', back: 'Back to trips', claim: 'Claim compensation 😉',
     ahead: 'Ahead of schedule! 😎', spare: 'Spare train set! 🚆', streak: '10 in a row without a mishap – extra train set!',
     green: 'Green signal! −3 min', redSig: 'Waiting for a signal… +3 min', lvl: 'Level {n}',
-    levels: { 2: 'Level 2: leaves and ice!', 3: 'Level 3: tunnels!', 4: 'Level 4: trees on the line!', 5: 'Level 5: moose!' },
+    levels: { 2: 'Level 2: leaves and ice!', 3: 'Level 3: tunnels!', 4: 'Level 4: trees on the line!', 5: 'Level 5: moose!' }, levelMore: 'Level {n}: a bit more of everything!',
+    slowSign: 'Slow running for 5 seconds 🚧',
     tunnel: 'Tunnel: {a} ⟷ {b}', sides: { left: 'left', right: 'right', top: 'top', bottom: 'bottom' }, tree: 'Trees on the line!', moose: 'Moose on the line!',
     paused: 'Paused', leaf: 'Leaves on the line!', ice: 'Ice on the overhead wire!', self: 'Rolling stock shortage!', edge: 'Signal failure!',
     lateTitle: '31 minutes late!', lateText: 'Congratulations – you are entitled to compensation.',
@@ -61,7 +64,8 @@ const TXT = {
       '⏱ The delay keeps ticking: +1 minute every 3 seconds (the bar shows the next minute). At 31 minutes the game is over.',
       '🟢 A green signal takes 3 minutes off the delay – below zero you are ahead of schedule. 🔴 A red signal adds 3 – drive around it.',
       '🚆 Extra train sets: pick up the spare train with + when it shows up, or take 10 passengers in a row without a mishap (up to 5 train sets).',
-      '📈 A new level every 4 passengers. 2: leaves and ice 🍂❄️ show up for a few seconds. 3: tunnels – two edges (yellow and black) open for a while: drive out of one and come in from the other, sometimes from the side. 4: trees on the line 🌲. 5: a moose wandering across.',
+      '📈 A new level every 4 passengers. 2: leaves and ice 🍂❄️ show up for a few seconds. 3: tunnels – two edges (yellow and black) open for a while: drive out of one and come in from the other, sometimes from the side. 4: trees on the line 🌲 (they blink first). 5: a moose wandering across. From level 6, obstacles come a little more often.',
+      '🚧 Slow running (a 40 sign, from level 3): the train runs at half speed for 5 seconds – easier to steer, but the clock keeps going.',
       '💥 Hit leaves, ice, trees, a moose, a closed edge or your own wagons and you lose a train set (3 in all), and the speed starts calm again.',
       '🕹 Steer with the arrows, or swipe on the board. ⏸ bottom left pauses.'],
   },
@@ -109,11 +113,23 @@ export function start(root, { lang = 'no', back = () => {}, testScore = 0 } = {}
   const spawnSnake = () => { const y = Math.floor(N / 2); return [{ x: 4, y }, { x: 3, y }, { x: 2, y }]; };
   const fresh = () => ({ score: 0, run: 0, lives: 3, delay: 0, slow: 0, snake: spawnSnake(), dir: 'right', queue: [], grow: 0,
     pax: null, hazards: [], nextHazard: 3000, signals: [], nextSignal: 4000,
-    trees: [], tunnel: null, nextTunnel: 4000, moose: null, nextMoose: 3000, spare: null, nextSpare: 15000 });
-  const level = () => Math.min(5, 1 + Math.floor(st.score / PER_LEVEL));
+    trees: [], tunnel: null, nextTunnel: 4000, moose: null, nextMoose: 3000, spare: null, nextSpare: 15000,
+    t: 0, treesAge: 0, sign: null, nextSign: 6000, slowUntil: 0 });
+  const level = () => 1 + Math.floor(st.score / PER_LEVEL);   /* 1–5 add one thing each; from 6, obstacles come more often */
   const on = (cells, x, y) => cells.some(c => c.x === x && c.y === y);
   const taken = (x, y) => on(st.snake, x, y) || (st.pax && st.pax.x === x && st.pax.y === y) || st.hazards.some(h => on(h.cells, x, y))
-    || st.signals.some(g => g.x === x && g.y === y) || on(st.trees, x, y) || (st.spare && st.spare.x === x && st.spare.y === y);
+    || st.signals.some(g => g.x === x && g.y === y) || on(st.trees, x, y) || (st.spare && st.spare.x === x && st.spare.y === y)
+    || (st.sign && st.sign.x === x && st.sign.y === y);
+  /* passengers look different: coat, skin, hair, and sometimes something in hand */
+  const pick = a => a[Math.floor(Math.random() * a.length)];
+  const newPax = () => {
+    const p = freeCell(3);
+    return p && { ...p, look: { coat: pick(['#ff8a3d', '#e84a5f', '#4aa3ff', '#b07cff', '#ffffff', '#f5c400', '#3fbf7f']),
+      skin: pick(['#f1c7a5', '#e0ac85', '#b57b52', '#7a5032']), hair: pick(['#2b1d12', '#6b4423', '#d8b25a', '#a7a7a7', '#c0502d']),
+      item: pick(['none', 'none', 'bag', 'backpack', 'umbrella', 'coffee']) } };
+  };
+  /* obstacles come a little more often with every passenger from level 6 (down to 45 % of the wait) */
+  const busier = () => Math.max(0.45, 1 - Math.max(0, st.score - 5 * PER_LEVEL) * 0.025);
 
   function freeCell(minDist = 0) {
     const h = st.snake[0];
@@ -142,7 +158,7 @@ export function start(root, { lang = 'no', back = () => {}, testScore = 0 } = {}
   function newGame() {
     st = fresh();
     if (testScore) { st.score = testScore; for (let n = 2; n <= level(); n++) levelUp(n); }   /* tests only */
-    st.pax = freeCell(3);
+    st.pax = newPax();
     acc = 0;
     hud();
     setMode('run');
@@ -170,7 +186,7 @@ export function start(root, { lang = 'no', back = () => {}, testScore = 0 } = {}
       st.dir = INWARD[to]; st.queue = [];
     }
     if (x < 0 || y < 0 || x >= N || y >= N) return crash('edge');
-    if (on(st.trees, x, y)) return crash('tree');
+    if (st.treesAge >= 1500 && on(st.trees, x, y)) return crash('tree');
     if (st.moose && st.moose.x === x && st.moose.y === y) return crash('moose');
     const body = st.grow ? st.snake : st.snake.slice(0, -1);   /* the tail moves away this step */
     if (on(body, x, y)) return crash('self');
@@ -181,7 +197,7 @@ export function start(root, { lang = 'no', back = () => {}, testScore = 0 } = {}
     if (st.pax && st.pax.x === x && st.pax.y === y) {
       const before = level();
       st.score++; st.run++; st.grow++;
-      st.pax = freeCell(3);
+      st.pax = newPax();
       if (st.run % STREAK === 0) extraLife(T.streak);
       if (level() > before) levelUp(level());
       hud();
@@ -196,6 +212,7 @@ export function start(root, { lang = 'no', back = () => {}, testScore = 0 } = {}
       if (st.delay >= LIMIT) over('late');
     }
     if (st.spare && st.spare.x === x && st.spare.y === y) { st.spare = null; extraLife(T.spare); }
+    if (st.sign && st.sign.x === x && st.sign.y === y) { st.sign = null; st.slowUntil = st.t + 5000; toast(T.slowSign); }
   }
 
   function extraLife(text) {
@@ -206,10 +223,10 @@ export function start(root, { lang = 'no', back = () => {}, testScore = 0 } = {}
   }
 
   function levelUp(n) {
-    toast(T.levels[n]);
+    toast(T.levels[n] || fill(T.levelMore, { n }));
     if (n >= 4 && !st.trees.length) {
-      st.trees = TREES;
-      if (st.pax && on(st.trees, st.pax.x, st.pax.y)) st.pax = freeCell(3);
+      st.trees = TREES; st.treesAge = 0;
+      if (st.pax && on(st.trees, st.pax.x, st.pax.y)) st.pax = newPax();
       st.signals = st.signals.filter(g => !on(st.trees, g.x, g.y));
       st.hazards = st.hazards.filter(z => !z.cells.some(c => on(st.trees, c.x, c.y)));
     }
@@ -249,8 +266,8 @@ export function start(root, { lang = 'no', back = () => {}, testScore = 0 } = {}
   function afterCrash() {
     if (st.lives <= 0) return over('lives');
     st.snake = spawnSnake(); st.dir = 'right'; st.queue = []; st.grow = 0; st.hazards = []; st.signals = [];
-    st.run = 0; st.moose = null; st.nextMoose = 4000;   /* a new train set starts calm */
-    if (!st.pax || on(st.snake, st.pax.x, st.pax.y)) st.pax = freeCell(3);
+    st.run = 0; st.moose = null; st.nextMoose = 4000; st.slowUntil = 0;   /* a new train set starts calm */
+    if (!st.pax || on(st.snake, st.pax.x, st.pax.y)) st.pax = newPax();
     st.nextHazard = 5000;
     setMode('run');
   }
@@ -278,7 +295,7 @@ export function start(root, { lang = 'no', back = () => {}, testScore = 0 } = {}
     const L = level();
     if (L >= 2) {
       st.nextHazard -= dt;
-      if (st.nextHazard <= 0) { spawnHazard(); st.nextHazard = 5000 + Math.random() * 5000; }
+      if (st.nextHazard <= 0) { spawnHazard(); st.nextHazard = (5000 + Math.random() * 5000) * busier(); }
     }
     if (L >= 3) {
       if (st.tunnel) {
@@ -301,7 +318,7 @@ export function start(root, { lang = 'no', back = () => {}, testScore = 0 } = {}
     }
     if (L >= 5) {
       if (st.moose) moveMoose(dt);
-      else if ((st.nextMoose -= dt) <= 0) { spawnMoose(); st.nextMoose = 6000 + Math.random() * 6000; }
+      else if ((st.nextMoose -= dt) <= 0) { spawnMoose(); st.nextMoose = (6000 + Math.random() * 6000) * busier(); }
       if (mode !== 'run') return;
     }
     st.nextSignal -= dt;
@@ -315,7 +332,18 @@ export function start(root, { lang = 'no', back = () => {}, testScore = 0 } = {}
     st.signals = st.signals.filter(g => g.age < g.life);
     st.hazards.forEach(z => { z.age += dt; });
     st.hazards = st.hazards.filter(z => z.age < z.life);
-    const stepMs = Math.max(90, 170 - st.run * 3);   /* faster with each passenger since the last crash */
+    st.t += dt;
+    st.treesAge += dt;
+    if (L >= 3) {
+      if (st.sign) { st.sign.age += dt; if (st.sign.age >= st.sign.life) st.sign = null; }
+      else if ((st.nextSign -= dt) <= 0) {
+        const at = freeCell(4);
+        if (at) st.sign = { ...at, age: 0, life: 6000 };
+        st.nextSign = 12000 + Math.random() * 8000;
+      }
+    }
+    const slow = st.t < st.slowUntil ? 2 : 1;   /* slow running: half speed */
+    const stepMs = Math.max(90, 170 - st.run * 3) * slow;   /* faster with each passenger since the last crash */
     acc += dt;
     while (acc >= stepMs && mode === 'run') { acc -= stepMs; step(); }
   }
@@ -393,7 +421,7 @@ export function start(root, { lang = 'no', back = () => {}, testScore = 0 } = {}
     if (!st) return;
     if (st.tunnel) tunnel(st.tunnel, W, c, now);
     if (st.moose) moose(st.moose, c);
-    st.trees.forEach(p => tree((p.x + 0.5) * c, (p.y + 0.5) * c, c));
+    if (st.treesAge >= 1500 || Math.floor(now / 150) % 2) st.trees.forEach(p => tree((p.x + 0.5) * c, (p.y + 0.5) * c, c));
     /* hazards: fade in (harmless while appearing), blink before they go */
     for (const z of st.hazards) {
       const a = z.age < 700 ? 0.25 + z.age / 1000 : (z.life - z.age < 900 && Math.floor(now / 150) % 2 ? 0.35 : 1);
@@ -411,7 +439,8 @@ export function start(root, { lang = 'no', back = () => {}, testScore = 0 } = {}
       ctx.fillStyle = C.yellow; ctx.beginPath(); ctx.arc(sx + 0.8 * c, sy + 0.2 * c, 0.2 * c, 0, Math.PI * 2); ctx.fill();
       ctx.fillStyle = C.ink; ctx.fillRect(sx + 0.72 * c, sy + 0.18 * c, 0.16 * c, 0.04 * c); ctx.fillRect(sx + 0.78 * c, sy + 0.12 * c, 0.04 * c, 0.16 * c);
     }
-    if (st.pax) passenger((st.pax.x + 0.5) * c, (st.pax.y + 0.5) * c + Math.sin(now / 180) * c * 0.04, c);
+    if (st.sign && !(st.sign.life - st.sign.age < 1500 && Math.floor(now / 150) % 2)) slowSign((st.sign.x + 0.5) * c, (st.sign.y + 0.5) * c, c);
+    if (st.pax) passenger((st.pax.x + 0.5) * c, (st.pax.y + 0.5) * c + Math.sin(now / 180) * c * 0.03, c, st.pax.look);
     for (let i = st.snake.length - 1; i > 0; i--) wagon(st.snake[i].x * c, st.snake[i].y * c, c);
     head(st.snake[0], c);
     if (now < flashUntil) { ctx.fillStyle = 'rgba(255,107,87,.35)'; ctx.fillRect(0, 0, W, W); }
@@ -491,10 +520,30 @@ export function start(root, { lang = 'no', back = () => {}, testScore = 0 } = {}
     ctx.beginPath(); ctx.arc(x, y - 0.16 * c, 0.13 * c, 0, Math.PI * 2); ctx.fill();
   }
 
-  function passenger(x, y, c) {
-    ctx.fillStyle = C.yellow;
-    ctx.beginPath(); ctx.arc(x, y - 0.2 * c, 0.13 * c, 0, Math.PI * 2); ctx.fill();
-    rr(x - 0.18 * c, y - 0.04 * c, 0.36 * c, 0.36 * c, 0.12 * c); ctx.fill();
+  /** A waiting passenger: yellow glow (so it's the obvious target), legs, coat, head, hair and maybe a thing. */
+  function passenger(x, y, c, look) {
+    const L = look || { coat: C.yellow, skin: '#e0ac85', hair: '#2b1d12', item: 'none' };
+    ctx.fillStyle = 'rgba(245,196,0,.28)'; ctx.beginPath(); ctx.arc(x, y + 0.02 * c, 0.46 * c, 0, Math.PI * 2); ctx.fill();
+    if (L.item === 'backpack') { ctx.fillStyle = '#3a4a44'; rr(x - 0.24 * c, y - 0.06 * c, 0.14 * c, 0.22 * c, 0.04 * c); ctx.fill(); }
+    ctx.fillStyle = C.ink; ctx.fillRect(x - 0.09 * c, y + 0.14 * c, 0.07 * c, 0.24 * c); ctx.fillRect(x + 0.02 * c, y + 0.14 * c, 0.07 * c, 0.24 * c);
+    ctx.fillStyle = L.coat; rr(x - 0.15 * c, y - 0.09 * c, 0.3 * c, 0.28 * c, 0.08 * c); ctx.fill();
+    ctx.fillStyle = L.skin; ctx.beginPath(); ctx.arc(x, y - 0.21 * c, 0.1 * c, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = L.hair; ctx.beginPath(); ctx.arc(x, y - 0.23 * c, 0.105 * c, Math.PI, 0); ctx.fill();
+    if (L.item === 'bag') { ctx.fillStyle = '#8a5a2b'; rr(x + 0.15 * c, y + 0.04 * c, 0.14 * c, 0.12 * c, 0.03 * c); ctx.fill(); }
+    if (L.item === 'coffee') { ctx.fillStyle = '#fff'; ctx.fillRect(x + 0.16 * c, y - 0.02 * c, 0.08 * c, 0.11 * c); ctx.fillStyle = '#6b4423'; ctx.fillRect(x + 0.16 * c, y + 0.02 * c, 0.08 * c, 0.03 * c); }
+    if (L.item === 'umbrella') {
+      ctx.strokeStyle = C.ink; ctx.lineWidth = 0.03 * c; ctx.beginPath(); ctx.moveTo(x + 0.2 * c, y + 0.1 * c); ctx.lineTo(x + 0.2 * c, y - 0.3 * c); ctx.stroke();
+      ctx.fillStyle = '#e84a5f'; ctx.beginPath(); ctx.arc(x + 0.2 * c, y - 0.28 * c, 0.16 * c, Math.PI, 0); ctx.fill();
+    }
+  }
+
+  /** Slow-running sign: a round speed sign with 40. */
+  function slowSign(x, y, c) {
+    ctx.fillStyle = '#7d8f88'; ctx.fillRect(x - 0.03 * c, y + 0.1 * c, 0.06 * c, 0.34 * c);
+    ctx.fillStyle = '#d8262c'; ctx.beginPath(); ctx.arc(x, y - 0.08 * c, 0.34 * c, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(x, y - 0.08 * c, 0.25 * c, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = C.ink; ctx.font = `800 ${Math.round(0.26 * c)}px system-ui, sans-serif`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillText('40', x, y - 0.07 * c);
   }
 
   function leaf(x, y, c, seed) {
