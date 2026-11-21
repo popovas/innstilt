@@ -298,3 +298,8 @@ dialog.helpdlg .intro h1 { font-size: 20px; }
 .g-row .g-go:disabled { opacity: .45; }
 .g-row .helpbtn { position: static; flex: none; }
 .g-spacer { width: 24px; }
+/* Full fart: a taller board, speed under the distance */
+.g-board.g-tall { aspect-ratio: 3 / 4; }
+.g-speed { font-size: 12px; font-weight: 600; color: var(--muted); }
+.g-speed.fast { color: var(--link); }
+.g-row > .muted { text-align: center; }

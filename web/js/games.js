@@ -4,6 +4,7 @@
 export const GAMES = {
   forsinket: () => import('./game.js'),
   sporarbeid: () => import('./game-spor.js'),
+  fullfart: () => import('./game-fart.js'),
 };
 
 const osloDate = d => new Intl.DateTimeFormat('sv-SE', { timeZone: 'Europe/Oslo' }).format(d);   /* YYYY-MM-DD */

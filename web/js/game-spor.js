@@ -25,7 +25,7 @@ const THEMES = [
 const TXT = {
   no: {
     title: 'Sporarbeid', intro: 'Vri skinnene så toget kommer fram til stasjonen til høyre. Toget går når nedtellingen er ute – eller når du trykker «Kjør nå!».',
-    start: 'Start', resume: 'Fortsett', again: 'Spill igjen', back: 'Tilbake til turene', other: 'Prøv det andre spillet',
+    start: 'Start', resume: 'Fortsett', again: 'Spill igjen', back: 'Tilbake til turene', other: 'Prøv et annet spill',
     go: 'Kjør nå!', paused: 'Pause', wait: 'Avgang om {s} s', running: 'Toget går', level: 'Nivå {n}', points: 'Poeng',
     winTitle: 'Framme!', winText: '+{n} poeng.', next: 'Neste avgang',
     switches: 'Sporveksler!',
@@ -43,7 +43,7 @@ const TXT = {
   },
   en: {
     title: 'Sporarbeid', intro: 'Turn the rails so the train reaches the station on the right. The train leaves when the countdown runs out – or when you press "Go now!".',
-    start: 'Start', resume: 'Resume', again: 'Play again', back: 'Back to trips', other: 'Try the other game',
+    start: 'Start', resume: 'Resume', again: 'Play again', back: 'Back to trips', other: 'Try another game',
     go: 'Go now!', paused: 'Paused', wait: 'Departs in {s} s', running: 'Train running', level: 'Level {n}', points: 'Points',
     winTitle: 'Arrived!', winText: '+{n} points.', next: 'Next departure',
     switches: 'Switches!',
