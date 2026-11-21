@@ -1,0 +1,10 @@
+# Exact versions for the nightly build (GitHub Actions), so a new release of a package cannot change what
+# runs there unnoticed. Update deliberately: .venv/bin/pip freeze, test locally, then edit here.
+anyio==4.16.0
+certifi==2026.10.23
+greenlet==3.5.6
+h11==0.16.0
+httpcore==1.0.9
+httpx==0.28.1
+idna==3.20
+playwright==1.65.2

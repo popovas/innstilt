@@ -2,7 +2,7 @@
    The text below is meant to be edited freely: one string per paragraph, Norwegian first, then English.
    Plain text only (it is escaped when shown). */
 
-export const VERSION = '0.3.0';
+export const VERSION = '0.4.0';
 
 /* Contact address for the "Contact us" button (Cloudflare Email Routing forwards it). Split, so it isn't sitting
    in the page as plain text for spam bots; it is put together only when someone taps the button. */
@@ -64,7 +64,7 @@ export const FAQ = {
     ['Er Innstilt laget av Vy?',
       'Nei. Innstilt er et uavhengig fritidsprosjekt laget av en lei pendler, og er ikke tilknyttet Vy eller Entur. Togdataene er åpne data fra Entur.'],
     ['Hva skjer med opplysningene mine?',
-      'Billettkode, navn, e-post og kontonummer lagres bare på denne enheten og brukes bare til å fylle ut Vy sitt skjema. Vil du, kan du dele anonym statistikk – bare antall krav og kroner per måned – til den felles telleren. Du kan laste ned eller slette alt i Innstillinger.'],
+      'Billettkode, navn, e-post og kontonummer lagres bare på denne enheten og brukes bare til å fylle ut Vy sitt skjema. Vy sitt skjema tar imot opplysningene i nettadressen, så de blir også stående i nettleserens historikk. Togdata hentes fra Entur, som ser hvilke stasjoner appen spør om, men ikke hvem du er. Vil du, kan du dele anonym statistikk – bare antall krav og kroner per måned – til den felles telleren. Du kan laste ned eller slette alt i Innstillinger.'],
     ['Koster det noe?',
       'Nei. Innstilt er gratis og uten reklame. Vil du bidra til domene og app-butikker, kan du spandere en billett.'],
   ],
@@ -84,7 +84,7 @@ export const FAQ = {
     ['Is Innstilt made by Vy?',
       'No. Innstilt is an independent spare-time project by a fed-up commuter and is not affiliated with Vy or Entur. The train data is open data from Entur.'],
     ['What happens to my details?',
-      'Ticket code, name, e-mail and account number are stored only on this device and used only to fill in Vy\'s form. If you like, you can share anonymous statistics – just numbers of claims and kroner per month – for the shared counter. You can download or delete everything in Settings.'],
+      'Ticket code, name, e-mail and account number are stored only on this device and used only to fill in Vy\'s form. Vy\'s form takes the details in its web address, so they also stay in your browser history. Train data comes from Entur, which sees which stations the app asks about, but not who you are. If you like, you can share anonymous statistics – just numbers of claims and kroner per month – for the shared counter. You can download or delete everything in Settings.'],
     ['Does it cost anything?',
       'No. Innstilt is free and ad-free. If you want to help with the domain and app stores, you can buy us a ticket.'],
   ],

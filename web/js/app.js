@@ -38,6 +38,12 @@ function shell() {
 }
 
 function render() {
+  /* Never run inside another site's frame (GitHub Pages can't send the header that forbids it), so nobody
+     can overlay Innstilt with invisible buttons (clickjacking). */
+  if (window.top !== window.self) {
+    $('#main').innerHTML = `<p class="notice">${esc(t('framed'))} <a href="https://innstilt.app/" target="_blank" rel="noopener">innstilt.app</a></p>`;
+    return;
+  }
   shell();
   offlineBanner();
   syncStats();
@@ -699,7 +705,7 @@ function tripHtml({ from, to, j, next }, id, action = null) {
   const all = store.get().tickets;
   const valid = action === null && all.length > 1 ? core.ticketsFor(all, j.depMs) : [];
   const tk = valid.length > 1
-    ? `<label class="tk-pick">🎫 <select data-ticket="${id}" aria-label="${esc(t('whichTicket'))}">${valid.map(v =>
+    ? `<label class="tk-pick">🎫 <select data-ticket="${esc(id)}" aria-label="${esc(t('whichTicket'))}">${valid.map(v =>
         `<option value="${esc(v.code)}">${esc(v.code)}</option>`).join('')}</select></label>`
     : valid.length ? `<small class="tk">🎫 ${esc(valid[0].code)}</small>` : '';
   return `<article class="trip">
@@ -707,8 +713,8 @@ function tripHtml({ from, to, j, next }, id, action = null) {
     <div class="what">${esc(from.name.replace(/ stasjon$/, ''))} → ${esc(to.name.replace(/ stasjon$/, ''))} ${statusHtml(j)}${nx}${tk}</div>
     ${action === null && core.daysLeft(j.date) <= core.DEADLINE_WARN_DAYS ? `<small class="deadline">⏳ ${esc(
       core.daysLeft(j.date) <= 0 ? t('lastDay') : t('daysLeft', { n: core.daysLeft(j.date) }))}</small>` : ''}
-    ${action === null ? `<div class="acts"><button class="primary" data-claim="${id}">${esc(t('claimBtn'))}</button>
-      <button type="button" class="link small" data-done="${id}">${esc(t('alreadyClaimed'))}</button></div>`
+    ${action === null ? `<div class="acts"><button class="primary" data-claim="${esc(id)}">${esc(t('claimBtn'))}</button>
+      <button type="button" class="link small" data-done="${esc(id)}">${esc(t('alreadyClaimed'))}</button></div>`
     : `<span class="muted">${esc(action)}</span>`}
   </article>`;
 }
