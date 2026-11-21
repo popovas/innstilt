@@ -364,7 +364,7 @@ async function viewTrips() {
   const days = index.days.filter(d => d >= oldest && d < today).sort().reverse();
   const done = new Set(s.claims.map(c => c.key));
   const pairs = p.routes.flatMap(r => [[r.a, r.b, r.timesOut], [r.b, r.a, r.timesBack]]);
-  let shown = 0, skipped = new Set();
+  let shown = 0, urgent = 0, skipped = new Set();
 
   /* Today comes live from Entur (real-time info only lasts until about an hour after a train arrives, so
      the last few hours); earlier days come from the nightly archive files. */
@@ -396,6 +396,7 @@ async function viewTrips() {
     if (!items.length || run !== tripsRun) continue;
     items.sort((a, b) => a.j.depMs - b.j.depMs);
     shown += items.length;
+    if (core.daysLeft(day) <= core.DEADLINE_WARN_DAYS) urgent += items.length;
     const sec = document.createElement('section');
     sec.className = 'day';
     sec.innerHTML = `<h2>${esc(fmtDay(day))}${isToday ? ` <span class="pill live">${esc(t('live'))}</span>` : ''}</h2>` + items.map((it, i) => tripHtml(it, `${day}-${i}`)).join('');
@@ -405,6 +406,8 @@ async function viewTrips() {
   if (run !== tripsRun) return;
   $('#progress').textContent = (skipped.size ? t('noTicketDay', { n: skipped.size }) + ' ' : '');
   if (!shown) $('#trips').innerHTML = `<p class="empty">${esc(t('noTrips'))}</p>`;
+  /* the list is newest first, so trips about to expire are at the bottom: say so at the top */
+  if (urgent) $('#trips').insertAdjacentHTML('afterbegin', `<p class="notice urgent">⏳ ${esc(t('urgentTop', { n: urgent }))}</p>`);
 }
 
 function statusHtml(j) {
@@ -428,6 +431,8 @@ function tripHtml({ from, to, j, next }, id, action = null) {
   return `<article class="trip">
     <div class="when"><strong>${esc(j.dep)}</strong><span>${esc(j.line)}</span></div>
     <div class="what">${esc(from.name.replace(/ stasjon$/, ''))} → ${esc(to.name.replace(/ stasjon$/, ''))} ${statusHtml(j)}${nx}</div>
+    ${action === null && core.daysLeft(j.date) <= core.DEADLINE_WARN_DAYS ? `<small class="deadline">⏳ ${esc(
+      core.daysLeft(j.date) <= 0 ? t('lastDay') : t('daysLeft', { n: core.daysLeft(j.date) }))}</small>` : ''}
     ${action === null ? `<div class="acts"><button class="primary" data-claim="${id}">${esc(t('claimBtn'))}</button>
       <button type="button" class="link small" data-done="${id}">${esc(t('alreadyClaimed'))}</button></div>`
     : `<span class="muted">${esc(action)}</span>`}

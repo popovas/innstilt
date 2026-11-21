@@ -95,6 +95,14 @@ export function addDays(date, n) {
   return new Date(Date.UTC(y, m - 1, d + n)).toISOString().slice(0, 10);
 }
 
+/** Days left to claim a trip on `date` (Vy: within 3 months, counted here as CLAIM_DEADLINE_DAYS). */
+export function daysLeft(date, today = todayOslo()) {
+  const day = d => Date.UTC(+d.slice(0, 4), +d.slice(5, 7) - 1, +d.slice(8, 10)) / 86400000;
+  return CLAIM_DEADLINE_DAYS - (day(today) - day(date));
+}
+
+export const DEADLINE_WARN_DAYS = 14;
+
 const minutes = hhmm => Number(hhmm.slice(0, 2)) * 60 + Number(hhmm.slice(3, 5));
 
 /* ---------- tickets ---------- */
