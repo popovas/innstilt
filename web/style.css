@@ -218,3 +218,12 @@ fieldset.tkkind legend { font-weight: 600; font-size: 14px; margin-bottom: 4px; 
 fieldset.tkkind label.check { margin: 4px 0; }
 .tkimg-preview { display: flex; align-items: center; gap: 10px; margin: -4px 0 8px; }
 .tkimg-preview img { max-height: 96px; max-width: 96px; border-radius: 8px; border: 1px solid var(--mint-2); }
+.intro { max-width: 460px; margin: 0 auto; text-align: center; }
+.intro-top { display: flex; justify-content: flex-end; }
+.intro-pic svg { width: 100%; max-width: 320px; height: auto; margin: 4px auto 8px; display: block; }
+.intro h1 { font-size: 23px; margin: 8px 0 6px; }
+.intro .lead { font-size: 17px; margin: 0 0 10px; }
+.dots { display: flex; justify-content: center; gap: 8px; margin: 14px 0; }
+.dot { width: 10px; height: 10px; padding: 0; border-radius: 50%; border: none; background: var(--mint-2); }
+.dot[aria-current] { background: var(--stripe); width: 26px; border-radius: 5px; }
+.intro .card { text-align: left; }

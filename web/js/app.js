@@ -5,6 +5,7 @@ import { t, getLang, setLang, fmtDate, fmtDay } from './i18n.js';
 import { BOOKMARKLET } from './bookmarklet-href.js';
 import { VERSION, ABOUT, ROADMAP, FAQ, contactAddress } from './about.js';
 import * as stats from './stats.js';
+import { INTRO, picture as introPicture } from './intro.js';
 
 /* Android app test (Google Play closed test). Empty group link = the tester card stays hidden. */
 const TESTER_GROUP_URL = '';  /* e.g. 'https://groups.google.com/g/innstilt-testere' */
@@ -55,6 +56,7 @@ function render() {
   const s = store.get();
   const route = location.hash.slice(2) || 'trips';
   if (route === 'about') return viewAbout();  /* readable before setup too */
+  if (route === 'intro') return viewWelcome(true);
   if (route.startsWith('case?')) return viewCase(new URLSearchParams(route.slice(5)));
   if (!s.welcomed) return viewWelcome();
   if (!store.isReady()) return viewSetup(true);  /* first-run setup until profile + ticket are complete */
@@ -84,27 +86,48 @@ addEventListener('offline', offlineBanner);
 
 /* ------------------------------------------------------------------ welcome */
 
-function viewWelcome() {
+/* First start: four short slides (one drawing, a line or two each). "Skip" is always there; the last slide
+   links the privacy page and starts setup. Re-openable from About (#/intro). */
+let introIdx = 0;
+function viewWelcome(again = false) {
+  const slides = INTRO[getLang()] || INTRO.no;
+  const i = Math.min(introIdx, slides.length - 1), last = i === slides.length - 1;
+  const privacyHref = `${data.NATIVE ? 'https://innstilt.app/' : ''}personvern.html${getLang() === 'en' ? '#en' : ''}`;
   $('#main').innerHTML = `
-    <section class="hero">
-      <img src="icons/ghost-192.png" width="120" height="120" alt="">
-      <h1>Innstilt</h1>
-      <p class="lead">${esc(t('tagline'))}</p>
-      <p class="why">${esc(t('why'))}</p>
-      <p class="counter" data-counter hidden></p>
-      <p class="jab" data-jab hidden></p>
-    </section>
-    <section class="card privacy">
-      <h2>🔒 ${esc(t('privacyTitle'))}</h2>
-      <p>${esc(t('privacyBody'))}</p>
-      <p class="muted">${esc(t('notVy'))}</p>
-    </section>
-    ${wantsTester() ? testerHtml() : wantsHomeScreen() ? `<section class="card homecard">${homeHtml(true)}</section>` : ''}
-    <button class="primary big" id="start">${esc(t('start'))}</button>`;
-  $('#start').onclick = () => { store.update(s => { s.welcomed = true; }); go('trips'); };
+    <section class="intro">
+      <div class="intro-top"><button type="button" class="link" id="start">${esc(t(again ? 'introClose' : 'introSkip'))}</button></div>
+      <div class="intro-slide" id="slide">
+        <div class="intro-pic">${introPicture(i)}</div>
+        <h1>${esc(slides[i][0])}</h1>
+        <p class="lead">${esc(slides[i][1])}</p>
+        ${i === 0 ? '<p class="counter" data-counter hidden></p><details class="card fold jabfold" data-jab-fold hidden><summary></summary><div class="jab-body"></div></details>' : ''}
+        ${last ? `<p><a href="${esc(privacyHref)}">${esc(t('readPrivacy'))}</a></p>` : ''}
+      </div>
+      <div class="dots">${slides.map((_, k) => `<button type="button" class="dot" data-go="${k}" aria-label="${k + 1}" ${k === i ? 'aria-current="step"' : ''}></button>`).join('')}</div>
+      ${last ? `<button class="primary big" id="startEnd">${esc(t(again ? 'introClose' : 'start'))}</button>`
+        : `<button class="primary big" id="next">${esc(t('introNext'))}</button>`}
+      ${last && !again ? (wantsTester() ? testerHtml() : wantsHomeScreen() ? `<section class="card homecard">${homeHtml(true)}</section>` : '') : ''}
+    </section>`;
+  const goTo = k => { introIdx = Math.max(0, Math.min(slides.length - 1, k)); viewWelcome(again); };
+  const done = () => {
+    introIdx = 0;
+    if (again) { go('about'); return; }
+    store.update(st => { st.welcomed = true; });
+    go('trips');
+  };
+  $('#start').onclick = done;
+  $('#startEnd')?.addEventListener('click', done);
+  $('#next')?.addEventListener('click', () => goTo(i + 1));
+  document.querySelectorAll('.dot').forEach(d => d.addEventListener('click', () => goTo(Number(d.dataset.go))));
+  let x0 = null;  /* swipe left/right */
+  $('#slide').addEventListener('touchstart', e => { x0 = e.touches[0].clientX; }, { passive: true });
+  $('#slide').addEventListener('touchend', e => {
+    if (x0 === null) return;
+    const dx = e.changedTouches[0].clientX - x0; x0 = null;
+    if (Math.abs(dx) > 50) goTo(i + (dx < 0 ? 1 : -1));
+  });
   wireInstall();
-  fillCounter();
-  fillJab();
+  if (i === 0) { fillCounter(); fillJab(); }
 }
 
 /* ------------------------------------------------------------------ case number from the bookmarklet */
@@ -228,8 +251,10 @@ async function viewAbout() {
       <p>${esc(t('contactBody'))}</p>
       <button type="button" class="primary" id="contact">✉️ ${esc(t('contact'))}</button>
     </section>` : ''}
+    <p class="center"><button type="button" class="link" id="showIntro">${esc(t('introAgain'))}</button></p>
     <p class="center"><button type="button" class="link" id="back">← ${esc(t('back'))}</button></p>`;
   $('#back').onclick = () => (history.length > 1 ? history.back() : go('trips'));
+  $('#showIntro').onclick = () => { introIdx = 0; go('intro'); };
   fillCounter();
   $('#contact')?.addEventListener('click', () => {
     /* Opens the visitor's own mail app; only the version and language are filled in, nothing personal. */
