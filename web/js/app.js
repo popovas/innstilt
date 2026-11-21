@@ -10,6 +10,18 @@ const DONATE_URL = '';  /* e.g. a Vipps or Buy Me a Coffee link; the footer butt
 const $ = sel => document.querySelector(sel);
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
 const isTouch = () => matchMedia('(pointer: coarse)').matches;
+const isStandalone = () => matchMedia('(display-mode: standalone)').matches || navigator.standalone === true;
+const isIos = () => /iPhone|iPad|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+const wantsHomeScreen = () => isTouch() && !isStandalone();
+
+/* Android/Chrome offers a real install dialog; keep its event so our own "Install" button can open it. */
+let installPrompt = null;
+addEventListener('beforeinstallprompt', e => {
+  e.preventDefault();
+  installPrompt = e;
+  document.querySelectorAll('[data-install]').forEach(b => { b.hidden = false; });
+});
+addEventListener('appinstalled', () => store.update(s => { s.homeDone = true; }));
 
 /* ------------------------------------------------------------------ shell */
 
@@ -74,8 +86,10 @@ function viewWelcome() {
       <p>${esc(t('privacyBody'))}</p>
       <p class="muted">${esc(t('notVy'))}</p>
     </section>
+    ${wantsHomeScreen() ? `<section class="card homecard">${homeHtml(true)}</section>` : ''}
     <button class="primary big" id="start">${esc(t('start'))}</button>`;
   $('#start').onclick = () => { store.update(s => { s.welcomed = true; }); go('trips'); };
+  wireInstall();
   fillCounter();
   fillJab();
 }
@@ -334,6 +348,24 @@ function wireSettingsExtras() {
   };
 }
 
+/** How to put Innstilt on the home screen; `beforeSetup` adds the iPhone note about separate storage. */
+function homeHtml(beforeSetup) {
+  return `<h2>📲 ${esc(t('homeTitle'))}</h2>
+    <p>${esc(isIos() ? t('homeIos') : t('homeAndroid'))}</p>
+    ${isIos() && beforeSetup ? `<p class="muted small">${esc(t('homeIosNote'))}</p>` : ''}
+    <button type="button" class="primary" data-install ${installPrompt ? '' : 'hidden'}>${esc(t('homeInstall'))}</button>`;
+}
+
+function wireInstall() {
+  document.querySelectorAll('[data-install]').forEach(b => b.addEventListener('click', async () => {
+    if (!installPrompt) return;
+    installPrompt.prompt();
+    const { outcome } = await installPrompt.userChoice;
+    installPrompt = null;
+    if (outcome === 'accepted') { store.update(s => { s.homeDone = true; }); document.querySelectorAll('.homecard').forEach(c => c.remove()); }
+  }));
+}
+
 function importHtml(asButton = false) {
   return `<button type="button" class="${asButton ? '' : 'link'}" id="importBtn">${esc(t('importData'))}</button>
     <input type="file" id="importFile" accept="application/json,.json" hidden>
@@ -396,6 +428,9 @@ async function viewTrips() {
       <p class="center"><a class="bookmarklet" href="${esc(BOOKMARKLET)}" id="bm"><img src="icons/ghost-32.png" width="22" height="22" alt=""><span class="vh">👻 </span>Innstilt: fyll ut</a></p>
       <div class="actions"><button type="button" id="bmLater">${esc(t('bmLater'))}</button>
         <button type="button" class="primary" id="bmDone">${esc(t('bmDone'))}</button></div></section>` : ''}
+    ${wantsHomeScreen() && !s.homeDone ? `<section class="card homecard">${homeHtml(false)}
+      <div class="actions"><button type="button" id="homeLater">${esc(t('bmLater'))}</button>
+        <button type="button" class="primary" id="homeDone">${esc(t('bmDone'))}</button></div></section>` : ''}
     <details class="card fold jabfold" data-jab-fold hidden><summary></summary><div class="jab-body"></div></details>
     ${otherTripHtml()}
     <p class="muted">${esc(t('tripsIntro', { min: core.DEFAULT_THRESHOLD, days: core.CLAIM_DEADLINE_DAYS }))}</p>
@@ -404,6 +439,9 @@ async function viewTrips() {
   $('#bm')?.addEventListener('click', e => { e.preventDefault(); alert(t('bookmarkClick')); });
   $('#bmDone')?.addEventListener('click', () => { store.update(st => { st.bookmarkDone = true; }); $('.bmcard').remove(); });
   $('#bmLater')?.addEventListener('click', () => $('.bmcard').remove());
+  $('#homeLater')?.addEventListener('click', () => $('.homecard').remove());
+  $('#homeDone')?.addEventListener('click', () => { store.update(st => { st.homeDone = true; }); $('.homecard').remove(); });
+  wireInstall();
   wireOtherTrip();
   fillJab();
   const index = await data.loadIndex();

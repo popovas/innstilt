@@ -156,3 +156,5 @@ details.jabfold .jab-body { padding: 0 16px 12px; }
 .offline { margin: 0; padding: 6px 16px; background: var(--ink); color: var(--yellow); font-size: 14px; text-align: center; }
 .notice.problem { background: #ffe1dc; }
 .suggest li.small { padding: 8px 10px; font-size: 13px; }
+.homecard { border: 2px dashed var(--stripe); }
+.homecard h2 { margin-top: 0; }

@@ -95,6 +95,11 @@ const STRINGS = {
     contact: 'Kontakt oss', contactBody: 'Spørsmål, feil eller ideer? Skriv til oss – meldingen åpnes i din egen e-postapp.',
     bmCardTitle: 'Spar tid: legg Innstilt i bokmerkelinjen',
     bmCardBody: 'Vy sitt skjema godtar bare avgangstiden når du skriver den inn selv. Med bokmerket gjøres det – og togvalget – med ett klikk. Vis bokmerkelinjen (⌘⇧B på Mac, Ctrl+Shift+B på Windows) og dra knappen opp dit.',
+    homeTitle: 'Legg Innstilt på Hjem-skjermen',
+    homeIos: 'Trykk Del-knappen (firkanten med pil opp) i Safari og velg «Legg til på Hjem-skjerm». Da åpnes Innstilt som en egen app.',
+    homeAndroid: 'Trykk menyen (⋮) i nettleseren og velg «Installer app» eller «Legg til på startsiden». Da åpnes Innstilt som en egen app.',
+    homeIosNote: 'Gjør det før oppsettet: på iPhone har appen på Hjem-skjermen egne data, adskilt fra Safari.',
+    homeInstall: 'Installer',
     bmDone: 'Ferdig, den ligger der', bmLater: 'Senere', bmHave: 'Jeg har lagt bokmerket i bokmerkelinjen',
   },
   en: {
@@ -184,6 +189,11 @@ const STRINGS = {
     contact: 'Contact us', contactBody: 'Questions, bugs or ideas? Write to us – the message opens in your own e-mail app.',
     bmCardTitle: 'Save time: put Innstilt in your bookmarks bar',
     bmCardBody: 'Vy\'s form only accepts the departure time when you type it yourself. The bookmark does that – and picks the train – in one click. Show the bookmarks bar (⌘⇧B on Mac, Ctrl+Shift+B on Windows) and drag the button up there.',
+    homeTitle: 'Put Innstilt on your home screen',
+    homeIos: 'Tap the Share button (the square with an arrow) in Safari and choose "Add to Home Screen". Innstilt then opens like an app.',
+    homeAndroid: 'Tap the browser menu (⋮) and choose "Install app" or "Add to Home screen". Innstilt then opens like an app.',
+    homeIosNote: 'Do it before the setup: on iPhone, the home-screen app keeps its own data, separate from Safari.',
+    homeInstall: 'Install',
     bmDone: 'Done, it\'s there', bmLater: 'Later', bmHave: 'I\'ve added the bookmark to my bookmarks bar',
   },
 };
