@@ -28,6 +28,7 @@ const TXT = {
     start: 'Start', resume: 'Fortsett', again: 'Spill igjen', back: 'Tilbake til turene', other: 'Prøv det andre spillet',
     go: 'Kjør nå!', paused: 'Pause', wait: 'Avgang om {s} s', running: 'Toget går', level: 'Nivå {n}', points: 'Poeng',
     winTitle: 'Framme!', winText: '+{n} poeng.', next: 'Neste avgang',
+    switches: 'Sporveksler!',
     seasons: { summer: 'Sommer', autumn: 'Høst', winter: 'Vinter', night: 'Natt' },
     loseTitle: 'Buss for tog!', loseText: 'Sporet tok slutt på nivå {lvl}.', result: '{n} poeng.', newBest: 'Ny rekord!', best: 'Rekord: {n}',
     help: 'Hvordan spiller jeg?', keys: 'Klikk på en rute for å vri den · Enter = kjør nå · P = pause',
@@ -37,13 +38,15 @@ const TXT = {
       '⏱ Toget går når nedtellingen er ute. Er du klar før, trykk «Kjør nå!»: hvert sekund du sparer gir et poeng, og hver rute toget kjører gir ett til.',
       '🚆 Ruter toget ikke har kommet til ennå, kan du fortsatt vri.',
       '🚌 Tar sporet slutt, blir det buss for tog – og spillet er over.',
-      '📈 Hvert nivå: større brett, kortere tid og raskere tog. Steiner kan ikke flyttes, og kryss står fast.'],
+      '📈 Hvert nivå: større brett, kortere tid og raskere tog. Steiner kan ikke flyttes, og kryss står fast.',
+      '🔀 Fra nivå 11: sporveksler. Trykk for å legge om – toget følger grenen som er tegnet tydelig (den gule spaken står på den siden).'],
   },
   en: {
     title: 'Sporarbeid', intro: 'Turn the rails so the train reaches the station on the right. The train leaves when the countdown runs out – or when you press "Go now!".',
     start: 'Start', resume: 'Resume', again: 'Play again', back: 'Back to trips', other: 'Try the other game',
     go: 'Go now!', paused: 'Paused', wait: 'Departs in {s} s', running: 'Train running', level: 'Level {n}', points: 'Points',
     winTitle: 'Arrived!', winText: '+{n} points.', next: 'Next departure',
+    switches: 'Switches!',
     seasons: { summer: 'Summer', autumn: 'Autumn', winter: 'Winter', night: 'Night' },
     loseTitle: 'Bus for train!', loseText: 'The track ran out on level {lvl}.', result: '{n} points.', newBest: 'New record!', best: 'Record: {n}',
     help: 'How do I play?', keys: 'Click a tile to turn it · Enter = go now · P = pause',
@@ -53,7 +56,8 @@ const TXT = {
       '⏱ The train leaves when the countdown runs out. Ready earlier? Press "Go now!": every second saved is a point, and every tile the train runs is one more.',
       '🚆 Tiles the train hasn\'t reached yet can still be turned.',
       '🚌 If the track runs out, it\'s a bus for train – and the game is over.',
-      '📈 Every level: a bigger board, less time and a faster train. Rocks can\'t be moved, and crossings are fixed.'],
+      '📈 Every level: a bigger board, less time and a faster train. Rocks can\'t be moved, and crossings are fixed.',
+      '🔀 From level 11: switches. Tap to change them – the train follows the branch drawn bold (the yellow lever is on that side).'],
   },
 };
 
@@ -62,10 +66,34 @@ const readBest = () => { try { return Number(localStorage.getItem(BEST_KEY)) || 
 const saveBest = n => { try { localStorage.setItem(BEST_KEY, String(n)); } catch { /* private mode */ } };
 const rnd = n => Math.floor(Math.random() * n);
 
+const ORDER = ['n', 'e', 's', 'w'];
+const turn = (side, k) => ORDER[(ORDER.indexOf(side) + k) % 4];   /* a side turned k × 90° clockwise */
+const SWITCH_FROM = 11;   /* switches appear from this level */
+
+/** A switch: drawn with its stem at the bottom, straight branch up and the curve to the right (hand 'r') or left
+   ('l'), then turned `rot` × 90°. Tapping flips `set` between the straight and the curved branch. */
+function switchSides(tile) {
+  return { stem: turn('s', tile.rot), straight: turn('n', tile.rot), curve: turn(tile.hand === 'r' ? 'e' : 'w', tile.rot) };
+}
+
+/** A switch that fits a route cell entered from `entry` and left through `exit`. */
+function switchFor(entry, exit) {
+  const k = ORDER.indexOf(entry) - ORDER.indexOf('s') + 4;
+  const straight = OPP[entry];
+  const curve = exit === straight ? (Math.random() < 0.5 ? turn(entry, 1) : turn(entry, 3)) : exit;
+  const hand = turn('e', k % 4) === curve ? 'r' : 'l';
+  return { kind: 'switch', rot: k % 4, hand, set: Math.random() < 0.5 ? 'straight' : 'curve' };
+}
+
 /** Where the train goes when it enters `tile` from side `entry` (null = the track ends). */
 function exitOf(tile, entry) {
   if (tile.kind === 'cross') return OPP[entry];
   if (tile.kind === 'rock') return null;
+  if (tile.kind === 'switch') {
+    const sd = switchSides(tile);
+    if (entry === sd.stem) return sd[tile.set];          /* from the stem: along the branch that is set */
+    return entry === sd[tile.set] ? sd.stem : null;      /* from a branch: only the one that is set leads through */
+  }
   const [a, b] = CONNS[tile.kind][tile.rot % CONNS[tile.kind].length];
   return a === entry ? b : b === entry ? a : null;
 }
@@ -103,13 +131,15 @@ function makeLevel(level) {
     const entry = i === 0 ? 'w' : OPP[sideTo(route[i - 1], p)];
     const exit = i === route.length - 1 ? 'e' : sideTo(p, route[i + 1]);
     const kind = OPP[entry] === exit ? 'straight' : 'curve';
-    grid[p.y][p.x] = { kind, rot: rnd(4), route: true };
+    grid[p.y][p.x] = level >= SWITCH_FROM && Math.random() < 0.22 ? { ...switchFor(entry, exit), route: true } : { kind, rot: rnd(4), route: true };
   });
   const rocks = Math.min(0.14, Math.max(0, level - 2) * 0.03), crosses = level >= 4 ? 0.08 : 0;
   for (let y = 0; y < N; y++) for (let x = 0; x < N; x++) {
     if (grid[y][x]) continue;
     const r = Math.random();
+    const sw = level >= SWITCH_FROM ? 0.06 : 0;
     grid[y][x] = r < rocks ? { kind: 'rock', rot: 0 } : r < rocks + crosses ? { kind: 'cross', rot: 0 }
+      : r < rocks + crosses + sw ? { kind: 'switch', rot: rnd(4), hand: Math.random() < 0.5 ? 'r' : 'l', set: 'straight' }
       : { kind: Math.random() < 0.6 ? 'curve' : 'straight', rot: rnd(4) };
   }
   const start = route[0].y, goal = route[route.length - 1].y;
@@ -166,7 +196,7 @@ export function start(root, { lang = 'no', back = () => {}, other = null } = {})
     hud();
     msg.hidden = true;
     setMode('wait');
-    toast(`${fill(T.level, { n: g.level })} · ${T.seasons[g.theme.key]}`);
+    toast(`${fill(T.level, { n: g.level })} · ${T.seasons[g.theme.key]}${g.level === SWITCH_FROM ? ` · ${T.switches}` : ''}`);
   }
 
   function toast(text) {
@@ -179,6 +209,7 @@ export function start(root, { lang = 'no', back = () => {}, other = null } = {})
     if (!g || (mode !== 'wait' && mode !== 'run')) return;
     const tile = g.grid[y]?.[x];
     if (!tile || tile.kind === 'rock' || tile.kind === 'cross' || tile.locked) return;
+    if (tile.kind === 'switch') { tile.set = tile.set === 'straight' ? 'curve' : 'straight'; return; }   /* switches flip */
     tile.rot = (tile.rot + 1) % 4;
     tile.spin = 1;
   }
@@ -391,8 +422,13 @@ export function start(root, { lang = 'no', back = () => {}, other = null } = {})
       rr(px + c * 0.03, py + c * 0.03, c * 0.94, c * 0.94, c * 0.12); ctx.fill();
       ctx.fillStyle = 'rgba(255,255,255,.07)';   /* a little shine on the upper half */
       rr(px + c * 0.03, py + c * 0.03, c * 0.94, c * 0.42, c * 0.12); ctx.fill();
+      if (tile.kind === 'switch') {   /* switches get a yellow frame so they stand out */
+        ctx.strokeStyle = C.yellow; ctx.lineWidth = Math.max(2, c * 0.05);
+        rr(px + c * 0.06, py + c * 0.06, c * 0.88, c * 0.88, c * 0.1); ctx.stroke();
+      }
       ctx.save(); ctx.translate(px + c / 2, py + c / 2);
       if (tile.kind === 'rock') rock(c);
+      else if (tile.kind === 'switch') switchPiece(tile, lit, c);
       else { ctx.rotate(((tile.rot - (tile.spin || 0)) * Math.PI) / 2); trackPiece(tile.kind, lit, c); }
       ctx.restore();
     }
@@ -404,6 +440,23 @@ export function start(root, { lang = 'no', back = () => {}, other = null } = {})
       const pos = along(seg, i < 0 ? 0 : p - i, c, o);
       car(pos, c, k === 0, now);
     }
+  }
+
+  /** A switch: both branches, the one not set drawn faint, and a yellow lever on the side of the set branch. */
+  function switchPiece(tile, lit, c) {
+    ctx.rotate((tile.rot * Math.PI) / 2);
+    const curveTurn = tile.hand === 'r' ? 1 : 2;   /* the curve piece n–e turned to s–e (right) or s–w (left) */
+    const branch = (which, on) => {
+      ctx.globalAlpha = on ? 1 : 0.4;
+      if (which === 'straight') trackPiece('straight', lit && on, c);
+      else { ctx.save(); ctx.rotate((curveTurn * Math.PI) / 2); trackPiece('curve', lit && on, c); ctx.restore(); }
+      ctx.globalAlpha = 1;
+    };
+    const other = tile.set === 'straight' ? 'curve' : 'straight';
+    branch(other, false); branch(tile.set, true);
+    ctx.fillStyle = C.yellow; ctx.strokeStyle = C.ink; ctx.lineWidth = Math.max(1, c * 0.02);
+    const lx = (tile.set === 'curve' ? 1 : -1) * (tile.hand === 'r' ? 0.3 : -0.3) * c;
+    ctx.beginPath(); ctx.arc(lx, 0.34 * c, 0.08 * c, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
   }
 
   function station(x, y, c, ready) {
@@ -489,3 +542,6 @@ export function start(root, { lang = 'no', back = () => {}, other = null } = {})
   stop.peek = () => ({ mode, g });   /* for automated tests */
   return stop;
 }
+
+/* for automated tests only */
+export const _test = { exitOf, makeLevel, switchSides };
