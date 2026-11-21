@@ -90,6 +90,7 @@ function viewWelcome() {
       <img src="icons/ghost-192.png" width="120" height="120" alt="">
       <h1>Innstilt</h1>
       <p class="lead">${esc(t('tagline'))}</p>
+      <p class="why">${esc(t('why'))}</p>
       <p class="counter" data-counter hidden></p>
       <p class="jab" data-jab hidden></p>
     </section>

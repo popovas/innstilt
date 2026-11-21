@@ -1,7 +1,7 @@
 {
   "name": "Innstilt",
   "short_name": "Innstilt",
-  "description": "Få pengene tilbake fra Vy for forsinkede og innstilte tog. Ikke tilknyttet Vy.",
+  "description": "Prisavslag og erstatning for forsinkede og innstilte tog – uten bryet med Vy sitt skjema. Ikke tilknyttet Vy.",
   "lang": "nb",
   "start_url": "./#/trips",
   "scope": "./",

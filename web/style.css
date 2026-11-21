@@ -212,3 +212,4 @@ main.legal li { margin: 6px 0; }
 main.legal hr { border: none; border-top: 1px solid var(--mint-2); margin: 32px 0 8px; }
 .testercard { border: 2px dashed var(--yellow); }
 .testercard h2 { margin-top: 0; }
+.hero .why { max-width: 520px; margin: 6px auto 0; color: var(--muted); font-size: 15px; }

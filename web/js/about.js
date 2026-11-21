@@ -13,7 +13,7 @@ export const ABOUT = {
   no: [
     'Toget er innstilt. Igjen.',
     'Innstilt ble laget av en pendler som ble lei. På mange strekninger er innstilte og forsinkede tog blitt en del av hverdagen – samtidig som billettene blir dyrere.',
-    'Du har rett på penger tilbake når toget er mer enn 30 minutter forsinket eller blir innstilt. Men skjemaet tar tid, du må huske hvilket tog det var og finne fram billettkoden, så de fleste lar det være. Pengene du ikke krever, blir værende hos Vy.',
+    'Etter Vy sine egne vilkår har du rett på prisavslag eller erstatning når toget er mer enn 30 minutter forsinket eller blir innstilt. Men skjemaet tar tid: du må huske hvilket tog det var, finne fram billettkoden og fylle ut alt for hver tur, så de fleste lar det være.',
     'Innstilt gjør jobben enklere: appen finner turene dine som var forsinket eller innstilt, ved hjelp av Entur sine åpne data, og åpner Vy sitt refusjonsskjema ferdig utfylt. Du sjekker og trykker «Send inn» selv – appen sender aldri noe på egen hånd.',
     'Hvert krav er kanskje ikke stort, men de blir mange. Og hvert krav er også et lite signal om hvor ofte toget svikter.',
     'Ingen innlogging, ingen konto, ingen sporing. Billettkoden, navnet, e-posten og kontonummeret ditt lagres bare på denne enheten og brukes bare til å fylle ut skjemaet.',
@@ -23,7 +23,7 @@ export const ABOUT = {
   en: [
     'The train is cancelled. Again.',
     'Innstilt ("cancelled") was made by a commuter who had had enough. On many lines, cancelled and late trains have become part of everyday life – while tickets keep getting more expensive.',
-    'You are entitled to money back when a train is more than 30 minutes late or cancelled. But the form takes time, you have to remember which train it was and dig out your ticket code, so most people don\'t bother. The money nobody claims stays with Vy.',
+    'Under Vy\'s own terms you are entitled to a price reduction or compensation when a train is more than 30 minutes late or cancelled. But the form takes time: you have to remember which train it was, dig out your ticket code and fill everything in for every trip, so most people don\'t bother.',
     'Innstilt makes it easy: it finds your trips that were late or cancelled, using Entur\'s open data, and opens Vy\'s refund form already filled in. You check it and press "Send inn" yourself – the app never sends anything on its own.',
     'Each refund may be small, but they add up. And every claim is also a small signal of how often the trains let us down.',
     'No login, no account, no tracking. Your ticket code, name, e-mail and account number are stored only on this device and used only to fill in the form.',
@@ -66,7 +66,7 @@ export const FAQ = {
     ['Hva skjer med opplysningene mine?',
       'Billettkode, navn, e-post og kontonummer lagres bare på denne enheten og brukes bare til å fylle ut Vy sitt skjema. Vy sitt skjema tar imot opplysningene i nettadressen, så de blir også stående i nettleserens historikk. Togdata hentes fra Entur, som ser hvilke stasjoner appen spør om, men ikke hvem du er. Vil du, kan du dele anonym statistikk – bare antall krav og kroner per måned – til den felles telleren. Du kan laste ned eller slette alt i Innstillinger.'],
     ['Koster det noe?',
-      'Nei. Innstilt er gratis og uten reklame. Vil du bidra til domene og app-butikker, kan du spandere en billett.'],
+      'Nei. Innstilt er gratis og uten reklame. Vil du bidra til domene og app-butikker, kan du spandere en kaffe.'],
   ],
   en: [
     ['Why do I have to press "Send inn" myself?',
@@ -86,6 +86,6 @@ export const FAQ = {
     ['What happens to my details?',
       'Ticket code, name, e-mail and account number are stored only on this device and used only to fill in Vy\'s form. Vy\'s form takes the details in its web address, so they also stay in your browser history. Train data comes from Entur, which sees which stations the app asks about, but not who you are. If you like, you can share anonymous statistics – just numbers of claims and kroner per month – for the shared counter. You can download or delete everything in Settings.'],
     ['Does it cost anything?',
-      'No. Innstilt is free and ad-free. If you want to help with the domain and app stores, you can buy us a ticket.'],
+      'No. Innstilt is free and ad-free. If you want to help with the domain and app stores, you can buy us a coffee.'],
   ],
 };
