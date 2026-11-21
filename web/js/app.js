@@ -169,6 +169,8 @@ function viewSetup(first) {
       <div id="routes">${(p.routes.length ? p.routes : [null]).map(routeHtml).join('')}</div>
       <button type="button" class="link" id="addRoute">＋ ${esc(t('addRoute'))}</button>
 
+      ${first && stats.enabled() ? `<label class="check share-setup"><input type="checkbox" name="share">
+        <span>${esc(t('shareSetup'))}<small>${esc(t('shareSetupHelp'))}</small></span></label>` : ''}
       <p class="error" id="err" role="alert"></p>
       <button class="primary" type="submit">${esc(t('save'))}</button>
       <span class="ok" id="ok" hidden>✓ ${esc(t('saved'))}</span>
@@ -344,6 +346,7 @@ function saveSetup(first) {
     Object.assign(s.profile, { name, email, account, routes });
   });
   $('#err').textContent = '';
+  if (first && f.share?.checked) setShare(true);  /* unticked: the Claims page asks once later, with real numbers */
   if (first) { go('trips'); return true; }
   render();
   $('#ok').hidden = false;
