@@ -966,14 +966,14 @@ function statusHtml(j) {
   if (j.cancelled) return `<span class="badge bad">${esc(t('cancelled'))}</span>`;
   if (j.delayMin === null && j.expectedMin != null) {
     const cls = j.expectedMin > core.DEFAULT_THRESHOLD ? 'warn' : 'quiet';
-    return `<span class="badge ${cls}">${esc(j.expectedMin > 1 ? t('expLate', { min: j.expectedMin }) : t('expOnTime'))}</span>`;
+    return `<span class="badge ${cls}">${esc(j.expectedMin >= 1 ? t('expLate', { min: j.expectedMin }) : t('expOnTime'))}</span>`;
   }
   if (j.delayMin === null && j.live) {
     return `<span class="badge quiet">${esc(j.depMs > Date.now() ? t('planned') : t('dataTonight'))}</span>`;
   }
   if (j.delayMin === null) return `<span class="badge quiet">${esc(t('noData'))}</span>`;
   if (core.eligible(j)) return `<span class="badge warn">${esc(t('late', { min: j.delayMin }))}</span>`;
-  return `<span class="badge quiet">${esc(j.delayMin <= 1 ? t('onTime') : t('late', { min: j.delayMin }))}</span>`;
+  return `<span class="badge quiet">${esc(j.delayMin < 1 ? t('onTime') : t('late', { min: j.delayMin }))}</span>`;
 }
 
 /** `action` replaces the claim button (e.g. "sent ✓") when the trip can't be claimed. */
@@ -1321,7 +1321,7 @@ async function renderNowBoard(run) {
     let status;
     if (j.cancelled) status = `<span class="badge bad">${esc(t('cancelled'))}</span>`;
     else if (!j.realtime) status = `<span class="badge quiet">${esc(t('planned'))}</span>`;
-    else if (!departed) status = j.depDelayMin > 1
+    else if (!departed) status = j.depDelayMin >= 1
       ? `<span class="badge ${j.depDelayMin > core.DEFAULT_THRESHOLD ? 'warn' : 'quiet'}">${esc(t('depLate', { min: j.depDelayMin }))}</span>`
       : `<span class="badge quiet">${esc(t('onTime'))}</span>`;
     else status = statusHtml(j);
