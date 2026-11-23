@@ -15,7 +15,7 @@ android {
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode 1          /* must go up by one for every upload to Google Play */
-        versionName "0.4.0"    /* keep in step with VERSION in web/js/about.js */
+        versionName "0.5.0"    /* keep in step with VERSION in web/js/about.js */
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         aaptOptions {
              // Files and dirs to omit from the packaged assets dir, modified to accommodate modern web apps.
