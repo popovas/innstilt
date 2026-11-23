@@ -10,6 +10,7 @@ import { slides as introSlides, picture as introPicture, HELP } from './intro.js
 /* Android app test (Google Play closed test). Empty group link = the tester card stays hidden. */
 const TESTER_GROUP_URL = '';  /* e.g. 'https://groups.google.com/g/innstilt-testere' */
 const TESTER_PLAY_URL = 'https://play.google.com/apps/testing/app.innstilt';
+const BUG_REPORTS = true;  /* "report a bug" in the footer while the apps are in testing; false hides it */
 const DONATE_URL = 'https://ko-fi.com/innstilt_team';  /* tips via Ko-fi (no phone number exposed, no requests); empty = hidden */
 const $ = sel => document.querySelector(sel);
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
@@ -43,10 +44,24 @@ function shell() {
   help.hidden = !store.get().welcomed || route === 'intro' || route.startsWith('game');  /* the games have their own "?" */
   help.setAttribute('aria-label', t('help')); help.title = t('help');
   $('#foot').innerHTML = `<a href="#/about">${esc(t('about'))}</a> · <a href="${data.NATIVE ? 'https://innstilt.app/' : ''}personvern.html${getLang() === 'en' ? '#en' : ''}">${esc(t('privacy'))}</a> · ${esc(t('notVy'))} ${esc(t('dataFrom'))}`
-    + (DONATE_URL ? ` · <a href="${esc(DONATE_URL)}" target="_blank" rel="noopener">${esc(t('coffee'))}</a>` : '');
+    + (DONATE_URL ? ` · <a href="${esc(DONATE_URL)}" target="_blank" rel="noopener">${esc(t('coffee'))}</a>` : '')
+    + (BUG_REPORTS ? `<br><a href="#" id="bugLink">🐞 ${esc(t('bugReport'))}</a>` : '');
+  $('#bugLink')?.addEventListener('click', reportBug);
 }
 
 let stopGame = null;  /* the game, while it is open */
+
+/** A pre-filled e-mail with what helps to find a bug – version, platform, screen, date – and nothing personal. */
+async function reportBug(e) {
+  e.preventDefault();
+  const platform = data.NATIVE ? (globalThis.Capacitor?.getPlatform?.() === 'ios' ? 'iPhone-app' : 'Android-app')
+    : `${t('bugBrowser')} (${/Android/i.test(navigator.userAgent) ? 'Android' : /iPhone|iPad/i.test(navigator.userAgent) ? 'iOS' : 'PC/Mac'})`;
+  const screen = (location.hash.slice(2) || 'trips').split('?')[0];
+  const body = fill(t('bugBody'), { v: VERSION, platform, screen, date: new Date().toISOString().slice(0, 16).replace('T', ' ') });
+  const q = new URLSearchParams({ subject: fill(t('bugSubject'), { v: VERSION }), body });
+  location.href = `mailto:${await contactAddress()}?${q.toString().replace(/\+/g, '%20')}`;
+}
+const fill = (s, v) => s.replace(/\{(\w+)\}/g, (_, k) => v[k]);
 
 function render() {
   stopGame?.(); stopGame = null;
