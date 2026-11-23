@@ -17,6 +17,3 @@ export function gameOfDay(date = new Date()) {
   for (const ch of osloDate(date)) h = Math.imul(h ^ ch.charCodeAt(0), 16777619);
   return READY[(h >>> 0) % READY.length];
 }
-
-/** The next ready game after `id` (for "try another game"). */
-export const nextGame = id => READY[(READY.indexOf(id) + 1) % READY.length];

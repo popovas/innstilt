@@ -21,12 +21,12 @@ const THEMES = [   /* a season per kilometre, as in Sporarbeid */
 ];
 const C = { mint: '#f2faf5', stripe: '#2fa36b', win: '#0e3a30', ink: '#0b0b0c', yellow: '#f5c400', sleeper: '#7a5a3a',
   tree: '#2b7a3d', tree2: '#1f5c2d', trunk: '#6b4a2a', rock: '#8a958f', rock2: '#6c7671', leaf: '#d9822b', leaf2: '#8a4512',
-  moose: '#7a4a26', antler: '#e2c898', go: '#3fe08a', stop: '#ff3b2f', other: '#9aa5ad', red: '#ff6b57' };
+  moose: '#7a4a26', antler: '#e2c898', go: '#3fe08a', stop: '#ff3b2f', red: '#ff6b57' };
 
 const TXT = {
   no: {
     title: 'Full fart', intro: 'Bytt spor og kjør så langt du kan. Farten øker hele tiden – kjør utenom det som står i veien.',
-    start: 'Start', resume: 'Fortsett', again: 'Spill igjen', back: 'Tilbake til turene', other: 'Prøv et annet spill',
+    start: 'Start', resume: 'Fortsett', again: 'Spill igjen', back: 'Tilbake til turene', 
     paused: 'Pause', help: 'Hvordan spiller jeg?', keys: 'Piltaster eller A/D · P eller mellomrom = pause', pad: { pause: 'Pause' },
     points: 'Poeng', lives: 'Togsett igjen', speed: '{v} km/t',
     tree: 'Tre over sporet!', rock: 'Stein på sporet!', moose: 'Elg på sporet!', train: 'Møtende tog!',
@@ -41,7 +41,7 @@ const TXT = {
   },
   en: {
     title: 'Full fart', intro: 'Change tracks and get as far as you can. The speed keeps rising – steer around what\'s in the way.',
-    start: 'Start', resume: 'Resume', again: 'Play again', back: 'Back to trips', other: 'Try another game',
+    start: 'Start', resume: 'Resume', again: 'Play again', back: 'Back to trips', 
     paused: 'Paused', help: 'How do I play?', keys: 'Arrow keys or A/D · P or Space = pause', pad: { pause: 'Pause' },
     points: 'Points', lives: 'Train sets left', speed: '{v} km/h',
     tree: 'Tree on the line!', rock: 'Rock on the line!', moose: 'Moose on the line!', train: 'Oncoming train!',
@@ -63,7 +63,7 @@ const rnd = n => Math.floor(Math.random() * n);
 const AVOID = new Set(['tree', 'rock', 'moose', 'train']);
 
 /** Starts the game inside `root`. Returns a function that stops it and removes every listener. */
-export function start(root, { lang = 'no', back = () => {}, other = null } = {}) {
+export function start(root, { lang = 'no', back = () => {} } = {}) {
   const T = TXT[lang === 'en' ? 'en' : 'no'];
   const touch = matchMedia('(pointer: coarse)').matches;
   root.innerHTML = `
@@ -579,7 +579,6 @@ export function start(root, { lang = 'no', back = () => {}, other = null } = {})
   resize();
 
   const intro = [[T.start, newGame, true], [T.back, back]];
-  if (other) intro.push([T.other, other]);
   show(T.title, `${T.intro}${best ? ` ${fill(T.best, { n: best })}` : ''}`, intro);
   raf = requestAnimationFrame(frame);
 

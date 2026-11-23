@@ -823,8 +823,7 @@ async function viewGame(id) {
   const which = id in games.GAMES ? id : games.gameOfDay();
   const { start } = await games.GAMES[which]();
   if (location.hash !== hash || !$('#game')) return;  /* the user moved on while it loaded */
-  const other = games.nextGame(which);
-  stopGame = start($('#game'), { lang: getLang(), back: () => go('trips'), other: other !== which ? () => go(`game/${other}`) : null });
+  stopGame = start($('#game'), { lang: getLang(), back: () => go('trips') });
 }
 
 async function viewTrips() {

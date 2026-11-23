@@ -29,7 +29,7 @@ const SIGN = '<svg class="g-sign" viewBox="0 0 24 24" width="20" height="20" ari
 const TXT = {
   no: {
     title: 'Forsinket?', intro: 'Plukk opp så mange passasjerer du rekker med spøkelsestoget. Forsinkelsen tikker hele tiden – ved 31 minutter er det slutt. Grønt signal hjelper, rødt signal koster. Pass deg for kanten og dine egne vogner – og for mer etter hvert.',
-    other: 'Prøv et annet spill', start: 'Start', resume: 'Fortsett', again: 'Spill igjen', back: 'Tilbake til turene', claim: 'Krev erstatning 😉',
+    start: 'Start', resume: 'Fortsett', again: 'Spill igjen', back: 'Tilbake til turene', claim: 'Krev erstatning 😉',
     ahead: 'Foran rute! 😎', spare: 'Ekstra togsett! 🚆', streak: '10 på rad uten uhell – ekstra togsett!',
     green: 'Grønt signal! −3 min', redSig: 'Venter på signal… +3 min', lvl: 'Nivå {n}',
     levels: { 2: 'Nivå 2: løv og is!', 3: 'Nivå 3: tunneler!', 4: 'Nivå 4: trær over sporet!', 5: 'Nivå 5: elg!' }, levelMore: 'Nivå {n}: litt mer av alt!',
@@ -52,7 +52,7 @@ const TXT = {
   },
   en: {
     title: 'Forsinket?', intro: 'Pick up as many passengers as you can with the ghost train. The delay keeps ticking – at 31 minutes it\'s over. Green signals help, red ones cost. Watch out for the edge and your own wagons – and for more as you go.',
-    other: 'Try another game', start: 'Start', resume: 'Resume', again: 'Play again', back: 'Back to trips', claim: 'Claim compensation 😉',
+    start: 'Start', resume: 'Resume', again: 'Play again', back: 'Back to trips', claim: 'Claim compensation 😉',
     ahead: 'Ahead of schedule! 😎', spare: 'Spare train set! 🚆', streak: '10 in a row without a mishap – extra train set!',
     green: 'Green signal! −3 min', redSig: 'Waiting for a signal… +3 min', lvl: 'Level {n}',
     levels: { 2: 'Level 2: leaves and ice!', 3: 'Level 3: tunnels!', 4: 'Level 4: trees on the line!', 5: 'Level 5: moose!' }, levelMore: 'Level {n}: a bit more of everything!',
@@ -80,7 +80,7 @@ const readBest = () => { try { return Number(localStorage.getItem(BEST_KEY)) || 
 const saveBest = n => { try { localStorage.setItem(BEST_KEY, String(n)); } catch { /* private mode: keep it for this game only */ } };
 
 /** Starts the game inside `root`. Returns a function that stops it and removes every listener. */
-export function start(root, { lang = 'no', back = () => {}, testScore = 0, other = null } = {}) {
+export function start(root, { lang = 'no', back = () => {}, testScore = 0 } = {}) {
   const T = TXT[lang === 'en' ? 'en' : 'no'];
   const touch = matchMedia('(pointer: coarse)').matches;
   root.innerHTML = `
@@ -630,7 +630,6 @@ export function start(root, { lang = 'no', back = () => {}, testScore = 0, other
   resize();
 
   const intro = [[T.start, newGame, true], [T.back, back]];
-  if (other) intro.push([T.other, other]);
   show(T.title, `${T.intro}${best ? ` ${fill(T.best, { n: best })}` : ''}`, intro);
   raf = requestAnimationFrame(frame);
 

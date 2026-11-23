@@ -25,7 +25,7 @@ const THEMES = [
 const TXT = {
   no: {
     title: 'Sporarbeid', intro: 'Vri skinnene så toget kommer fram til stasjonen til høyre. Toget går når nedtellingen er ute – eller når du trykker «Kjør nå!».',
-    start: 'Start', resume: 'Fortsett', again: 'Spill igjen', back: 'Tilbake til turene', other: 'Prøv et annet spill',
+    start: 'Start', resume: 'Fortsett', again: 'Spill igjen', back: 'Tilbake til turene', 
     go: 'Kjør nå!', paused: 'Pause', wait: 'Avgang om {s} s', running: 'Toget går', level: 'Nivå {n}', points: 'Poeng',
     winTitle: 'Framme!', winText: '+{n} poeng.', next: 'Neste avgang',
     switches: 'Sporveksler!',
@@ -43,7 +43,7 @@ const TXT = {
   },
   en: {
     title: 'Sporarbeid', intro: 'Turn the rails so the train reaches the station on the right. The train leaves when the countdown runs out – or when you press "Go now!".',
-    start: 'Start', resume: 'Resume', again: 'Play again', back: 'Back to trips', other: 'Try another game',
+    start: 'Start', resume: 'Resume', again: 'Play again', back: 'Back to trips', 
     go: 'Go now!', paused: 'Paused', wait: 'Departs in {s} s', running: 'Train running', level: 'Level {n}', points: 'Points',
     winTitle: 'Arrived!', winText: '+{n} points.', next: 'Next departure',
     switches: 'Switches!',
@@ -170,7 +170,7 @@ function makeLevel(level) {
 }
 
 /** Starts the game inside `root`. Returns a function that stops it and removes every listener. */
-export function start(root, { lang = 'no', back = () => {}, other = null } = {}) {
+export function start(root, { lang = 'no', back = () => {} } = {}) {
   const T = TXT[lang === 'en' ? 'en' : 'no'];
   const touch = matchMedia('(pointer: coarse)').matches;
   root.innerHTML = `
@@ -544,7 +544,6 @@ export function start(root, { lang = 'no', back = () => {}, other = null } = {})
   resize();
 
   const intro = [[T.start, newGame, true], [T.back, back]];
-  if (other) intro.push([T.other, other]);
   show(T.title, `${T.intro}${best ? ` ${fill(T.best, { n: best })}` : ''}`, intro);
   setMode('intro');
   raf = requestAnimationFrame(frame);
