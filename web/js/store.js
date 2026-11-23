@@ -40,13 +40,26 @@ function migrate(s) {
 const SECURE = globalThis.Capacitor?.isNativePlatform?.() ? globalThis.Capacitor.Plugins?.SecureStorage : null;
 let writes = Promise.resolve();
 
+/* If saving fails (blocked storage, a broken keystore, a full disk), the app must say so instead of carrying on
+   with data that will be gone after a restart. */
+let saveFailed = false;
+const failListeners = [];
+/** fn(true) when saving starts failing, fn(false) when it works again. */
+export const onSaveFailed = fn => failListeners.push(fn);
+export const isSaveFailing = () => saveFailed;
+function failed(yes) {
+  if (saveFailed === yes) return;
+  saveFailed = yes;
+  failListeners.forEach(fn => fn(yes));
+}
+
 function save() {
   if (SECURE) {
     const data = JSON.stringify(state);
-    writes = writes.then(() => SECURE.internalSetItem({ prefixedKey: KEY, data })).catch(() => {});
+    writes = writes.then(() => SECURE.internalSetItem({ prefixedKey: KEY, data })).then(() => failed(false), () => failed(true));
     return true;
   }
-  try { localStorage.setItem(KEY, JSON.stringify(state)); return true; } catch { return false; }
+  try { localStorage.setItem(KEY, JSON.stringify(state)); failed(false); return true; } catch { failed(true); return false; }
 }
 
 /** Call once before the first render. In the app: read the encrypted store; on the first start after an update,
@@ -54,7 +67,7 @@ function save() {
 export async function init() {
   if (!SECURE) return;
   let raw = null;
-  try { raw = (await SECURE.internalGetItem({ prefixedKey: KEY }))?.data || null; } catch { /* keep in-memory state */ }
+  try { raw = (await SECURE.internalGetItem({ prefixedKey: KEY }))?.data || null; } catch { failed(true); return; }   /* can't read: warn, don't overwrite */
   if (raw) {
     try { state = migrate({ ...structuredClone(EMPTY), ...JSON.parse(raw) }); } catch { /* corrupt: keep what we have */ }
     return;

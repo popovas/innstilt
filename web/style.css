@@ -303,3 +303,5 @@ dialog.helpdlg .intro h1 { font-size: 20px; }
 .g-speed { font-size: 12px; font-weight: 600; color: var(--muted); }
 .g-speed.fast { color: var(--link); }
 .g-row > .muted { text-align: center; }
+.savefail { background: var(--red); color: #fff; font-weight: 600; }
+.savefail a { color: #fff; }

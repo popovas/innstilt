@@ -59,6 +59,7 @@ function render() {
   }
   shell();
   offlineBanner();
+  saveFailBanner();
   syncStats();
   const s = store.get();
   const route = location.hash.slice(2) || 'trips';
@@ -90,6 +91,14 @@ function offlineBanner() {
   el.textContent = `📡 ${t('offline')}`;
   el.hidden = navigator.onLine;
 }
+/* Saving failed: a clear warning with a way to rescue the data, instead of losing it quietly at the next start. */
+function saveFailBanner() {
+  const el = $('#saveFail');
+  el.innerHTML = `⚠️ ${esc(t('saveFailed'))} <a href="#/settings">${esc(t('saveFailedAct'))}</a>`;
+  el.hidden = !store.isSaveFailing();
+}
+store.onSaveFailed(saveFailBanner);
+
 addEventListener('online', offlineBanner);
 addEventListener('offline', offlineBanner);
 
